@@ -58,7 +58,6 @@ router.get("/dossiers", async (req, res): Promise<void> => {
       isFavorite: false,
       readingProgress: 0,
       lastReadPage: 1,
-      isFree: dossier.isFree,
       createdAt: dossier.createdAt,
     }));
 
@@ -128,7 +127,6 @@ router.get("/dossiers/:id", requireAuth, async (req, res): Promise<void> => {
     isFavorite: !!fav,
     readingProgress: progress?.readingProgress ?? 0,
     lastReadPage: progress?.lastReadPage ?? 1,
-    isFree: row.dossier.isFree,
     createdAt: row.dossier.createdAt,
   });
 });

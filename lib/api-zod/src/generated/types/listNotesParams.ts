@@ -3,10 +3,13 @@
  * Do not edit manually.
  * Api
  * منصة أبو العربي - API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export type ListNotesParams = {
 subjectId?: number;
 dossierId?: number;
+type?: string;
+search?: string;
+isPinned?: boolean;
 };

@@ -12,10 +12,11 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "@/hooks/use-auth";
 import { useLogout } from "@workspace/api-client-react";
 
 export function Sidebar() {
@@ -115,6 +116,16 @@ export function Sidebar() {
         </nav>
 
         <div className="p-4 border-t border-white/10 shrink-0 space-y-1">
+          {(user?.role === 'admin' || user?.role === 'super_admin') && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-amber-400 hover:bg-amber-500/10 font-medium group"
+              onClick={() => setIsOpen(false)}
+            >
+              <ShieldCheck className="w-5 h-5" />
+              <span>لوحة الإدارة</span>
+            </Link>
+          )}
           <Link 
             href="/settings"
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${

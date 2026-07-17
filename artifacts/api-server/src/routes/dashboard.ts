@@ -125,7 +125,6 @@ router.get("/dashboard", requireAuth, async (req, res): Promise<void> => {
       isFavorite: false,
       readingProgress: 0,
       lastReadPage: 1,
-      isFree: dossier.isFree,
       createdAt: dossier.createdAt,
     })),
     currentQuiz: currentQuiz

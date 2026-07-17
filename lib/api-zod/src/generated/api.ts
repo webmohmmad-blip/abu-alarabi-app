@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * منصة أبو العربي - API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import * as zod from 'zod';
 
@@ -16,9 +16,6 @@ export const HealthCheckResponse = zod.object({
 })
 
 
-/**
- * @summary Register a new student account
- */
 export const registerBodyFullNameMin = 3;
 
 export const registerBodyPasswordMin = 8;
@@ -38,9 +35,10 @@ export const RegisterResponse = zod.object({
   "fullName": zod.string(),
   "phone": zod.string(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['student', 'teacher', 'admin', 'super_admin']),
+  "role": zod.enum(['student', 'teacher', 'assistant_teacher', 'moderator', 'admin', 'super_admin']),
   "avatarUrl": zod.string().nullish(),
   "onboardingCompleted": zod.boolean().optional(),
+  "isActive": zod.boolean().optional(),
   "createdAt": zod.string()
 }),
   "token": zod.string(),
@@ -48,9 +46,6 @@ export const RegisterResponse = zod.object({
 })
 
 
-/**
- * @summary Login with phone and password
- */
 export const LoginBody = zod.object({
   "phone": zod.string(),
   "password": zod.string(),
@@ -63,9 +58,10 @@ export const LoginResponse = zod.object({
   "fullName": zod.string(),
   "phone": zod.string(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['student', 'teacher', 'admin', 'super_admin']),
+  "role": zod.enum(['student', 'teacher', 'assistant_teacher', 'moderator', 'admin', 'super_admin']),
   "avatarUrl": zod.string().nullish(),
   "onboardingCompleted": zod.boolean().optional(),
+  "isActive": zod.boolean().optional(),
   "createdAt": zod.string()
 }),
   "token": zod.string(),
@@ -73,30 +69,22 @@ export const LoginResponse = zod.object({
 })
 
 
-/**
- * @summary Logout current session
- */
 export const LogoutResponse = zod.unknown()
 
 
-/**
- * @summary Get current authenticated user
- */
 export const GetMeResponse = zod.object({
   "id": zod.number(),
   "fullName": zod.string(),
   "phone": zod.string(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['student', 'teacher', 'admin', 'super_admin']),
+  "role": zod.enum(['student', 'teacher', 'assistant_teacher', 'moderator', 'admin', 'super_admin']),
   "avatarUrl": zod.string().nullish(),
   "onboardingCompleted": zod.boolean().optional(),
+  "isActive": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 
 
-/**
- * @summary Complete student onboarding wizard
- */
 export const CompleteOnboardingBody = zod.object({
   "grade": zod.string(),
   "field": zod.string(),
@@ -116,16 +104,14 @@ export const CompleteOnboardingResponse = zod.object({
   "fullName": zod.string(),
   "phone": zod.string(),
   "email": zod.string().nullish(),
-  "role": zod.enum(['student', 'teacher', 'admin', 'super_admin']),
+  "role": zod.enum(['student', 'teacher', 'assistant_teacher', 'moderator', 'admin', 'super_admin']),
   "avatarUrl": zod.string().nullish(),
   "onboardingCompleted": zod.boolean().optional(),
+  "isActive": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 
 
-/**
- * @summary Get student profile
- */
 export const GetProfileResponse = zod.object({
   "id": zod.number(),
   "fullName": zod.string(),
@@ -147,9 +133,6 @@ export const GetProfileResponse = zod.object({
 })
 
 
-/**
- * @summary Update profile fields
- */
 export const UpdateProfileBody = zod.object({
   "fullName": zod.string().optional(),
   "avatarUrl": zod.string().optional(),
@@ -180,9 +163,6 @@ export const UpdateProfileResponse = zod.object({
 })
 
 
-/**
- * @summary Get student badges and achievements
- */
 export const GetAchievementsResponseItem = zod.object({
   "id": zod.number(),
   "title": zod.string(),
@@ -194,9 +174,6 @@ export const GetAchievementsResponseItem = zod.object({
 export const GetAchievementsResponse = zod.array(GetAchievementsResponseItem)
 
 
-/**
- * @summary List all subjects
- */
 export const ListSubjectsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
@@ -211,9 +188,6 @@ export const ListSubjectsResponseItem = zod.object({
 export const ListSubjectsResponse = zod.array(ListSubjectsResponseItem)
 
 
-/**
- * @summary Get subject details with units and progress
- */
 export const GetSubjectParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -235,9 +209,6 @@ export const GetSubjectResponse = zod.object({
 })
 
 
-/**
- * @summary List dossiers with filters
- */
 export const ListDossiersQueryParams = zod.object({
   "subjectId": zod.coerce.number().optional(),
   "grade": zod.coerce.string().optional(),
@@ -255,7 +226,7 @@ export const ListDossiersResponse = zod.object({
   "subjectName": zod.string(),
   "grade": zod.string(),
   "pageCount": zod.number(),
-  "fileSize": zod.string().optional(),
+  "fileSize": zod.string().nullish(),
   "downloads": zod.number(),
   "views": zod.number().optional(),
   "rating": zod.number(),
@@ -264,7 +235,6 @@ export const ListDossiersResponse = zod.object({
   "isFavorite": zod.boolean().optional(),
   "readingProgress": zod.number().optional(),
   "lastReadPage": zod.number().optional(),
-  "isFree": zod.boolean().optional(),
   "createdAt": zod.string().optional()
 })),
   "total": zod.number(),
@@ -273,9 +243,6 @@ export const ListDossiersResponse = zod.object({
 })
 
 
-/**
- * @summary Get dossier details
- */
 export const GetDossierParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -288,7 +255,7 @@ export const GetDossierResponse = zod.object({
   "subjectName": zod.string(),
   "grade": zod.string(),
   "pageCount": zod.number(),
-  "fileSize": zod.string().optional(),
+  "fileSize": zod.string().nullish(),
   "downloads": zod.number(),
   "views": zod.number().optional(),
   "rating": zod.number(),
@@ -297,14 +264,10 @@ export const GetDossierResponse = zod.object({
   "isFavorite": zod.boolean().optional(),
   "readingProgress": zod.number().optional(),
   "lastReadPage": zod.number().optional(),
-  "isFree": zod.boolean().optional(),
   "createdAt": zod.string().optional()
 })
 
 
-/**
- * @summary Toggle dossier favorite
- */
 export const ToggleDossierFavoriteParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -314,9 +277,6 @@ export const ToggleDossierFavoriteResponse = zod.object({
 })
 
 
-/**
- * @summary Update reading progress for a dossier
- */
 export const UpdateDossierProgressParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -328,9 +288,6 @@ export const UpdateDossierProgressBody = zod.object({
 export const UpdateDossierProgressResponse = zod.unknown()
 
 
-/**
- * @summary List worksheets with filters
- */
 export const ListWorksheetsQueryParams = zod.object({
   "subjectId": zod.coerce.number().optional(),
   "search": zod.coerce.string().optional(),
@@ -351,7 +308,6 @@ export const ListWorksheetsResponse = zod.object({
   "downloads": zod.number().optional(),
   "solvers": zod.number().optional(),
   "fileUrl": zod.string().nullish(),
-  "isFree": zod.boolean().optional(),
   "createdAt": zod.string().optional()
 })),
   "total": zod.number(),
@@ -360,9 +316,6 @@ export const ListWorksheetsResponse = zod.object({
 })
 
 
-/**
- * @summary Get worksheet details
- */
 export const GetWorksheetParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -379,14 +332,10 @@ export const GetWorksheetResponse = zod.object({
   "downloads": zod.number().optional(),
   "solvers": zod.number().optional(),
   "fileUrl": zod.string().nullish(),
-  "isFree": zod.boolean().optional(),
   "createdAt": zod.string().optional()
 })
 
 
-/**
- * @summary List available exams
- */
 export const ListExamsQueryParams = zod.object({
   "subjectId": zod.coerce.number().optional(),
   "type": zod.coerce.string().optional()
@@ -403,7 +352,6 @@ export const ListExamsResponseItem = zod.object({
   "difficulty": zod.enum(['easy', 'medium', 'hard', 'ministerial']),
   "totalParticipants": zod.number().optional(),
   "averageScore": zod.number().nullish(),
-  "isFree": zod.boolean().optional(),
   "isAvailable": zod.boolean().optional(),
   "userAttempts": zod.number().optional(),
   "maxAttempts": zod.number().optional()
@@ -411,9 +359,6 @@ export const ListExamsResponseItem = zod.object({
 export const ListExamsResponse = zod.array(ListExamsResponseItem)
 
 
-/**
- * @summary Get exam details and instructions
- */
 export const GetExamParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -440,9 +385,6 @@ export const GetExamResponse = zod.object({
 })
 
 
-/**
- * @summary Start an exam attempt
- */
 export const StartExamParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -469,9 +411,6 @@ export const StartExamResponse = zod.object({
 })
 
 
-/**
- * @summary Submit an answer for a question in an attempt
- */
 export const SubmitAnswerParams = zod.object({
   "attemptId": zod.coerce.number()
 })
@@ -484,9 +423,6 @@ export const SubmitAnswerBody = zod.object({
 export const SubmitAnswerResponse = zod.unknown()
 
 
-/**
- * @summary Submit an exam attempt for final grading
- */
 export const SubmitExamParams = zod.object({
   "attemptId": zod.coerce.number()
 })
@@ -509,9 +445,6 @@ export const SubmitExamResponse = zod.object({
 })
 
 
-/**
- * @summary List past exam results for current user
- */
 export const ListExamResultsResponseItem = zod.object({
   "id": zod.number(),
   "examId": zod.number(),
@@ -531,13 +464,10 @@ export const ListExamResultsResponseItem = zod.object({
 export const ListExamResultsResponse = zod.array(ListExamResultsResponseItem)
 
 
-/**
- * @summary Get the current weekly quiz
- */
 export const GetCurrentQuizResponse = zod.object({
   "id": zod.number(),
   "title": zod.string(),
-  "description": zod.string().optional(),
+  "description": zod.string().nullish(),
   "subjectName": zod.string(),
   "startsAt": zod.string(),
   "endsAt": zod.string(),
@@ -550,9 +480,6 @@ export const GetCurrentQuizResponse = zod.object({
 })
 
 
-/**
- * @summary Start the weekly quiz attempt
- */
 export const StartQuizParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -579,9 +506,6 @@ export const StartQuizResponse = zod.object({
 })
 
 
-/**
- * @summary Get weekly quiz leaderboard
- */
 export const GetQuizLeaderboardResponseItem = zod.object({
   "rank": zod.number(),
   "displayName": zod.string(),
@@ -595,9 +519,6 @@ export const GetQuizLeaderboardResponseItem = zod.object({
 export const GetQuizLeaderboardResponse = zod.array(GetQuizLeaderboardResponseItem)
 
 
-/**
- * @summary Get current student's study plan with today's tasks
- */
 export const GetStudyPlanResponse = zod.object({
   "id": zod.number(),
   "goal": zod.string(),
@@ -627,9 +548,6 @@ export const GetStudyPlanResponse = zod.object({
 })
 
 
-/**
- * @summary List study tasks with filters
- */
 export const ListStudyTasksQueryParams = zod.object({
   "date": zod.coerce.string().optional(),
   "status": zod.coerce.string().optional(),
@@ -652,9 +570,6 @@ export const ListStudyTasksResponseItem = zod.object({
 export const ListStudyTasksResponse = zod.array(ListStudyTasksResponseItem)
 
 
-/**
- * @summary Mark a study task as complete
- */
 export const CompleteStudyTaskParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -680,9 +595,6 @@ export const CompleteStudyTaskResponse = zod.object({
 })
 
 
-/**
- * @summary Rebuild/regenerate the study plan
- */
 export const RebuildStudyPlanResponse = zod.object({
   "id": zod.number(),
   "goal": zod.string(),
@@ -712,9 +624,6 @@ export const RebuildStudyPlanResponse = zod.object({
 })
 
 
-/**
- * @summary List student's study sessions
- */
 export const ListStudySessionsQueryParams = zod.object({
   "date": zod.coerce.string().optional(),
   "subjectId": zod.coerce.number().optional()
@@ -738,9 +647,6 @@ export const ListStudySessionsResponseItem = zod.object({
 export const ListStudySessionsResponse = zod.array(ListStudySessionsResponseItem)
 
 
-/**
- * @summary Start a new study session
- */
 export const CreateStudySessionBody = zod.object({
   "subjectId": zod.number(),
   "type": zod.string(),
@@ -767,9 +673,6 @@ export const CreateStudySessionResponse = zod.object({
 })
 
 
-/**
- * @summary Update session (pause, resume, end)
- */
 export const UpdateStudySessionParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -798,60 +701,95 @@ export const UpdateStudySessionResponse = zod.object({
 })
 
 
-/**
- * @summary List student's notes
- */
 export const ListNotesQueryParams = zod.object({
   "subjectId": zod.coerce.number().optional(),
-  "dossierId": zod.coerce.number().optional()
+  "dossierId": zod.coerce.number().optional(),
+  "type": zod.coerce.string().optional(),
+  "search": zod.coerce.string().optional(),
+  "isPinned": zod.coerce.boolean().optional()
 })
 
 export const ListNotesResponseItem = zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "content": zod.string(),
+  "noteType": zod.string().optional(),
   "subjectId": zod.number(),
   "subjectName": zod.string(),
   "dossierId": zod.number().nullish(),
   "sessionId": zod.number().nullish(),
   "tags": zod.array(zod.string()).optional(),
+  "color": zod.string().nullish(),
   "isPinned": zod.boolean().optional(),
+  "isPrivate": zod.boolean().optional(),
+  "importance": zod.number().optional(),
+  "reviewStatus": zod.string().nullish(),
+  "nextReviewAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
 export const ListNotesResponse = zod.array(ListNotesResponseItem)
 
 
-/**
- * @summary Create a new note
- */
 export const CreateNoteBody = zod.object({
   "title": zod.string(),
   "content": zod.string(),
+  "noteType": zod.string().optional(),
   "subjectId": zod.number(),
   "dossierId": zod.number().optional(),
   "sessionId": zod.number().optional(),
-  "tags": zod.array(zod.string()).optional()
+  "tags": zod.array(zod.string()).optional(),
+  "color": zod.string().optional(),
+  "isPrivate": zod.boolean().optional(),
+  "importance": zod.number().optional()
 })
 
 export const CreateNoteResponse = zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "content": zod.string(),
+  "noteType": zod.string().optional(),
   "subjectId": zod.number(),
   "subjectName": zod.string(),
   "dossierId": zod.number().nullish(),
   "sessionId": zod.number().nullish(),
   "tags": zod.array(zod.string()).optional(),
+  "color": zod.string().nullish(),
   "isPinned": zod.boolean().optional(),
+  "isPrivate": zod.boolean().optional(),
+  "importance": zod.number().optional(),
+  "reviewStatus": zod.string().nullish(),
+  "nextReviewAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
 
 
-/**
- * @summary Update a note
- */
+export const GetNoteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetNoteResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "content": zod.string(),
+  "noteType": zod.string().optional(),
+  "subjectId": zod.number(),
+  "subjectName": zod.string(),
+  "dossierId": zod.number().nullish(),
+  "sessionId": zod.number().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "color": zod.string().nullish(),
+  "isPinned": zod.boolean().optional(),
+  "isPrivate": zod.boolean().optional(),
+  "importance": zod.number().optional(),
+  "reviewStatus": zod.string().nullish(),
+  "nextReviewAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
 export const UpdateNoteParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -859,28 +797,36 @@ export const UpdateNoteParams = zod.object({
 export const UpdateNoteBody = zod.object({
   "title": zod.string().optional(),
   "content": zod.string().optional(),
+  "noteType": zod.string().optional(),
   "tags": zod.array(zod.string()).optional(),
-  "isPinned": zod.boolean().optional()
+  "color": zod.string().optional(),
+  "isPinned": zod.boolean().optional(),
+  "isPrivate": zod.boolean().optional(),
+  "importance": zod.number().optional(),
+  "reviewStatus": zod.string().optional()
 })
 
 export const UpdateNoteResponse = zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "content": zod.string(),
+  "noteType": zod.string().optional(),
   "subjectId": zod.number(),
   "subjectName": zod.string(),
   "dossierId": zod.number().nullish(),
   "sessionId": zod.number().nullish(),
   "tags": zod.array(zod.string()).optional(),
+  "color": zod.string().nullish(),
   "isPinned": zod.boolean().optional(),
+  "isPrivate": zod.boolean().optional(),
+  "importance": zod.number().optional(),
+  "reviewStatus": zod.string().nullish(),
+  "nextReviewAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
 
 
-/**
- * @summary Delete a note
- */
 export const DeleteNoteParams = zod.object({
   "id": zod.coerce.number()
 })
@@ -888,9 +834,127 @@ export const DeleteNoteParams = zod.object({
 export const DeleteNoteResponse = zod.void()
 
 
-/**
- * @summary Get student statistics and analytics
- */
+export const ListFlashcardsQueryParams = zod.object({
+  "subjectId": zod.coerce.number().optional(),
+  "deckId": zod.coerce.number().optional(),
+  "dueOnly": zod.coerce.boolean().optional()
+})
+
+export const ListFlashcardsResponseItem = zod.object({
+  "id": zod.number(),
+  "front": zod.string(),
+  "back": zod.string(),
+  "deckId": zod.number().nullish(),
+  "deckName": zod.string().nullish(),
+  "subjectId": zod.number(),
+  "subjectName": zod.string(),
+  "cardType": zod.string().optional(),
+  "difficulty": zod.enum(['easy', 'medium', 'hard']),
+  "masteryLevel": zod.number(),
+  "reviewCount": zod.number(),
+  "nextReviewAt": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "sourceNoteId": zod.number().nullish(),
+  "createdAt": zod.string().optional()
+})
+export const ListFlashcardsResponse = zod.array(ListFlashcardsResponseItem)
+
+
+export const CreateFlashcardBody = zod.object({
+  "front": zod.string(),
+  "back": zod.string(),
+  "subjectId": zod.number(),
+  "deckId": zod.number().optional(),
+  "cardType": zod.string().optional(),
+  "difficulty": zod.string().optional(),
+  "tags": zod.array(zod.string()).optional(),
+  "sourceNoteId": zod.number().optional()
+})
+
+export const CreateFlashcardResponse = zod.object({
+  "id": zod.number(),
+  "front": zod.string(),
+  "back": zod.string(),
+  "deckId": zod.number().nullish(),
+  "deckName": zod.string().nullish(),
+  "subjectId": zod.number(),
+  "subjectName": zod.string(),
+  "cardType": zod.string().optional(),
+  "difficulty": zod.enum(['easy', 'medium', 'hard']),
+  "masteryLevel": zod.number(),
+  "reviewCount": zod.number(),
+  "nextReviewAt": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "sourceNoteId": zod.number().nullish(),
+  "createdAt": zod.string().optional()
+})
+
+
+export const ReviewFlashcardParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReviewFlashcardBody = zod.object({
+  "rating": zod.enum(['forgot', 'hard', 'good', 'easy']),
+  "responseTimeSeconds": zod.number().optional()
+})
+
+export const ReviewFlashcardResponse = zod.object({
+  "id": zod.number(),
+  "front": zod.string(),
+  "back": zod.string(),
+  "deckId": zod.number().nullish(),
+  "deckName": zod.string().nullish(),
+  "subjectId": zod.number(),
+  "subjectName": zod.string(),
+  "cardType": zod.string().optional(),
+  "difficulty": zod.enum(['easy', 'medium', 'hard']),
+  "masteryLevel": zod.number(),
+  "reviewCount": zod.number(),
+  "nextReviewAt": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "sourceNoteId": zod.number().nullish(),
+  "createdAt": zod.string().optional()
+})
+
+
+export const ListFlashcardDecksQueryParams = zod.object({
+  "subjectId": zod.coerce.number().optional()
+})
+
+export const ListFlashcardDecksResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "subjectId": zod.number(),
+  "subjectName": zod.string(),
+  "cardCount": zod.number(),
+  "dueCount": zod.number(),
+  "masteredCount": zod.number().optional(),
+  "createdAt": zod.string().optional()
+})
+export const ListFlashcardDecksResponse = zod.array(ListFlashcardDecksResponseItem)
+
+
+export const CreateFlashcardDeckBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "subjectId": zod.number()
+})
+
+export const CreateFlashcardDeckResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "subjectId": zod.number(),
+  "subjectName": zod.string(),
+  "cardCount": zod.number(),
+  "dueCount": zod.number(),
+  "masteredCount": zod.number().optional(),
+  "createdAt": zod.string().optional()
+})
+
+
 export const GetStatisticsResponse = zod.object({
   "totalStudyMinutes": zod.number(),
   "totalSessions": zod.number(),
@@ -907,9 +971,6 @@ export const GetStatisticsResponse = zod.object({
 })
 
 
-/**
- * @summary Get per-subject statistics
- */
 export const GetSubjectStatisticsResponseItem = zod.object({
   "subjectId": zod.number(),
   "subjectName": zod.string(),
@@ -922,9 +983,6 @@ export const GetSubjectStatisticsResponseItem = zod.object({
 export const GetSubjectStatisticsResponse = zod.array(GetSubjectStatisticsResponseItem)
 
 
-/**
- * @summary Get home dashboard summary (today's tasks, streak, recent activity, platform stats)
- */
 export const GetDashboardResponse = zod.object({
   "greeting": zod.string(),
   "todayGoalMinutes": zod.number(),
@@ -943,7 +1001,7 @@ export const GetDashboardResponse = zod.object({
   "linkedContentType": zod.string().nullish()
 })),
   "streakDays": zod.number(),
-  "nextTask": zod.string().nullable(),
+  "nextTask": zod.string().nullish(),
   "overdueTasks": zod.number().optional(),
   "upcomingExam": zod.string().nullish(),
   "weeklyProgress": zod.number().optional(),
@@ -963,7 +1021,7 @@ export const GetDashboardResponse = zod.object({
   "subjectName": zod.string(),
   "grade": zod.string(),
   "pageCount": zod.number(),
-  "fileSize": zod.string().optional(),
+  "fileSize": zod.string().nullish(),
   "downloads": zod.number(),
   "views": zod.number().optional(),
   "rating": zod.number(),
@@ -972,13 +1030,12 @@ export const GetDashboardResponse = zod.object({
   "isFavorite": zod.boolean().optional(),
   "readingProgress": zod.number().optional(),
   "lastReadPage": zod.number().optional(),
-  "isFree": zod.boolean().optional(),
   "createdAt": zod.string().optional()
 })).optional(),
   "currentQuiz": zod.object({
   "id": zod.number(),
   "title": zod.string(),
-  "description": zod.string().optional(),
+  "description": zod.string().nullish(),
   "subjectName": zod.string(),
   "startsAt": zod.string(),
   "endsAt": zod.string(),
@@ -992,9 +1049,6 @@ export const GetDashboardResponse = zod.object({
 })
 
 
-/**
- * @summary Get public platform statistics (total students, dossiers, etc.)
- */
 export const GetPlatformStatsResponse = zod.object({
   "totalStudents": zod.number(),
   "totalDossiers": zod.number(),
@@ -1005,14 +1059,11 @@ export const GetPlatformStatsResponse = zod.object({
 })
 
 
-/**
- * @summary List notifications for current user
- */
 export const ListNotificationsResponseItem = zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "message": zod.string(),
-  "type": zod.enum(['session_reminder', 'new_dossier', 'quiz_started', 'review_due', 'goal_achieved', 'exam_result']),
+  "type": zod.enum(['session_reminder', 'new_dossier', 'quiz_started', 'review_due', 'goal_achieved', 'exam_result', 'announcement', 'system']),
   "isRead": zod.boolean(),
   "createdAt": zod.string(),
   "actionUrl": zod.string().nullish()
@@ -1020,13 +1071,1000 @@ export const ListNotificationsResponseItem = zod.object({
 export const ListNotificationsResponse = zod.array(ListNotificationsResponseItem)
 
 
-/**
- * @summary Mark notification as read
- */
 export const MarkNotificationReadParams = zod.object({
   "id": zod.coerce.number()
 })
 
 export const MarkNotificationReadResponse = zod.unknown()
+
+
+/**
+ * @summary List comments for a piece of content
+ */
+export const ListCommentsQueryParams = zod.object({
+  "contentType": zod.enum(['dossier', 'worksheet', 'exam', 'subject', 'lesson']),
+  "contentId": zod.coerce.number(),
+  "sort": zod.enum(['newest', 'oldest', 'helpful', 'teacher_first']).optional(),
+  "page": zod.coerce.number().optional(),
+  "limit": zod.coerce.number().optional()
+})
+
+export const ListCommentsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "authorName": zod.string(),
+  "authorRole": zod.string(),
+  "authorAvatarUrl": zod.string().nullish(),
+  "text": zod.string(),
+  "commentType": zod.enum(['question', 'answer', 'clarification', 'correction', 'teacher_note', 'announcement']).optional(),
+  "contentType": zod.string(),
+  "contentId": zod.number(),
+  "parentId": zod.number().nullish(),
+  "replies": zod.array(zod.unknown()).optional(),
+  "helpfulCount": zod.number().optional(),
+  "isAccepted": zod.boolean().optional(),
+  "isHidden": zod.boolean().optional(),
+  "isPinned": zod.boolean().optional(),
+  "isTeacherReply": zod.boolean().optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "limit": zod.number()
+})
+
+
+export const CreateCommentBody = zod.object({
+  "text": zod.string(),
+  "contentType": zod.enum(['dossier', 'worksheet', 'exam', 'subject', 'lesson']),
+  "contentId": zod.number(),
+  "commentType": zod.string().optional()
+})
+
+export const CreateCommentResponse = zod.object({
+  "id": zod.number(),
+  "authorName": zod.string(),
+  "authorRole": zod.string(),
+  "authorAvatarUrl": zod.string().nullish(),
+  "text": zod.string(),
+  "commentType": zod.enum(['question', 'answer', 'clarification', 'correction', 'teacher_note', 'announcement']).optional(),
+  "contentType": zod.string(),
+  "contentId": zod.number(),
+  "parentId": zod.number().nullish(),
+  "replies": zod.array(zod.unknown()).optional(),
+  "helpfulCount": zod.number().optional(),
+  "isAccepted": zod.boolean().optional(),
+  "isHidden": zod.boolean().optional(),
+  "isPinned": zod.boolean().optional(),
+  "isTeacherReply": zod.boolean().optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+export const UpdateCommentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateCommentBody = zod.object({
+  "text": zod.string()
+})
+
+export const UpdateCommentResponse = zod.object({
+  "id": zod.number(),
+  "authorName": zod.string(),
+  "authorRole": zod.string(),
+  "authorAvatarUrl": zod.string().nullish(),
+  "text": zod.string(),
+  "commentType": zod.enum(['question', 'answer', 'clarification', 'correction', 'teacher_note', 'announcement']).optional(),
+  "contentType": zod.string(),
+  "contentId": zod.number(),
+  "parentId": zod.number().nullish(),
+  "replies": zod.array(zod.unknown()).optional(),
+  "helpfulCount": zod.number().optional(),
+  "isAccepted": zod.boolean().optional(),
+  "isHidden": zod.boolean().optional(),
+  "isPinned": zod.boolean().optional(),
+  "isTeacherReply": zod.boolean().optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+export const DeleteCommentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteCommentResponse = zod.void()
+
+
+export const MarkCommentHelpfulParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const MarkCommentHelpfulResponse = zod.unknown()
+
+
+/**
+ * @summary Teacher marks an answer as accepted
+ */
+export const AcceptAnswerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AcceptAnswerResponse = zod.unknown()
+
+
+export const ReportCommentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReportCommentBody = zod.object({
+  "reason": zod.enum(['inappropriate', 'spam', 'wrong_info', 'contact_sharing', 'harassment']),
+  "description": zod.string().optional()
+})
+
+export const ReportCommentResponse = zod.unknown()
+
+
+export const CreateReplyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const CreateReplyBody = zod.object({
+  "text": zod.string(),
+  "commentType": zod.string().optional()
+})
+
+export const CreateReplyResponse = zod.object({
+  "id": zod.number(),
+  "authorName": zod.string(),
+  "authorRole": zod.string(),
+  "authorAvatarUrl": zod.string().nullish(),
+  "text": zod.string(),
+  "commentType": zod.enum(['question', 'answer', 'clarification', 'correction', 'teacher_note', 'announcement']).optional(),
+  "contentType": zod.string(),
+  "contentId": zod.number(),
+  "parentId": zod.number().nullish(),
+  "replies": zod.array(zod.unknown()).optional(),
+  "helpfulCount": zod.number().optional(),
+  "isAccepted": zod.boolean().optional(),
+  "isHidden": zod.boolean().optional(),
+  "isPinned": zod.boolean().optional(),
+  "isTeacherReply": zod.boolean().optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Admin dashboard overview stats
+ */
+export const GetAdminDashboardResponse = zod.object({
+  "totalStudents": zod.number(),
+  "totalTeachers": zod.number(),
+  "totalModerators": zod.number().optional(),
+  "totalSubjects": zod.number(),
+  "totalDossiers": zod.number(),
+  "totalWorksheets": zod.number(),
+  "totalExams": zod.number(),
+  "totalComments": zod.number(),
+  "pendingReports": zod.number().optional(),
+  "todaySessions": zod.number(),
+  "activeUsersNow": zod.number(),
+  "newUsersThisWeek": zod.number(),
+  "totalStudyHoursAllTime": zod.number()
+})
+
+
+/**
+ * @summary Live activity feed
+ */
+export const GetAdminActivityQueryParams = zod.object({
+  "limit": zod.coerce.number().optional()
+})
+
+export const GetAdminActivityResponseItem = zod.object({
+  "id": zod.number(),
+  "type": zod.string(),
+  "description": zod.string(),
+  "actorName": zod.string(),
+  "createdAt": zod.string()
+})
+export const GetAdminActivityResponse = zod.array(GetAdminActivityResponseItem)
+
+
+export const AdminListUsersQueryParams = zod.object({
+  "search": zod.coerce.string().optional(),
+  "role": zod.coerce.string().optional(),
+  "status": zod.coerce.string().optional(),
+  "groupId": zod.coerce.number().optional(),
+  "page": zod.coerce.number().optional(),
+  "limit": zod.coerce.number().optional()
+})
+
+export const AdminListUsersResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "fullName": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string().nullish(),
+  "role": zod.string(),
+  "status": zod.enum(['active', 'suspended', 'frozen', 'pending', 'deleted']),
+  "avatarUrl": zod.string().nullish(),
+  "totalSessions": zod.number().optional(),
+  "totalExams": zod.number().optional(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "limit": zod.number()
+})
+
+
+export const adminCreateUserBodyPasswordMin = 8;
+
+
+
+export const AdminCreateUserBody = zod.object({
+  "fullName": zod.string(),
+  "phone": zod.string(),
+  "password": zod.string().min(adminCreateUserBodyPasswordMin),
+  "email": zod.string().optional(),
+  "role": zod.enum(['student', 'teacher', 'assistant_teacher', 'moderator', 'admin']),
+  "groupId": zod.number().optional(),
+  "grade": zod.string().optional(),
+  "field": zod.string().optional()
+})
+
+export const AdminCreateUserResponse = zod.object({
+  "id": zod.number(),
+  "fullName": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string().nullish(),
+  "role": zod.string(),
+  "status": zod.enum(['active', 'suspended', 'frozen', 'pending', 'deleted']),
+  "avatarUrl": zod.string().nullish(),
+  "totalSessions": zod.number().optional(),
+  "totalExams": zod.number().optional(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+export const AdminGetUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminGetUserResponse = zod.object({
+  "id": zod.number(),
+  "fullName": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string().nullish(),
+  "role": zod.string(),
+  "status": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "grade": zod.string().nullish(),
+  "field": zod.string().nullish(),
+  "goal": zod.string().nullish(),
+  "groupName": zod.string().nullish(),
+  "totalSessions": zod.number().optional(),
+  "totalExams": zod.number().optional(),
+  "totalStudyMinutes": zod.number().optional(),
+  "totalNotes": zod.number().optional(),
+  "totalComments": zod.number().optional(),
+  "streakDays": zod.number().optional(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+export const AdminUpdateUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateUserBody = zod.object({
+  "fullName": zod.string().optional(),
+  "email": zod.string().optional(),
+  "role": zod.string().optional(),
+  "groupId": zod.number().optional()
+})
+
+export const AdminUpdateUserResponse = zod.object({
+  "id": zod.number(),
+  "fullName": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string().nullish(),
+  "role": zod.string(),
+  "status": zod.enum(['active', 'suspended', 'frozen', 'pending', 'deleted']),
+  "avatarUrl": zod.string().nullish(),
+  "totalSessions": zod.number().optional(),
+  "totalExams": zod.number().optional(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+export const AdminDeleteUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminDeleteUserResponse = zod.void()
+
+
+export const AdminUpdateUserStatusParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateUserStatusBody = zod.object({
+  "status": zod.enum(['active', 'suspended', 'frozen']),
+  "reason": zod.string().optional()
+})
+
+export const AdminUpdateUserStatusResponse = zod.object({
+  "id": zod.number(),
+  "fullName": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string().nullish(),
+  "role": zod.string(),
+  "status": zod.enum(['active', 'suspended', 'frozen', 'pending', 'deleted']),
+  "avatarUrl": zod.string().nullish(),
+  "totalSessions": zod.number().optional(),
+  "totalExams": zod.number().optional(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+export const AdminResetPasswordParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const adminResetPasswordBodyNewPasswordMin = 8;
+
+
+
+export const AdminResetPasswordBody = zod.object({
+  "newPassword": zod.string().min(adminResetPasswordBodyNewPasswordMin),
+  "forceChange": zod.boolean().optional()
+})
+
+export const AdminResetPasswordResponse = zod.unknown()
+
+
+export const AdminImportUsersBody = zod.object({
+  "users": zod.array(zod.object({
+  "fullName": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string().optional(),
+  "role": zod.string().optional(),
+  "groupId": zod.number().optional(),
+  "grade": zod.string().optional(),
+  "field": zod.string().optional()
+})),
+  "defaultRole": zod.string().optional(),
+  "defaultGroupId": zod.number().optional(),
+  "defaultPassword": zod.string().optional()
+})
+
+export const AdminImportUsersResponse = zod.object({
+  "total": zod.number(),
+  "created": zod.number(),
+  "updated": zod.number(),
+  "skipped": zod.number(),
+  "errors": zod.array(zod.string())
+})
+
+
+export const AdminListGroupsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "color": zod.string().nullish(),
+  "memberCount": zod.number(),
+  "teacherName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const AdminListGroupsResponse = zod.array(AdminListGroupsResponseItem)
+
+
+export const AdminCreateGroupBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().optional(),
+  "color": zod.string().optional(),
+  "teacherId": zod.number().optional()
+})
+
+export const AdminCreateGroupResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "color": zod.string().nullish(),
+  "memberCount": zod.number(),
+  "teacherName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+export const AdminUpdateGroupParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateGroupBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().optional(),
+  "color": zod.string().optional(),
+  "teacherId": zod.number().optional()
+})
+
+export const AdminUpdateGroupResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "color": zod.string().nullish(),
+  "memberCount": zod.number(),
+  "teacherName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+export const AdminDeleteGroupParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminDeleteGroupResponse = zod.void()
+
+
+export const AdminAddGroupMembersParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminAddGroupMembersBody = zod.object({
+  "userIds": zod.array(zod.number())
+})
+
+export const AdminAddGroupMembersResponse = zod.unknown()
+
+
+export const AdminListSubjectsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "grade": zod.string(),
+  "field": zod.string(),
+  "iconUrl": zod.string().nullish(),
+  "color": zod.string().optional(),
+  "totalUnits": zod.number().optional(),
+  "totalLessons": zod.number().optional(),
+  "studentProgress": zod.number().nullish()
+})
+export const AdminListSubjectsResponse = zod.array(AdminListSubjectsResponseItem)
+
+
+export const AdminCreateSubjectBody = zod.object({
+  "name": zod.string(),
+  "grade": zod.string(),
+  "field": zod.string(),
+  "color": zod.string().optional(),
+  "iconUrl": zod.string().optional()
+})
+
+export const AdminCreateSubjectResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "grade": zod.string(),
+  "field": zod.string(),
+  "iconUrl": zod.string().nullish(),
+  "color": zod.string().optional(),
+  "totalUnits": zod.number().optional(),
+  "totalLessons": zod.number().optional(),
+  "studentProgress": zod.number().nullish()
+})
+
+
+export const AdminUpdateSubjectParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateSubjectBody = zod.object({
+  "name": zod.string(),
+  "grade": zod.string(),
+  "field": zod.string(),
+  "color": zod.string().optional(),
+  "iconUrl": zod.string().optional()
+})
+
+export const AdminUpdateSubjectResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "grade": zod.string(),
+  "field": zod.string(),
+  "iconUrl": zod.string().nullish(),
+  "color": zod.string().optional(),
+  "totalUnits": zod.number().optional(),
+  "totalLessons": zod.number().optional(),
+  "studentProgress": zod.number().nullish()
+})
+
+
+export const AdminDeleteSubjectParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminDeleteSubjectResponse = zod.void()
+
+
+export const AdminCreateDossierBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "subjectId": zod.number(),
+  "grade": zod.string(),
+  "pageCount": zod.number().optional(),
+  "fileSize": zod.string().optional(),
+  "fileUrl": zod.string().optional(),
+  "coverUrl": zod.string().optional()
+})
+
+export const AdminCreateDossierResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "subjectId": zod.number(),
+  "subjectName": zod.string(),
+  "grade": zod.string(),
+  "pageCount": zod.number(),
+  "fileSize": zod.string().nullish(),
+  "downloads": zod.number(),
+  "views": zod.number().optional(),
+  "rating": zod.number(),
+  "coverUrl": zod.string().nullish(),
+  "fileUrl": zod.string().nullish(),
+  "isFavorite": zod.boolean().optional(),
+  "readingProgress": zod.number().optional(),
+  "lastReadPage": zod.number().optional(),
+  "createdAt": zod.string().optional()
+})
+
+
+export const AdminUpdateDossierParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateDossierBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "subjectId": zod.number(),
+  "grade": zod.string(),
+  "pageCount": zod.number().optional(),
+  "fileSize": zod.string().optional(),
+  "fileUrl": zod.string().optional(),
+  "coverUrl": zod.string().optional()
+})
+
+export const AdminUpdateDossierResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "subjectId": zod.number(),
+  "subjectName": zod.string(),
+  "grade": zod.string(),
+  "pageCount": zod.number(),
+  "fileSize": zod.string().nullish(),
+  "downloads": zod.number(),
+  "views": zod.number().optional(),
+  "rating": zod.number(),
+  "coverUrl": zod.string().nullish(),
+  "fileUrl": zod.string().nullish(),
+  "isFavorite": zod.boolean().optional(),
+  "readingProgress": zod.number().optional(),
+  "lastReadPage": zod.number().optional(),
+  "createdAt": zod.string().optional()
+})
+
+
+export const AdminDeleteDossierParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminDeleteDossierResponse = zod.void()
+
+
+export const AdminCreateExamBody = zod.object({
+  "title": zod.string(),
+  "subjectId": zod.number(),
+  "type": zod.string(),
+  "difficulty": zod.string(),
+  "durationMinutes": zod.number(),
+  "instructions": zod.string().optional(),
+  "passingScore": zod.number().optional(),
+  "totalScore": zod.number().optional(),
+  "canGoBack": zod.boolean().optional(),
+  "canSkip": zod.boolean().optional(),
+  "maxAttempts": zod.number().optional(),
+  "deductOnWrong": zod.boolean().optional()
+})
+
+export const AdminCreateExamResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "subjectId": zod.number(),
+  "subjectName": zod.string(),
+  "questionCount": zod.number(),
+  "durationMinutes": zod.number(),
+  "type": zod.enum(['full', 'unit', 'lesson', 'weekly', 'diagnostic', 'ministerial']),
+  "difficulty": zod.enum(['easy', 'medium', 'hard', 'ministerial']),
+  "totalParticipants": zod.number().optional(),
+  "averageScore": zod.number().nullish(),
+  "isAvailable": zod.boolean().optional(),
+  "userAttempts": zod.number().optional(),
+  "maxAttempts": zod.number().optional()
+})
+
+
+export const AdminUpdateExamParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateExamBody = zod.object({
+  "title": zod.string(),
+  "subjectId": zod.number(),
+  "type": zod.string(),
+  "difficulty": zod.string(),
+  "durationMinutes": zod.number(),
+  "instructions": zod.string().optional(),
+  "passingScore": zod.number().optional(),
+  "totalScore": zod.number().optional(),
+  "canGoBack": zod.boolean().optional(),
+  "canSkip": zod.boolean().optional(),
+  "maxAttempts": zod.number().optional(),
+  "deductOnWrong": zod.boolean().optional()
+})
+
+export const AdminUpdateExamResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "subjectId": zod.number(),
+  "subjectName": zod.string(),
+  "questionCount": zod.number(),
+  "durationMinutes": zod.number(),
+  "type": zod.enum(['full', 'unit', 'lesson', 'weekly', 'diagnostic', 'ministerial']),
+  "difficulty": zod.enum(['easy', 'medium', 'hard', 'ministerial']),
+  "totalParticipants": zod.number().optional(),
+  "averageScore": zod.number().nullish(),
+  "isAvailable": zod.boolean().optional(),
+  "userAttempts": zod.number().optional(),
+  "maxAttempts": zod.number().optional()
+})
+
+
+export const AdminDeleteExamParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminDeleteExamResponse = zod.void()
+
+
+export const AdminListCommentsQueryParams = zod.object({
+  "status": zod.coerce.string().optional(),
+  "reported": zod.coerce.boolean().optional(),
+  "page": zod.coerce.number().optional(),
+  "limit": zod.coerce.number().optional()
+})
+
+export const AdminListCommentsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "authorName": zod.string(),
+  "authorRole": zod.string(),
+  "authorAvatarUrl": zod.string().nullish(),
+  "text": zod.string(),
+  "commentType": zod.enum(['question', 'answer', 'clarification', 'correction', 'teacher_note', 'announcement']).optional(),
+  "contentType": zod.string(),
+  "contentId": zod.number(),
+  "parentId": zod.number().nullish(),
+  "replies": zod.array(zod.unknown()).optional(),
+  "helpfulCount": zod.number().optional(),
+  "isAccepted": zod.boolean().optional(),
+  "isHidden": zod.boolean().optional(),
+  "isPinned": zod.boolean().optional(),
+  "isTeacherReply": zod.boolean().optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "limit": zod.number()
+})
+
+
+export const AdminHideCommentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminHideCommentResponse = zod.unknown()
+
+
+export const AdminListReportsQueryParams = zod.object({
+  "status": zod.coerce.string().optional(),
+  "page": zod.coerce.number().optional()
+})
+
+export const AdminListReportsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "reason": zod.string(),
+  "description": zod.string().nullish(),
+  "reporterName": zod.string(),
+  "contentType": zod.string(),
+  "commentText": zod.string(),
+  "status": zod.enum(['pending', 'resolved', 'dismissed']),
+  "createdAt": zod.string()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "limit": zod.number()
+})
+
+
+export const AdminResolveReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminResolveReportBody = zod.object({
+  "action": zod.enum(['dismiss', 'hide_content', 'warn_user', 'ban_user']),
+  "note": zod.string().optional()
+})
+
+export const AdminResolveReportResponse = zod.unknown()
+
+
+export const AdminListRolesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "isSystem": zod.boolean().optional(),
+  "memberCount": zod.number(),
+  "permissionCount": zod.number(),
+  "permissions": zod.array(zod.string()).optional(),
+  "createdAt": zod.string()
+})
+export const AdminListRolesResponse = zod.array(AdminListRolesResponseItem)
+
+
+export const AdminCreateRoleBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().optional(),
+  "permissions": zod.array(zod.string()).optional()
+})
+
+export const AdminCreateRoleResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "isSystem": zod.boolean().optional(),
+  "memberCount": zod.number(),
+  "permissionCount": zod.number(),
+  "permissions": zod.array(zod.string()).optional(),
+  "createdAt": zod.string()
+})
+
+
+export const AdminUpdateRoleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateRoleBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().optional(),
+  "permissions": zod.array(zod.string()).optional()
+})
+
+export const AdminUpdateRoleResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "isSystem": zod.boolean().optional(),
+  "memberCount": zod.number(),
+  "permissionCount": zod.number(),
+  "permissions": zod.array(zod.string()).optional(),
+  "createdAt": zod.string()
+})
+
+
+export const AdminDeleteRoleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminDeleteRoleResponse = zod.void()
+
+
+export const AdminListPermissionsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "group": zod.string(),
+  "description": zod.string()
+})
+export const AdminListPermissionsResponse = zod.array(AdminListPermissionsResponseItem)
+
+
+export const GetSystemSettingsResponse = zod.object({
+  "platformName": zod.string(),
+  "platformDescription": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "allowComments": zod.boolean(),
+  "allowStudentRegistration": zod.boolean(),
+  "requireCommentApproval": zod.boolean().optional(),
+  "maxFileSize": zod.number(),
+  "allowedFileTypes": zod.array(zod.string()).optional(),
+  "pomodoroMinutes": zod.number().optional(),
+  "breakMinutes": zod.number().optional(),
+  "streakMinDailyMinutes": zod.number().optional(),
+  "defaultTimezone": zod.string().optional()
+})
+
+
+export const UpdateSystemSettingsBody = zod.object({
+  "platformName": zod.string().optional(),
+  "platformDescription": zod.string().optional(),
+  "logoUrl": zod.string().optional(),
+  "allowComments": zod.boolean().optional(),
+  "allowStudentRegistration": zod.boolean().optional(),
+  "requireCommentApproval": zod.boolean().optional(),
+  "maxFileSize": zod.number().optional(),
+  "pomodoroMinutes": zod.number().optional(),
+  "breakMinutes": zod.number().optional(),
+  "streakMinDailyMinutes": zod.number().optional()
+})
+
+export const UpdateSystemSettingsResponse = zod.object({
+  "platformName": zod.string(),
+  "platformDescription": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "allowComments": zod.boolean(),
+  "allowStudentRegistration": zod.boolean(),
+  "requireCommentApproval": zod.boolean().optional(),
+  "maxFileSize": zod.number(),
+  "allowedFileTypes": zod.array(zod.string()).optional(),
+  "pomodoroMinutes": zod.number().optional(),
+  "breakMinutes": zod.number().optional(),
+  "streakMinDailyMinutes": zod.number().optional(),
+  "defaultTimezone": zod.string().optional()
+})
+
+
+export const GetAuditLogsQueryParams = zod.object({
+  "userId": zod.coerce.number().optional(),
+  "action": zod.coerce.string().optional(),
+  "from": zod.coerce.string().optional(),
+  "to": zod.coerce.string().optional(),
+  "page": zod.coerce.number().optional(),
+  "limit": zod.coerce.number().optional()
+})
+
+export const GetAuditLogsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "actorName": zod.string(),
+  "actorRole": zod.string().optional(),
+  "action": zod.string(),
+  "targetType": zod.string().nullish(),
+  "targetId": zod.number().nullish(),
+  "description": zod.string().optional(),
+  "ipAddress": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "limit": zod.number()
+})
+
+
+export const AdminGetPlatformReportsQueryParams = zod.object({
+  "type": zod.enum(['daily', 'weekly', 'monthly', 'subject', 'user']).optional(),
+  "from": zod.coerce.string().optional(),
+  "to": zod.coerce.string().optional()
+})
+
+export const AdminGetPlatformReportsResponse = zod.object({
+  "type": zod.string(),
+  "from": zod.string(),
+  "to": zod.string(),
+  "data": zod.record(zod.string(), zod.unknown())
+})
+
+
+export const AdminListAnnouncementsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "type": zod.enum(['general', 'subject', 'group', 'urgent', 'scheduled']),
+  "targetGrade": zod.string().nullish(),
+  "targetGroupId": zod.number().nullish(),
+  "isActive": zod.boolean(),
+  "startsAt": zod.string().nullish(),
+  "endsAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const AdminListAnnouncementsResponse = zod.array(AdminListAnnouncementsResponseItem)
+
+
+export const AdminCreateAnnouncementBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "type": zod.string(),
+  "targetGrade": zod.string().optional(),
+  "targetGroupId": zod.number().optional(),
+  "startsAt": zod.string().optional(),
+  "endsAt": zod.string().optional(),
+  "isActive": zod.boolean().optional()
+})
+
+export const AdminCreateAnnouncementResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "type": zod.enum(['general', 'subject', 'group', 'urgent', 'scheduled']),
+  "targetGrade": zod.string().nullish(),
+  "targetGroupId": zod.number().nullish(),
+  "isActive": zod.boolean(),
+  "startsAt": zod.string().nullish(),
+  "endsAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+export const AdminUpdateAnnouncementParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateAnnouncementBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "type": zod.string(),
+  "targetGrade": zod.string().optional(),
+  "targetGroupId": zod.number().optional(),
+  "startsAt": zod.string().optional(),
+  "endsAt": zod.string().optional(),
+  "isActive": zod.boolean().optional()
+})
+
+export const AdminUpdateAnnouncementResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "type": zod.enum(['general', 'subject', 'group', 'urgent', 'scheduled']),
+  "targetGrade": zod.string().nullish(),
+  "targetGroupId": zod.number().nullish(),
+  "isActive": zod.boolean(),
+  "startsAt": zod.string().nullish(),
+  "endsAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+export const AdminDeleteAnnouncementParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminDeleteAnnouncementResponse = zod.void()
+
+
+/**
+ * @summary Student-facing announcements
+ */
+export const ListAnnouncementsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "type": zod.enum(['general', 'subject', 'group', 'urgent', 'scheduled']),
+  "targetGrade": zod.string().nullish(),
+  "targetGroupId": zod.number().nullish(),
+  "isActive": zod.boolean(),
+  "startsAt": zod.string().nullish(),
+  "endsAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListAnnouncementsResponse = zod.array(ListAnnouncementsResponseItem)
 
 

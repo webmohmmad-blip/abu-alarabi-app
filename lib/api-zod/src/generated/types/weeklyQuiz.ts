@@ -3,13 +3,14 @@
  * Do not edit manually.
  * Api
  * منصة أبو العربي - API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface WeeklyQuiz {
   id: number;
   title: string;
-  description?: string;
+  /** @nullable */
+  description?: string | null;
   subjectName: string;
   startsAt: string;
   endsAt: string;

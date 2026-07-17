@@ -14,8 +14,18 @@ import { z } from "zod/v4";
 export const userRoleEnum = pgEnum("user_role", [
   "student",
   "teacher",
+  "assistant_teacher",
+  "moderator",
   "admin",
   "super_admin",
+]);
+
+export const userAccountStatusEnum = pgEnum("user_account_status", [
+  "active",
+  "suspended",
+  "frozen",
+  "pending",
+  "deleted",
 ]);
 
 export const usersTable = pgTable("users", {
@@ -27,6 +37,9 @@ export const usersTable = pgTable("users", {
   role: userRoleEnum("role").notNull().default("student"),
   avatarUrl: text("avatar_url"),
   onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
+  status: userAccountStatusEnum("status").notNull().default("active"),
+  isActive: boolean("is_active").notNull().default(true),
+  groupId: integer("group_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -34,6 +47,7 @@ export const usersTable = pgTable("users", {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({

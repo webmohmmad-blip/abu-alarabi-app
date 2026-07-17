@@ -1,41 +1,36 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
+  version: 0.2.0
   description: منصة أبو العربي - API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
   - name: auth
-    description: Authentication
   - name: users
-    description: User profile and settings
   - name: subjects
-    description: Academic subjects
   - name: dossiers
-    description: Study dossiers (PDF files)
   - name: worksheets
-    description: Worksheets
   - name: exams
-    description: Computer-based exams
   - name: quiz
-    description: Weekly quiz
   - name: studyplan
-    description: Smart study planner
   - name: sessions
-    description: Study sessions (study room)
   - name: notes
-    description: Smart notes
+  - name: flashcards
   - name: statistics
-    description: Student statistics
   - name: dashboard
-    description: Dashboard and summaries
   - name: notifications
-    description: Notifications
+  - name: comments
+  - name: admin
+  - name: admin-users
+  - name: admin-groups
+  - name: admin-content
+  - name: admin-rbac
+  - name: admin-settings
+  - name: admin-reports
+  - name: admin-audit
 
 paths:
   /healthz:
@@ -56,7 +51,6 @@ paths:
     post:
       operationId: register
       tags: [auth]
-      summary: Register a new student account
       requestBody:
         required: true
         content:
@@ -77,7 +71,6 @@ paths:
     post:
       operationId: login
       tags: [auth]
-      summary: Login with phone and password
       requestBody:
         required: true
         content:
@@ -98,7 +91,6 @@ paths:
     post:
       operationId: logout
       tags: [auth]
-      summary: Logout current session
       responses:
         "200":
           description: Logged out
@@ -107,7 +99,6 @@ paths:
     get:
       operationId: getMe
       tags: [auth]
-      summary: Get current authenticated user
       responses:
         "200":
           description: Current user
@@ -118,12 +109,10 @@ paths:
         "401":
           description: Not authenticated
 
-  # ─── ONBOARDING ────────────────────────────────────────
   /auth/onboarding:
     post:
       operationId: completeOnboarding
       tags: [auth]
-      summary: Complete student onboarding wizard
       requestBody:
         required: true
         content:
@@ -143,7 +132,6 @@ paths:
     get:
       operationId: getProfile
       tags: [users]
-      summary: Get student profile
       responses:
         "200":
           description: Student profile
@@ -154,7 +142,6 @@ paths:
     patch:
       operationId: updateProfile
       tags: [users]
-      summary: Update profile fields
       requestBody:
         required: true
         content:
@@ -173,7 +160,6 @@ paths:
     get:
       operationId: getAchievements
       tags: [users]
-      summary: Get student badges and achievements
       responses:
         "200":
           description: Achievements list
@@ -189,7 +175,6 @@ paths:
     get:
       operationId: listSubjects
       tags: [subjects]
-      summary: List all subjects
       responses:
         "200":
           description: Subjects list
@@ -204,7 +189,6 @@ paths:
     get:
       operationId: getSubject
       tags: [subjects]
-      summary: Get subject details with units and progress
       parameters:
         - name: id
           in: path
@@ -224,7 +208,6 @@ paths:
     get:
       operationId: listDossiers
       tags: [dossiers]
-      summary: List dossiers with filters
       parameters:
         - name: subjectId
           in: query
@@ -258,7 +241,6 @@ paths:
     get:
       operationId: getDossier
       tags: [dossiers]
-      summary: Get dossier details
       parameters:
         - name: id
           in: path
@@ -277,7 +259,6 @@ paths:
     post:
       operationId: toggleDossierFavorite
       tags: [dossiers]
-      summary: Toggle dossier favorite
       parameters:
         - name: id
           in: path
@@ -296,7 +277,6 @@ paths:
     patch:
       operationId: updateDossierProgress
       tags: [dossiers]
-      summary: Update reading progress for a dossier
       parameters:
         - name: id
           in: path
@@ -318,7 +298,6 @@ paths:
     get:
       operationId: listWorksheets
       tags: [worksheets]
-      summary: List worksheets with filters
       parameters:
         - name: subjectId
           in: query
@@ -348,7 +327,6 @@ paths:
     get:
       operationId: getWorksheet
       tags: [worksheets]
-      summary: Get worksheet details
       parameters:
         - name: id
           in: path
@@ -368,7 +346,6 @@ paths:
     get:
       operationId: listExams
       tags: [exams]
-      summary: List available exams
       parameters:
         - name: subjectId
           in: query
@@ -392,7 +369,6 @@ paths:
     get:
       operationId: getExam
       tags: [exams]
-      summary: Get exam details and instructions
       parameters:
         - name: id
           in: path
@@ -411,7 +387,6 @@ paths:
     post:
       operationId: startExam
       tags: [exams]
-      summary: Start an exam attempt
       parameters:
         - name: id
           in: path
@@ -430,7 +405,6 @@ paths:
     post:
       operationId: submitAnswer
       tags: [exams]
-      summary: Submit an answer for a question in an attempt
       parameters:
         - name: attemptId
           in: path
@@ -451,7 +425,6 @@ paths:
     post:
       operationId: submitExam
       tags: [exams]
-      summary: Submit an exam attempt for final grading
       parameters:
         - name: attemptId
           in: path
@@ -470,7 +443,6 @@ paths:
     get:
       operationId: listExamResults
       tags: [exams]
-      summary: List past exam results for current user
       responses:
         "200":
           description: Results list
@@ -486,7 +458,6 @@ paths:
     get:
       operationId: getCurrentQuiz
       tags: [quiz]
-      summary: Get the current weekly quiz
       responses:
         "200":
           description: Current quiz
@@ -499,7 +470,6 @@ paths:
     post:
       operationId: startQuiz
       tags: [quiz]
-      summary: Start the weekly quiz attempt
       parameters:
         - name: id
           in: path
@@ -518,7 +488,6 @@ paths:
     get:
       operationId: getQuizLeaderboard
       tags: [quiz]
-      summary: Get weekly quiz leaderboard
       responses:
         "200":
           description: Leaderboard
@@ -534,7 +503,6 @@ paths:
     get:
       operationId: getStudyPlan
       tags: [studyplan]
-      summary: Get current student's study plan with today's tasks
       responses:
         "200":
           description: Study plan
@@ -547,7 +515,6 @@ paths:
     get:
       operationId: listStudyTasks
       tags: [studyplan]
-      summary: List study tasks with filters
       parameters:
         - name: date
           in: query
@@ -575,7 +542,6 @@ paths:
     post:
       operationId: completeStudyTask
       tags: [studyplan]
-      summary: Mark a study task as complete
       parameters:
         - name: id
           in: path
@@ -600,7 +566,6 @@ paths:
     post:
       operationId: rebuildStudyPlan
       tags: [studyplan]
-      summary: Rebuild/regenerate the study plan
       responses:
         "200":
           description: New plan generated
@@ -614,7 +579,6 @@ paths:
     get:
       operationId: listStudySessions
       tags: [sessions]
-      summary: List student's study sessions
       parameters:
         - name: date
           in: query
@@ -636,7 +600,6 @@ paths:
     post:
       operationId: createStudySession
       tags: [sessions]
-      summary: Start a new study session
       requestBody:
         required: true
         content:
@@ -655,7 +618,6 @@ paths:
     patch:
       operationId: updateStudySession
       tags: [sessions]
-      summary: Update session (pause, resume, end)
       parameters:
         - name: id
           in: path
@@ -681,7 +643,6 @@ paths:
     get:
       operationId: listNotes
       tags: [notes]
-      summary: List student's notes
       parameters:
         - name: subjectId
           in: query
@@ -691,6 +652,18 @@ paths:
           in: query
           schema:
             type: integer
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: isPinned
+          in: query
+          schema:
+            type: boolean
       responses:
         "200":
           description: Notes list
@@ -703,7 +676,6 @@ paths:
     post:
       operationId: createNote
       tags: [notes]
-      summary: Create a new note
       requestBody:
         required: true
         content:
@@ -719,10 +691,25 @@ paths:
                 $ref: "#/components/schemas/Note"
 
   /notes/{id}:
+    get:
+      operationId: getNote
+      tags: [notes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
     patch:
       operationId: updateNote
       tags: [notes]
-      summary: Update a note
       parameters:
         - name: id
           in: path
@@ -745,7 +732,6 @@ paths:
     delete:
       operationId: deleteNote
       tags: [notes]
-      summary: Delete a note
       parameters:
         - name: id
           in: path
@@ -756,12 +742,114 @@ paths:
         "204":
           description: Note deleted
 
+  # ─── FLASHCARDS ─────────────────────────────────────────
+  /flashcards:
+    get:
+      operationId: listFlashcards
+      tags: [flashcards]
+      parameters:
+        - name: subjectId
+          in: query
+          schema:
+            type: integer
+        - name: deckId
+          in: query
+          schema:
+            type: integer
+        - name: dueOnly
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Flashcards list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Flashcard"
+    post:
+      operationId: createFlashcard
+      tags: [flashcards]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlashcardInput"
+      responses:
+        "201":
+          description: Flashcard created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flashcard"
+
+  /flashcards/{id}/review:
+    post:
+      operationId: reviewFlashcard
+      tags: [flashcards]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlashcardReviewInput"
+      responses:
+        "200":
+          description: Review recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flashcard"
+
+  /flashcard-decks:
+    get:
+      operationId: listFlashcardDecks
+      tags: [flashcards]
+      parameters:
+        - name: subjectId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Decks list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FlashcardDeck"
+    post:
+      operationId: createFlashcardDeck
+      tags: [flashcards]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlashcardDeckInput"
+      responses:
+        "201":
+          description: Deck created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlashcardDeck"
+
   # ─── STATISTICS ─────────────────────────────────────────
   /statistics:
     get:
       operationId: getStatistics
       tags: [statistics]
-      summary: Get student statistics and analytics
       responses:
         "200":
           description: Statistics
@@ -774,7 +862,6 @@ paths:
     get:
       operationId: getSubjectStatistics
       tags: [statistics]
-      summary: Get per-subject statistics
       responses:
         "200":
           description: Subject statistics
@@ -790,7 +877,6 @@ paths:
     get:
       operationId: getDashboard
       tags: [dashboard]
-      summary: Get home dashboard summary (today's tasks, streak, recent activity, platform stats)
       responses:
         "200":
           description: Dashboard summary
@@ -803,7 +889,6 @@ paths:
     get:
       operationId: getPlatformStats
       tags: [dashboard]
-      summary: Get public platform statistics (total students, dossiers, etc.)
       responses:
         "200":
           description: Platform statistics
@@ -817,7 +902,6 @@ paths:
     get:
       operationId: listNotifications
       tags: [notifications]
-      summary: List notifications for current user
       responses:
         "200":
           description: Notifications list
@@ -832,7 +916,6 @@ paths:
     post:
       operationId: markNotificationRead
       tags: [notifications]
-      summary: Mark notification as read
       parameters:
         - name: id
           in: path
@@ -842,6 +925,987 @@ paths:
       responses:
         "200":
           description: Marked read
+
+  # ─── COMMENTS (Academic Q&A) ────────────────────────────
+  /comments:
+    get:
+      operationId: listComments
+      tags: [comments]
+      summary: List comments for a piece of content
+      parameters:
+        - name: contentType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [dossier, worksheet, exam, subject, lesson]
+        - name: contentId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, oldest, helpful, teacher_first]
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Comments list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentList"
+    post:
+      operationId: createComment
+      tags: [comments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  /comments/{id}:
+    patch:
+      operationId: updateComment
+      tags: [comments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentUpdate"
+      responses:
+        "200":
+          description: Comment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Comment deleted
+
+  /comments/{id}/helpful:
+    post:
+      operationId: markCommentHelpful
+      tags: [comments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Marked helpful
+
+  /comments/{id}/accept:
+    post:
+      operationId: acceptAnswer
+      tags: [comments]
+      summary: Teacher marks an answer as accepted
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Accepted
+
+  /comments/{id}/report:
+    post:
+      operationId: reportComment
+      tags: [comments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "200":
+          description: Reported
+
+  /comments/{id}/replies:
+    post:
+      operationId: createReply
+      tags: [comments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplyInput"
+      responses:
+        "201":
+          description: Reply created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  # ─── ADMIN — Dashboard ──────────────────────────────────
+  /admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [admin]
+      summary: Admin dashboard overview stats
+      responses:
+        "200":
+          description: Admin dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboard"
+
+  /admin/activity:
+    get:
+      operationId: getAdminActivity
+      tags: [admin]
+      summary: Live activity feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  # ─── ADMIN — Users ───────────────────────────────────────
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin-users]
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: groupId
+          in: query
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserList"
+    post:
+      operationId: adminCreateUser
+      tags: [admin-users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCreateUserInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+
+  /admin/users/{id}:
+    get:
+      operationId: adminGetUser
+      tags: [admin-users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserDetail"
+    patch:
+      operationId: adminUpdateUser
+      tags: [admin-users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateUserInput"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+    delete:
+      operationId: adminDeleteUser
+      tags: [admin-users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: User soft-deleted
+
+  /admin/users/{id}/status:
+    patch:
+      operationId: adminUpdateUserStatus
+      tags: [admin-users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserStatusUpdate"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+
+  /admin/users/{id}/reset-password:
+    post:
+      operationId: adminResetPassword
+      tags: [admin-users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordInput"
+      responses:
+        "200":
+          description: Password reset
+
+  /admin/users/import:
+    post:
+      operationId: adminImportUsers
+      tags: [admin-users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportUsersInput"
+      responses:
+        "200":
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+
+  # ─── ADMIN — Groups ──────────────────────────────────────
+  /admin/groups:
+    get:
+      operationId: adminListGroups
+      tags: [admin-groups]
+      responses:
+        "200":
+          description: Groups list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+    post:
+      operationId: adminCreateGroup
+      tags: [admin-groups]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GroupInput"
+      responses:
+        "201":
+          description: Group created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+
+  /admin/groups/{id}:
+    patch:
+      operationId: adminUpdateGroup
+      tags: [admin-groups]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GroupInput"
+      responses:
+        "200":
+          description: Group updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+    delete:
+      operationId: adminDeleteGroup
+      tags: [admin-groups]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Group deleted
+
+  /admin/groups/{id}/members:
+    post:
+      operationId: adminAddGroupMembers
+      tags: [admin-groups]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userIds]
+              properties:
+                userIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "200":
+          description: Members added
+
+  # ─── ADMIN — Content ─────────────────────────────────────
+  /admin/subjects:
+    get:
+      operationId: adminListSubjects
+      tags: [admin-content]
+      responses:
+        "200":
+          description: Subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+    post:
+      operationId: adminCreateSubject
+      tags: [admin-content]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubjectInput"
+      responses:
+        "201":
+          description: Subject created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subject"
+
+  /admin/subjects/{id}:
+    patch:
+      operationId: adminUpdateSubject
+      tags: [admin-content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubjectInput"
+      responses:
+        "200":
+          description: Subject updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subject"
+    delete:
+      operationId: adminDeleteSubject
+      tags: [admin-content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Subject deleted
+
+  /admin/dossiers:
+    post:
+      operationId: adminCreateDossier
+      tags: [admin-content]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminDossierInput"
+      responses:
+        "201":
+          description: Dossier created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dossier"
+
+  /admin/dossiers/{id}:
+    patch:
+      operationId: adminUpdateDossier
+      tags: [admin-content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminDossierInput"
+      responses:
+        "200":
+          description: Dossier updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dossier"
+    delete:
+      operationId: adminDeleteDossier
+      tags: [admin-content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/exams:
+    post:
+      operationId: adminCreateExam
+      tags: [admin-content]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminExamInput"
+      responses:
+        "201":
+          description: Exam created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Exam"
+
+  /admin/exams/{id}:
+    patch:
+      operationId: adminUpdateExam
+      tags: [admin-content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminExamInput"
+      responses:
+        "200":
+          description: Exam updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Exam"
+    delete:
+      operationId: adminDeleteExam
+      tags: [admin-content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/comments:
+    get:
+      operationId: adminListComments
+      tags: [admin-content]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: reported
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Comments for moderation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentList"
+
+  /admin/comments/{id}/hide:
+    post:
+      operationId: adminHideComment
+      tags: [admin-content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Hidden
+
+  /admin/reports:
+    get:
+      operationId: adminListReports
+      tags: [admin-content]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportList"
+
+  /admin/reports/{id}/resolve:
+    post:
+      operationId: adminResolveReport
+      tags: [admin-content]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [dismiss, hide_content, warn_user, ban_user]
+                note:
+                  type: string
+      responses:
+        "200":
+          description: Resolved
+
+  # ─── ADMIN — RBAC ────────────────────────────────────────
+  /admin/roles:
+    get:
+      operationId: adminListRoles
+      tags: [admin-rbac]
+      responses:
+        "200":
+          description: Roles list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Role"
+    post:
+      operationId: adminCreateRole
+      tags: [admin-rbac]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleInput"
+      responses:
+        "201":
+          description: Role created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+
+  /admin/roles/{id}:
+    patch:
+      operationId: adminUpdateRole
+      tags: [admin-rbac]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleInput"
+      responses:
+        "200":
+          description: Role updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+    delete:
+      operationId: adminDeleteRole
+      tags: [admin-rbac]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/permissions:
+    get:
+      operationId: adminListPermissions
+      tags: [admin-rbac]
+      responses:
+        "200":
+          description: Permissions list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Permission"
+
+  # ─── ADMIN — Settings ────────────────────────────────────
+  /admin/settings:
+    get:
+      operationId: getSystemSettings
+      tags: [admin-settings]
+      responses:
+        "200":
+          description: System settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemSettings"
+    patch:
+      operationId: updateSystemSettings
+      tags: [admin-settings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SystemSettingsUpdate"
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemSettings"
+
+  # ─── ADMIN — Audit Logs ──────────────────────────────────
+  /admin/audit-logs:
+    get:
+      operationId: getAuditLogs
+      tags: [admin-audit]
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogList"
+
+  # ─── ADMIN — Reports ─────────────────────────────────────
+  /admin/platform-reports:
+    get:
+      operationId: adminGetPlatformReports
+      tags: [admin-reports]
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, subject, user]
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Platform report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformReport"
+
+  /admin/announcements:
+    get:
+      operationId: adminListAnnouncements
+      tags: [admin]
+      responses:
+        "200":
+          description: Announcements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Announcement"
+    post:
+      operationId: adminCreateAnnouncement
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnouncementInput"
+      responses:
+        "201":
+          description: Announcement created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+
+  /admin/announcements/{id}:
+    patch:
+      operationId: adminUpdateAnnouncement
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnouncementInput"
+      responses:
+        "200":
+          description: Announcement updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+    delete:
+      operationId: adminDeleteAnnouncement
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /announcements:
+    get:
+      operationId: listAnnouncements
+      tags: [notifications]
+      summary: Student-facing announcements
+      responses:
+        "200":
+          description: Active announcements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Announcement"
 
 components:
   schemas:
@@ -904,10 +1968,12 @@ components:
           type: ["string", "null"]
         role:
           type: string
-          enum: [student, teacher, admin, super_admin]
+          enum: [student, teacher, assistant_teacher, moderator, admin, super_admin]
         avatarUrl:
           type: ["string", "null"]
         onboardingCompleted:
+          type: boolean
+        isActive:
           type: boolean
         createdAt:
           type: string
@@ -1046,6 +2112,21 @@ components:
         studentProgress:
           type: ["number", "null"]
 
+    SubjectInput:
+      type: object
+      required: [name, grade, field]
+      properties:
+        name:
+          type: string
+        grade:
+          type: string
+        field:
+          type: string
+        color:
+          type: string
+        iconUrl:
+          type: string
+
     SubjectDetail:
       type: object
       required: [id, name, grade, field, units]
@@ -1102,7 +2183,7 @@ components:
         pageCount:
           type: integer
         fileSize:
-          type: string
+          type: ["string", "null"]
         downloads:
           type: integer
         views:
@@ -1119,9 +2200,28 @@ components:
           type: integer
         lastReadPage:
           type: integer
-        isFree:
-          type: boolean
         createdAt:
+          type: string
+
+    AdminDossierInput:
+      type: object
+      required: [title, subjectId, grade]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        subjectId:
+          type: integer
+        grade:
+          type: string
+        pageCount:
+          type: integer
+        fileSize:
+          type: string
+        fileUrl:
+          type: string
+        coverUrl:
           type: string
 
     DossierList:
@@ -1181,8 +2281,6 @@ components:
           type: integer
         fileUrl:
           type: ["string", "null"]
-        isFree:
-          type: boolean
         createdAt:
           type: string
 
@@ -1228,14 +2326,41 @@ components:
           type: integer
         averageScore:
           type: ["number", "null"]
-        isFree:
-          type: boolean
         isAvailable:
           type: boolean
         userAttempts:
           type: integer
         maxAttempts:
           type: integer
+
+    AdminExamInput:
+      type: object
+      required: [title, subjectId, type, difficulty, durationMinutes]
+      properties:
+        title:
+          type: string
+        subjectId:
+          type: integer
+        type:
+          type: string
+        difficulty:
+          type: string
+        durationMinutes:
+          type: integer
+        instructions:
+          type: string
+        passingScore:
+          type: number
+        totalScore:
+          type: number
+        canGoBack:
+          type: boolean
+        canSkip:
+          type: boolean
+        maxAttempts:
+          type: integer
+        deductOnWrong:
+          type: boolean
 
     ExamDetail:
       type: object
@@ -1384,7 +2509,7 @@ components:
         title:
           type: string
         description:
-          type: string
+          type: ["string", "null"]
         subjectName:
           type: string
         startsAt:
@@ -1581,6 +2706,8 @@ components:
           type: string
         content:
           type: string
+        noteType:
+          type: string
         subjectId:
           type: integer
         subjectName:
@@ -1593,8 +2720,18 @@ components:
           type: array
           items:
             type: string
+        color:
+          type: ["string", "null"]
         isPinned:
           type: boolean
+        isPrivate:
+          type: boolean
+        importance:
+          type: integer
+        reviewStatus:
+          type: ["string", "null"]
+        nextReviewAt:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:
@@ -1608,6 +2745,8 @@ components:
           type: string
         content:
           type: string
+        noteType:
+          type: string
         subjectId:
           type: integer
         dossierId:
@@ -1618,6 +2757,12 @@ components:
           type: array
           items:
             type: string
+        color:
+          type: string
+        isPrivate:
+          type: boolean
+        importance:
+          type: integer
 
     NoteUpdate:
       type: object
@@ -1626,12 +2771,128 @@ components:
           type: string
         content:
           type: string
+        noteType:
+          type: string
         tags:
           type: array
           items:
             type: string
+        color:
+          type: string
         isPinned:
           type: boolean
+        isPrivate:
+          type: boolean
+        importance:
+          type: integer
+        reviewStatus:
+          type: string
+
+    # ─── FLASHCARDS ───────────────────────────────────────
+    Flashcard:
+      type: object
+      required: [id, front, back, subjectId, subjectName, difficulty, masteryLevel, reviewCount]
+      properties:
+        id:
+          type: integer
+        front:
+          type: string
+        back:
+          type: string
+        deckId:
+          type: ["integer", "null"]
+        deckName:
+          type: ["string", "null"]
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        cardType:
+          type: string
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+        masteryLevel:
+          type: number
+        reviewCount:
+          type: integer
+        nextReviewAt:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        sourceNoteId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    FlashcardInput:
+      type: object
+      required: [front, back, subjectId]
+      properties:
+        front:
+          type: string
+        back:
+          type: string
+        subjectId:
+          type: integer
+        deckId:
+          type: integer
+        cardType:
+          type: string
+        difficulty:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        sourceNoteId:
+          type: integer
+
+    FlashcardReviewInput:
+      type: object
+      required: [rating]
+      properties:
+        rating:
+          type: string
+          enum: [forgot, hard, good, easy]
+        responseTimeSeconds:
+          type: integer
+
+    FlashcardDeck:
+      type: object
+      required: [id, title, subjectId, subjectName, cardCount, dueCount]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        cardCount:
+          type: integer
+        dueCount:
+          type: integer
+        masteredCount:
+          type: integer
+        createdAt:
+          type: string
+
+    FlashcardDeckInput:
+      type: object
+      required: [title, subjectId]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        subjectId:
+          type: integer
 
     # ─── STATISTICS ──────────────────────────────────────
     Statistics:
@@ -1688,7 +2949,7 @@ components:
     # ─── DASHBOARD ───────────────────────────────────────
     Dashboard:
       type: object
-      required: [greeting, todayGoalMinutes, todayDoneMinutes, todayTasks, streakDays, nextTask, platformStats]
+      required: [greeting, todayGoalMinutes, todayDoneMinutes, todayTasks, streakDays, platformStats]
       properties:
         greeting:
           type: string
@@ -1749,10 +3010,616 @@ components:
           type: string
         type:
           type: string
-          enum: [session_reminder, new_dossier, quiz_started, review_due, goal_achieved, exam_result]
+          enum: [session_reminder, new_dossier, quiz_started, review_due, goal_achieved, exam_result, announcement, system]
         isRead:
           type: boolean
         createdAt:
           type: string
         actionUrl:
           type: ["string", "null"]
+
+    # ─── COMMENTS ────────────────────────────────────────
+    Comment:
+      type: object
+      required: [id, authorName, authorRole, text, contentType, contentId, createdAt]
+      properties:
+        id:
+          type: integer
+        authorName:
+          type: string
+        authorRole:
+          type: string
+        authorAvatarUrl:
+          type: ["string", "null"]
+        text:
+          type: string
+        commentType:
+          type: string
+          enum: [question, answer, clarification, correction, teacher_note, announcement]
+        contentType:
+          type: string
+        contentId:
+          type: integer
+        parentId:
+          type: ["integer", "null"]
+        replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+        helpfulCount:
+          type: integer
+        isAccepted:
+          type: boolean
+        isHidden:
+          type: boolean
+        isPinned:
+          type: boolean
+        isTeacherReply:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    CommentInput:
+      type: object
+      required: [text, contentType, contentId]
+      properties:
+        text:
+          type: string
+        contentType:
+          type: string
+          enum: [dossier, worksheet, exam, subject, lesson]
+        contentId:
+          type: integer
+        commentType:
+          type: string
+
+    CommentUpdate:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+
+    ReplyInput:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+        commentType:
+          type: string
+
+    CommentList:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    ReportInput:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          enum: [inappropriate, spam, wrong_info, contact_sharing, harassment]
+        description:
+          type: string
+
+    ReportList:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Report"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    Report:
+      type: object
+      required: [id, reason, reporterName, contentType, commentText, status, createdAt]
+      properties:
+        id:
+          type: integer
+        reason:
+          type: string
+        description:
+          type: ["string", "null"]
+        reporterName:
+          type: string
+        contentType:
+          type: string
+        commentText:
+          type: string
+        status:
+          type: string
+          enum: [pending, resolved, dismissed]
+        createdAt:
+          type: string
+
+    # ─── ADMIN ───────────────────────────────────────────
+    AdminDashboard:
+      type: object
+      required: [totalStudents, totalTeachers, totalSubjects, totalDossiers, totalWorksheets, totalExams, totalComments, todaySessions, activeUsersNow, newUsersThisWeek, totalStudyHoursAllTime]
+      properties:
+        totalStudents:
+          type: integer
+        totalTeachers:
+          type: integer
+        totalModerators:
+          type: integer
+        totalSubjects:
+          type: integer
+        totalDossiers:
+          type: integer
+        totalWorksheets:
+          type: integer
+        totalExams:
+          type: integer
+        totalComments:
+          type: integer
+        pendingReports:
+          type: integer
+        todaySessions:
+          type: integer
+        activeUsersNow:
+          type: integer
+        newUsersThisWeek:
+          type: integer
+        totalStudyHoursAllTime:
+          type: integer
+
+    ActivityItem:
+      type: object
+      required: [id, type, description, actorName, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        actorName:
+          type: string
+        createdAt:
+          type: string
+
+    AdminUser:
+      type: object
+      required: [id, fullName, phone, role, status, createdAt]
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: ["string", "null"]
+        role:
+          type: string
+        status:
+          type: string
+          enum: [active, suspended, frozen, pending, deleted]
+        avatarUrl:
+          type: ["string", "null"]
+        totalSessions:
+          type: integer
+        totalExams:
+          type: integer
+        lastLoginAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AdminUserDetail:
+      type: object
+      required: [id, fullName, phone, role, status, createdAt]
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: ["string", "null"]
+        role:
+          type: string
+        status:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        grade:
+          type: ["string", "null"]
+        field:
+          type: ["string", "null"]
+        goal:
+          type: ["string", "null"]
+        groupName:
+          type: ["string", "null"]
+        totalSessions:
+          type: integer
+        totalExams:
+          type: integer
+        totalStudyMinutes:
+          type: integer
+        totalNotes:
+          type: integer
+        totalComments:
+          type: integer
+        streakDays:
+          type: integer
+        lastLoginAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AdminUserList:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminUser"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    AdminCreateUserInput:
+      type: object
+      required: [fullName, phone, password, role]
+      properties:
+        fullName:
+          type: string
+        phone:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        email:
+          type: string
+        role:
+          type: string
+          enum: [student, teacher, assistant_teacher, moderator, admin]
+        groupId:
+          type: integer
+        grade:
+          type: string
+        field:
+          type: string
+
+    AdminUpdateUserInput:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        groupId:
+          type: integer
+
+    UserStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [active, suspended, frozen]
+        reason:
+          type: string
+
+    ResetPasswordInput:
+      type: object
+      required: [newPassword]
+      properties:
+        newPassword:
+          type: string
+          minLength: 8
+        forceChange:
+          type: boolean
+
+    ImportUsersInput:
+      type: object
+      required: [users]
+      properties:
+        users:
+          type: array
+          items:
+            type: object
+            required: [fullName, phone]
+            properties:
+              fullName:
+                type: string
+              phone:
+                type: string
+              email:
+                type: string
+              role:
+                type: string
+              groupId:
+                type: integer
+              grade:
+                type: string
+              field:
+                type: string
+        defaultRole:
+          type: string
+        defaultGroupId:
+          type: integer
+        defaultPassword:
+          type: string
+
+    ImportResult:
+      type: object
+      required: [total, created, updated, skipped, errors]
+      properties:
+        total:
+          type: integer
+        created:
+          type: integer
+        updated:
+          type: integer
+        skipped:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
+
+    Group:
+      type: object
+      required: [id, name, memberCount, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+        memberCount:
+          type: integer
+        teacherName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    GroupInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        teacherId:
+          type: integer
+
+    Role:
+      type: object
+      required: [id, name, memberCount, permissionCount, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        isSystem:
+          type: boolean
+        memberCount:
+          type: integer
+        permissionCount:
+          type: integer
+        permissions:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+
+    RoleInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+
+    Permission:
+      type: object
+      required: [id, name, group, description]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        group:
+          type: string
+        description:
+          type: string
+
+    SystemSettings:
+      type: object
+      required: [platformName, allowComments, allowStudentRegistration, maxFileSize]
+      properties:
+        platformName:
+          type: string
+        platformDescription:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        allowComments:
+          type: boolean
+        allowStudentRegistration:
+          type: boolean
+        requireCommentApproval:
+          type: boolean
+        maxFileSize:
+          type: integer
+        allowedFileTypes:
+          type: array
+          items:
+            type: string
+        pomodoroMinutes:
+          type: integer
+        breakMinutes:
+          type: integer
+        streakMinDailyMinutes:
+          type: integer
+        defaultTimezone:
+          type: string
+
+    SystemSettingsUpdate:
+      type: object
+      properties:
+        platformName:
+          type: string
+        platformDescription:
+          type: string
+        logoUrl:
+          type: string
+        allowComments:
+          type: boolean
+        allowStudentRegistration:
+          type: boolean
+        requireCommentApproval:
+          type: boolean
+        maxFileSize:
+          type: integer
+        pomodoroMinutes:
+          type: integer
+        breakMinutes:
+          type: integer
+        streakMinDailyMinutes:
+          type: integer
+
+    AuditLog:
+      type: object
+      required: [id, actorName, action, createdAt]
+      properties:
+        id:
+          type: integer
+        actorName:
+          type: string
+        actorRole:
+          type: string
+        action:
+          type: string
+        targetType:
+          type: ["string", "null"]
+        targetId:
+          type: ["integer", "null"]
+        description:
+          type: string
+        ipAddress:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AuditLogList:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLog"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    PlatformReport:
+      type: object
+      required: [type, from, to, data]
+      properties:
+        type:
+          type: string
+        from:
+          type: string
+        to:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+
+    Announcement:
+      type: object
+      required: [id, title, type, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        type:
+          type: string
+          enum: [general, subject, group, urgent, scheduled]
+        targetGrade:
+          type: ["string", "null"]
+        targetGroupId:
+          type: ["integer", "null"]
+        isActive:
+          type: boolean
+        startsAt:
+          type: ["string", "null"]
+        endsAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AnnouncementInput:
+      type: object
+      required: [title, type]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+        targetGrade:
+          type: string
+        targetGroupId:
+          type: integer
+        startsAt:
+          type: string
+        endsAt:
+          type: string
+        isActive:
+          type: boolean

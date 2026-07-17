@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * منصة أبو العربي - API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 export interface HealthStatus {
   status: string;
@@ -30,6 +30,8 @@ export type UserRole = typeof UserRole[keyof typeof UserRole];
 export const UserRole = {
   student: 'student',
   teacher: 'teacher',
+  assistant_teacher: 'assistant_teacher',
+  moderator: 'moderator',
   admin: 'admin',
   super_admin: 'super_admin',
 } as const;
@@ -44,6 +46,7 @@ export interface User {
   /** @nullable */
   avatarUrl?: string | null;
   onboardingCompleted?: boolean;
+  isActive?: boolean;
   createdAt: string;
 }
 
@@ -124,6 +127,14 @@ export interface Subject {
   studentProgress?: number | null;
 }
 
+export interface SubjectInput {
+  name: string;
+  grade: string;
+  field: string;
+  color?: string;
+  iconUrl?: string;
+}
+
 export interface Unit {
   id: number;
   title: string;
@@ -153,7 +164,8 @@ export interface Dossier {
   subjectName: string;
   grade: string;
   pageCount: number;
-  fileSize?: string;
+  /** @nullable */
+  fileSize?: string | null;
   downloads: number;
   views?: number;
   rating: number;
@@ -164,8 +176,18 @@ export interface Dossier {
   isFavorite?: boolean;
   readingProgress?: number;
   lastReadPage?: number;
-  isFree?: boolean;
   createdAt?: string;
+}
+
+export interface AdminDossierInput {
+  title: string;
+  description?: string;
+  subjectId: number;
+  grade: string;
+  pageCount?: number;
+  fileSize?: string;
+  fileUrl?: string;
+  coverUrl?: string;
 }
 
 export interface DossierList {
@@ -205,7 +227,6 @@ export interface Worksheet {
   solvers?: number;
   /** @nullable */
   fileUrl?: string | null;
-  isFree?: boolean;
   createdAt?: string;
 }
 
@@ -250,10 +271,24 @@ export interface Exam {
   totalParticipants?: number;
   /** @nullable */
   averageScore?: number | null;
-  isFree?: boolean;
   isAvailable?: boolean;
   userAttempts?: number;
   maxAttempts?: number;
+}
+
+export interface AdminExamInput {
+  title: string;
+  subjectId: number;
+  type: string;
+  difficulty: string;
+  durationMinutes: number;
+  instructions?: string;
+  passingScore?: number;
+  totalScore?: number;
+  canGoBack?: boolean;
+  canSkip?: boolean;
+  maxAttempts?: number;
+  deductOnWrong?: boolean;
 }
 
 export interface ExamDetail {
@@ -345,7 +380,8 @@ export interface ExamResult {
 export interface WeeklyQuiz {
   id: number;
   title: string;
-  description?: string;
+  /** @nullable */
+  description?: string | null;
   subjectName: string;
   startsAt: string;
   endsAt: string;
@@ -528,6 +564,7 @@ export interface Note {
   id: number;
   title: string;
   content: string;
+  noteType?: string;
   subjectId: number;
   subjectName: string;
   /** @nullable */
@@ -535,7 +572,15 @@ export interface Note {
   /** @nullable */
   sessionId?: number | null;
   tags?: string[];
+  /** @nullable */
+  color?: string | null;
   isPinned?: boolean;
+  isPrivate?: boolean;
+  importance?: number;
+  /** @nullable */
+  reviewStatus?: string | null;
+  /** @nullable */
+  nextReviewAt?: string | null;
   createdAt: string;
   updatedAt?: string;
 }
@@ -543,17 +588,102 @@ export interface Note {
 export interface NoteInput {
   title: string;
   content: string;
+  noteType?: string;
   subjectId: number;
   dossierId?: number;
   sessionId?: number;
   tags?: string[];
+  color?: string;
+  isPrivate?: boolean;
+  importance?: number;
 }
 
 export interface NoteUpdate {
   title?: string;
   content?: string;
+  noteType?: string;
   tags?: string[];
+  color?: string;
   isPinned?: boolean;
+  isPrivate?: boolean;
+  importance?: number;
+  reviewStatus?: string;
+}
+
+export type FlashcardDifficulty = typeof FlashcardDifficulty[keyof typeof FlashcardDifficulty];
+
+
+export const FlashcardDifficulty = {
+  easy: 'easy',
+  medium: 'medium',
+  hard: 'hard',
+} as const;
+
+export interface Flashcard {
+  id: number;
+  front: string;
+  back: string;
+  /** @nullable */
+  deckId?: number | null;
+  /** @nullable */
+  deckName?: string | null;
+  subjectId: number;
+  subjectName: string;
+  cardType?: string;
+  difficulty: FlashcardDifficulty;
+  masteryLevel: number;
+  reviewCount: number;
+  /** @nullable */
+  nextReviewAt?: string | null;
+  tags?: string[];
+  /** @nullable */
+  sourceNoteId?: number | null;
+  createdAt?: string;
+}
+
+export interface FlashcardInput {
+  front: string;
+  back: string;
+  subjectId: number;
+  deckId?: number;
+  cardType?: string;
+  difficulty?: string;
+  tags?: string[];
+  sourceNoteId?: number;
+}
+
+export type FlashcardReviewInputRating = typeof FlashcardReviewInputRating[keyof typeof FlashcardReviewInputRating];
+
+
+export const FlashcardReviewInputRating = {
+  forgot: 'forgot',
+  hard: 'hard',
+  good: 'good',
+  easy: 'easy',
+} as const;
+
+export interface FlashcardReviewInput {
+  rating: FlashcardReviewInputRating;
+  responseTimeSeconds?: number;
+}
+
+export interface FlashcardDeck {
+  id: number;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  subjectId: number;
+  subjectName: string;
+  cardCount: number;
+  dueCount: number;
+  masteredCount?: number;
+  createdAt?: string;
+}
+
+export interface FlashcardDeckInput {
+  title: string;
+  description?: string;
+  subjectId: number;
 }
 
 export interface Statistics {
@@ -609,7 +739,7 @@ export interface Dashboard {
   todayTasks: StudyTask[];
   streakDays: number;
   /** @nullable */
-  nextTask: string | null;
+  nextTask?: string | null;
   overdueTasks?: number;
   /** @nullable */
   upcomingExam?: string | null;
@@ -629,6 +759,8 @@ export const NotificationType = {
   review_due: 'review_due',
   goal_achieved: 'goal_achieved',
   exam_result: 'exam_result',
+  announcement: 'announcement',
+  system: 'system',
 } as const;
 
 export interface Notification {
@@ -640,6 +772,427 @@ export interface Notification {
   createdAt: string;
   /** @nullable */
   actionUrl?: string | null;
+}
+
+export type CommentCommentType = typeof CommentCommentType[keyof typeof CommentCommentType];
+
+
+export const CommentCommentType = {
+  question: 'question',
+  answer: 'answer',
+  clarification: 'clarification',
+  correction: 'correction',
+  teacher_note: 'teacher_note',
+  announcement: 'announcement',
+} as const;
+
+export interface Comment {
+  id: number;
+  authorName: string;
+  authorRole: string;
+  /** @nullable */
+  authorAvatarUrl?: string | null;
+  text: string;
+  commentType?: CommentCommentType;
+  contentType: string;
+  contentId: number;
+  /** @nullable */
+  parentId?: number | null;
+  replies?: Comment[];
+  helpfulCount?: number;
+  isAccepted?: boolean;
+  isHidden?: boolean;
+  isPinned?: boolean;
+  isTeacherReply?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type CommentInputContentType = typeof CommentInputContentType[keyof typeof CommentInputContentType];
+
+
+export const CommentInputContentType = {
+  dossier: 'dossier',
+  worksheet: 'worksheet',
+  exam: 'exam',
+  subject: 'subject',
+  lesson: 'lesson',
+} as const;
+
+export interface CommentInput {
+  text: string;
+  contentType: CommentInputContentType;
+  contentId: number;
+  commentType?: string;
+}
+
+export interface CommentUpdate {
+  text: string;
+}
+
+export interface ReplyInput {
+  text: string;
+  commentType?: string;
+}
+
+export interface CommentList {
+  items: Comment[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export type ReportInputReason = typeof ReportInputReason[keyof typeof ReportInputReason];
+
+
+export const ReportInputReason = {
+  inappropriate: 'inappropriate',
+  spam: 'spam',
+  wrong_info: 'wrong_info',
+  contact_sharing: 'contact_sharing',
+  harassment: 'harassment',
+} as const;
+
+export interface ReportInput {
+  reason: ReportInputReason;
+  description?: string;
+}
+
+export type ReportStatus = typeof ReportStatus[keyof typeof ReportStatus];
+
+
+export const ReportStatus = {
+  pending: 'pending',
+  resolved: 'resolved',
+  dismissed: 'dismissed',
+} as const;
+
+export interface Report {
+  id: number;
+  reason: string;
+  /** @nullable */
+  description?: string | null;
+  reporterName: string;
+  contentType: string;
+  commentText: string;
+  status: ReportStatus;
+  createdAt: string;
+}
+
+export interface ReportList {
+  items: Report[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface AdminDashboard {
+  totalStudents: number;
+  totalTeachers: number;
+  totalModerators?: number;
+  totalSubjects: number;
+  totalDossiers: number;
+  totalWorksheets: number;
+  totalExams: number;
+  totalComments: number;
+  pendingReports?: number;
+  todaySessions: number;
+  activeUsersNow: number;
+  newUsersThisWeek: number;
+  totalStudyHoursAllTime: number;
+}
+
+export interface ActivityItem {
+  id: number;
+  type: string;
+  description: string;
+  actorName: string;
+  createdAt: string;
+}
+
+export type AdminUserStatus = typeof AdminUserStatus[keyof typeof AdminUserStatus];
+
+
+export const AdminUserStatus = {
+  active: 'active',
+  suspended: 'suspended',
+  frozen: 'frozen',
+  pending: 'pending',
+  deleted: 'deleted',
+} as const;
+
+export interface AdminUser {
+  id: number;
+  fullName: string;
+  phone: string;
+  /** @nullable */
+  email?: string | null;
+  role: string;
+  status: AdminUserStatus;
+  /** @nullable */
+  avatarUrl?: string | null;
+  totalSessions?: number;
+  totalExams?: number;
+  /** @nullable */
+  lastLoginAt?: string | null;
+  createdAt: string;
+}
+
+export interface AdminUserDetail {
+  id: number;
+  fullName: string;
+  phone: string;
+  /** @nullable */
+  email?: string | null;
+  role: string;
+  status: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  /** @nullable */
+  grade?: string | null;
+  /** @nullable */
+  field?: string | null;
+  /** @nullable */
+  goal?: string | null;
+  /** @nullable */
+  groupName?: string | null;
+  totalSessions?: number;
+  totalExams?: number;
+  totalStudyMinutes?: number;
+  totalNotes?: number;
+  totalComments?: number;
+  streakDays?: number;
+  /** @nullable */
+  lastLoginAt?: string | null;
+  createdAt: string;
+}
+
+export interface AdminUserList {
+  items: AdminUser[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export type AdminCreateUserInputRole = typeof AdminCreateUserInputRole[keyof typeof AdminCreateUserInputRole];
+
+
+export const AdminCreateUserInputRole = {
+  student: 'student',
+  teacher: 'teacher',
+  assistant_teacher: 'assistant_teacher',
+  moderator: 'moderator',
+  admin: 'admin',
+} as const;
+
+export interface AdminCreateUserInput {
+  fullName: string;
+  phone: string;
+  /** @minLength 8 */
+  password: string;
+  email?: string;
+  role: AdminCreateUserInputRole;
+  groupId?: number;
+  grade?: string;
+  field?: string;
+}
+
+export interface AdminUpdateUserInput {
+  fullName?: string;
+  email?: string;
+  role?: string;
+  groupId?: number;
+}
+
+export type UserStatusUpdateStatus = typeof UserStatusUpdateStatus[keyof typeof UserStatusUpdateStatus];
+
+
+export const UserStatusUpdateStatus = {
+  active: 'active',
+  suspended: 'suspended',
+  frozen: 'frozen',
+} as const;
+
+export interface UserStatusUpdate {
+  status: UserStatusUpdateStatus;
+  reason?: string;
+}
+
+export interface ResetPasswordInput {
+  /** @minLength 8 */
+  newPassword: string;
+  forceChange?: boolean;
+}
+
+export type ImportUsersInputUsersItem = {
+  fullName: string;
+  phone: string;
+  email?: string;
+  role?: string;
+  groupId?: number;
+  grade?: string;
+  field?: string;
+};
+
+export interface ImportUsersInput {
+  users: ImportUsersInputUsersItem[];
+  defaultRole?: string;
+  defaultGroupId?: number;
+  defaultPassword?: string;
+}
+
+export interface ImportResult {
+  total: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: string[];
+}
+
+export interface Group {
+  id: number;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  color?: string | null;
+  memberCount: number;
+  /** @nullable */
+  teacherName?: string | null;
+  createdAt: string;
+}
+
+export interface GroupInput {
+  name: string;
+  description?: string;
+  color?: string;
+  teacherId?: number;
+}
+
+export interface Role {
+  id: number;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  isSystem?: boolean;
+  memberCount: number;
+  permissionCount: number;
+  permissions?: string[];
+  createdAt: string;
+}
+
+export interface RoleInput {
+  name: string;
+  description?: string;
+  permissions?: string[];
+}
+
+export interface Permission {
+  id: number;
+  name: string;
+  group: string;
+  description: string;
+}
+
+export interface SystemSettings {
+  platformName: string;
+  /** @nullable */
+  platformDescription?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  allowComments: boolean;
+  allowStudentRegistration: boolean;
+  requireCommentApproval?: boolean;
+  maxFileSize: number;
+  allowedFileTypes?: string[];
+  pomodoroMinutes?: number;
+  breakMinutes?: number;
+  streakMinDailyMinutes?: number;
+  defaultTimezone?: string;
+}
+
+export interface SystemSettingsUpdate {
+  platformName?: string;
+  platformDescription?: string;
+  logoUrl?: string;
+  allowComments?: boolean;
+  allowStudentRegistration?: boolean;
+  requireCommentApproval?: boolean;
+  maxFileSize?: number;
+  pomodoroMinutes?: number;
+  breakMinutes?: number;
+  streakMinDailyMinutes?: number;
+}
+
+export interface AuditLog {
+  id: number;
+  actorName: string;
+  actorRole?: string;
+  action: string;
+  /** @nullable */
+  targetType?: string | null;
+  /** @nullable */
+  targetId?: number | null;
+  description?: string;
+  /** @nullable */
+  ipAddress?: string | null;
+  createdAt: string;
+}
+
+export interface AuditLogList {
+  items: AuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export type PlatformReportData = { [key: string]: unknown };
+
+export interface PlatformReport {
+  type: string;
+  from: string;
+  to: string;
+  data: PlatformReportData;
+}
+
+export type AnnouncementType = typeof AnnouncementType[keyof typeof AnnouncementType];
+
+
+export const AnnouncementType = {
+  general: 'general',
+  subject: 'subject',
+  group: 'group',
+  urgent: 'urgent',
+  scheduled: 'scheduled',
+} as const;
+
+export interface Announcement {
+  id: number;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  type: AnnouncementType;
+  /** @nullable */
+  targetGrade?: string | null;
+  /** @nullable */
+  targetGroupId?: number | null;
+  isActive: boolean;
+  /** @nullable */
+  startsAt?: string | null;
+  /** @nullable */
+  endsAt?: string | null;
+  createdAt: string;
+}
+
+export interface AnnouncementInput {
+  title: string;
+  description?: string;
+  type: string;
+  targetGrade?: string;
+  targetGroupId?: number;
+  startsAt?: string;
+  endsAt?: string;
+  isActive?: boolean;
 }
 
 export type ListDossiersParams = {
@@ -676,5 +1229,117 @@ subjectId?: number;
 export type ListNotesParams = {
 subjectId?: number;
 dossierId?: number;
+type?: string;
+search?: string;
+isPinned?: boolean;
 };
+
+export type ListFlashcardsParams = {
+subjectId?: number;
+deckId?: number;
+dueOnly?: boolean;
+};
+
+export type ListFlashcardDecksParams = {
+subjectId?: number;
+};
+
+export type ListCommentsParams = {
+contentType: ListCommentsContentType;
+contentId: number;
+sort?: ListCommentsSort;
+page?: number;
+limit?: number;
+};
+
+export type ListCommentsContentType = typeof ListCommentsContentType[keyof typeof ListCommentsContentType];
+
+
+export const ListCommentsContentType = {
+  dossier: 'dossier',
+  worksheet: 'worksheet',
+  exam: 'exam',
+  subject: 'subject',
+  lesson: 'lesson',
+} as const;
+
+export type ListCommentsSort = typeof ListCommentsSort[keyof typeof ListCommentsSort];
+
+
+export const ListCommentsSort = {
+  newest: 'newest',
+  oldest: 'oldest',
+  helpful: 'helpful',
+  teacher_first: 'teacher_first',
+} as const;
+
+export type GetAdminActivityParams = {
+limit?: number;
+};
+
+export type AdminListUsersParams = {
+search?: string;
+role?: string;
+status?: string;
+groupId?: number;
+page?: number;
+limit?: number;
+};
+
+export type AdminAddGroupMembersBody = {
+  userIds: number[];
+};
+
+export type AdminListCommentsParams = {
+status?: string;
+reported?: boolean;
+page?: number;
+limit?: number;
+};
+
+export type AdminListReportsParams = {
+status?: string;
+page?: number;
+};
+
+export type AdminResolveReportBodyAction = typeof AdminResolveReportBodyAction[keyof typeof AdminResolveReportBodyAction];
+
+
+export const AdminResolveReportBodyAction = {
+  dismiss: 'dismiss',
+  hide_content: 'hide_content',
+  warn_user: 'warn_user',
+  ban_user: 'ban_user',
+} as const;
+
+export type AdminResolveReportBody = {
+  action: AdminResolveReportBodyAction;
+  note?: string;
+};
+
+export type GetAuditLogsParams = {
+userId?: number;
+action?: string;
+from?: string;
+to?: string;
+page?: number;
+limit?: number;
+};
+
+export type AdminGetPlatformReportsParams = {
+type?: AdminGetPlatformReportsType;
+from?: string;
+to?: string;
+};
+
+export type AdminGetPlatformReportsType = typeof AdminGetPlatformReportsType[keyof typeof AdminGetPlatformReportsType];
+
+
+export const AdminGetPlatformReportsType = {
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+  subject: 'subject',
+  user: 'user',
+} as const;
 

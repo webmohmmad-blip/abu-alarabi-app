@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * منصة أبو العربي - API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import type { UserRole } from './userRole';
 
@@ -17,5 +17,6 @@ export interface User {
   /** @nullable */
   avatarUrl?: string | null;
   onboardingCompleted?: boolean;
+  isActive?: boolean;
   createdAt: string;
 }

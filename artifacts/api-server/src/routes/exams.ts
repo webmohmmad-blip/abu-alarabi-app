@@ -44,7 +44,6 @@ router.get("/exams", async (req, res): Promise<void> => {
       difficulty: exam.difficulty,
       totalParticipants: 0,
       averageScore: null,
-      isFree: exam.isFree,
       isAvailable: exam.isAvailable,
       userAttempts: 0,
       maxAttempts: exam.maxAttempts,

@@ -4,7 +4,6 @@ import {
   serial,
   timestamp,
   integer,
-  boolean,
   numeric,
   pgEnum,
 } from "drizzle-orm/pg-core";
@@ -31,7 +30,6 @@ export const dossiersTable = pgTable("dossiers", {
   downloads: integer("downloads").notNull().default(0),
   views: integer("views").notNull().default(0),
   rating: numeric("rating", { precision: 3, scale: 1 }).notNull().default("0"),
-  isFree: boolean("is_free").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -39,6 +37,7 @@ export const dossiersTable = pgTable("dossiers", {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 export const insertDossierSchema = createInsertSchema(dossiersTable).omit({
@@ -94,7 +93,6 @@ export const worksheetsTable = pgTable("worksheets", {
   fileUrl: text("file_url"),
   downloads: integer("downloads").notNull().default(0),
   solvers: integer("solvers").notNull().default(0),
-  isFree: boolean("is_free").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -102,6 +100,7 @@ export const worksheetsTable = pgTable("worksheets", {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 export const insertWorksheetSchema = createInsertSchema(worksheetsTable).omit({

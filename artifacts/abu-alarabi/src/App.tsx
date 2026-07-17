@@ -24,15 +24,36 @@ import Statistics from '@/pages/statistics';
 import Profile from '@/pages/profile';
 import Settings from '@/pages/settings';
 
-const queryClient = new QueryClient();
+// Admin pages
+import AdminDashboard from '@/pages/admin/index';
+import AdminUsers from '@/pages/admin/users';
+import AdminGroups from '@/pages/admin/groups';
+import AdminContent from '@/pages/admin/content';
+import AdminRoles from '@/pages/admin/roles';
+import AdminSettings from '@/pages/admin/settings';
+import AdminAudit from '@/pages/admin/audit';
+import AdminReports from '@/pages/admin/reports';
+import AdminAnnouncements from '@/pages/admin/announcements';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30_000,
+    },
+  },
+});
 
 function Router() {
   return (
     <Switch>
+      {/* Public */}
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/onboarding" component={Onboarding} />
+
+      {/* Student */}
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dossiers" component={Dossiers} />
       <Route path="/dossiers/:id" component={DossierDetail} />
@@ -48,6 +69,18 @@ function Router() {
       <Route path="/statistics" component={Statistics} />
       <Route path="/profile" component={Profile} />
       <Route path="/settings" component={Settings} />
+
+      {/* Admin */}
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/users" component={AdminUsers} />
+      <Route path="/admin/groups" component={AdminGroups} />
+      <Route path="/admin/content" component={AdminContent} />
+      <Route path="/admin/roles" component={AdminRoles} />
+      <Route path="/admin/settings" component={AdminSettings} />
+      <Route path="/admin/audit" component={AdminAudit} />
+      <Route path="/admin/reports" component={AdminReports} />
+      <Route path="/admin/announcements" component={AdminAnnouncements} />
+
       <Route component={NotFound} />
     </Switch>
   );

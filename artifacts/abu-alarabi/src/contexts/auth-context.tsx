@@ -1,13 +1,13 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useEffect, useState, ReactNode } from 'react';
 import { useGetMe, User } from '@workspace/api-client-react';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   isAuthenticated: false,
@@ -21,7 +21,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  // Small local state to avoid flickering before query finishes
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -41,8 +40,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
 }

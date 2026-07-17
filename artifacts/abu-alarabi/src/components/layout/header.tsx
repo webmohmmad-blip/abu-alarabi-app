@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { BookOpen, UserCircle, LogOut } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "@/hooks/use-auth";
 import { useLogout } from "@workspace/api-client-react";
 
 export function Header() {

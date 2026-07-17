@@ -40,6 +40,17 @@ export async function comparePassword(
   return bcrypt.compare(password, hash);
 }
 
+export function requireRole(roles: string[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const userRole = (req as AuthRequest).userRole;
+    if (!roles.includes(userRole)) {
+      res.status(403).json({ error: "غير مصرح لك بالوصول إلى هذه الصفحة" });
+      return;
+    }
+    next();
+  };
+}
+
 export async function requireAuth(
   req: Request,
   res: Response,

@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * منصة أبو العربي - API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface Dossier {
@@ -15,7 +15,8 @@ export interface Dossier {
   subjectName: string;
   grade: string;
   pageCount: number;
-  fileSize?: string;
+  /** @nullable */
+  fileSize?: string | null;
   downloads: number;
   views?: number;
   rating: number;
@@ -26,6 +27,5 @@ export interface Dossier {
   isFavorite?: boolean;
   readingProgress?: number;
   lastReadPage?: number;
-  isFree?: boolean;
   createdAt?: string;
 }

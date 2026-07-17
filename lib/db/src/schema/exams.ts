@@ -62,11 +62,11 @@ export const examsTable = pgTable("exams", {
   randomizeChoices: boolean("randomize_choices").notNull().default(false),
   deductOnWrong: boolean("deduct_on_wrong").notNull().default(false),
   maxAttempts: integer("max_attempts").notNull().default(3),
-  isFree: boolean("is_free").notNull().default(true),
   isAvailable: boolean("is_available").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 export const insertExamSchema = createInsertSchema(examsTable).omit({

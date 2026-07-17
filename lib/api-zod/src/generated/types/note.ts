@@ -3,13 +3,14 @@
  * Do not edit manually.
  * Api
  * منصة أبو العربي - API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface Note {
   id: number;
   title: string;
   content: string;
+  noteType?: string;
   subjectId: number;
   subjectName: string;
   /** @nullable */
@@ -17,7 +18,15 @@ export interface Note {
   /** @nullable */
   sessionId?: number | null;
   tags?: string[];
+  /** @nullable */
+  color?: string | null;
   isPinned?: boolean;
+  isPrivate?: boolean;
+  importance?: number;
+  /** @nullable */
+  reviewStatus?: string | null;
+  /** @nullable */
+  nextReviewAt?: string | null;
   createdAt: string;
   updatedAt?: string;
 }

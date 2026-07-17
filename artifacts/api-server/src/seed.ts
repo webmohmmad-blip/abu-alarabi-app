@@ -72,7 +72,7 @@ async function seed() {
         downloads: 4821,
         views: 12394,
         rating: "4.9",
-        isFree: true,
+        
       },
       {
         title: "دوسيه الفيزياء - الوحدات الأولى والثانية",
@@ -84,7 +84,7 @@ async function seed() {
         downloads: 3547,
         views: 8921,
         rating: "4.8",
-        isFree: true,
+        
       },
       {
         title: "دوسيه الكيمياء الشامل",
@@ -96,7 +96,7 @@ async function seed() {
         downloads: 2934,
         views: 7210,
         rating: "4.7",
-        isFree: true,
+        
       },
       {
         title: "دوسيه الأحياء - الوراثة والتكاثر",
@@ -108,7 +108,7 @@ async function seed() {
         downloads: 2156,
         views: 5840,
         rating: "4.8",
-        isFree: true,
+        
       },
       {
         title: "دوسيه اللغة العربية - الأدب والنصوص",
@@ -120,7 +120,7 @@ async function seed() {
         downloads: 5241,
         views: 14200,
         rating: "4.9",
-        isFree: true,
+        
       },
       {
         title: "دوسيه الرياضيات - التفاضل والتكامل",
@@ -132,7 +132,7 @@ async function seed() {
         downloads: 1893,
         views: 4780,
         rating: "4.6",
-        isFree: false,
+        
       },
     ])
     .returning();
@@ -150,7 +150,7 @@ async function seed() {
       estimatedMinutes: 45,
       downloads: 1847,
       solvers: 923,
-      isFree: true,
+      
     },
     {
       title: "ورقة عمل - قوانين نيوتن للحركة",
@@ -161,7 +161,7 @@ async function seed() {
       estimatedMinutes: 60,
       downloads: 1234,
       solvers: 567,
-      isFree: true,
+      
     },
     {
       title: "ورقة عمل - الجدول الدوري والروابط الكيميائية",
@@ -172,7 +172,7 @@ async function seed() {
       estimatedMinutes: 40,
       downloads: 987,
       solvers: 412,
-      isFree: true,
+      
     },
     {
       title: "ورقة عمل - النحو والإملاء",
@@ -183,7 +183,7 @@ async function seed() {
       estimatedMinutes: 35,
       downloads: 2341,
       solvers: 1892,
-      isFree: true,
+      
     },
     {
       title: "ورقة عمل - التفاضل المتقدم",
@@ -194,7 +194,7 @@ async function seed() {
       estimatedMinutes: 90,
       downloads: 743,
       solvers: 284,
-      isFree: false,
+      
     },
   ]);
 
@@ -215,7 +215,7 @@ async function seed() {
         canSkip: true,
         showResultImmediately: true,
         maxAttempts: 3,
-        isFree: true,
+        
         isAvailable: true,
       },
       {
@@ -231,7 +231,7 @@ async function seed() {
         canSkip: true,
         showResultImmediately: true,
         maxAttempts: 5,
-        isFree: true,
+        
         isAvailable: true,
       },
       {
@@ -247,7 +247,7 @@ async function seed() {
         canSkip: true,
         showResultImmediately: true,
         maxAttempts: 2,
-        isFree: true,
+        
         isAvailable: true,
       },
     ])

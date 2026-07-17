@@ -1,1 +1,2 @@
 - [Abu Al-Arabi Platform Architecture](abu-alarabi-arch.md) — full-stack Tawjihi education platform; auth uses JWT Bearer tokens, not sessions.
+- [Product Vision & Design Rules](abu-alarabi-vision.md) — core philosophy: Arabic-only, premium design, fixed palette, RTL-first, no payments ever. Read before any UI work.

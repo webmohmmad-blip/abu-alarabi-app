@@ -46,7 +46,6 @@ router.get("/worksheets", async (req, res): Promise<void> => {
       downloads: ws.downloads,
       solvers: ws.solvers,
       fileUrl: ws.fileUrl,
-      isFree: ws.isFree,
       createdAt: ws.createdAt,
     }));
 
@@ -85,7 +84,6 @@ router.get("/worksheets/:id", async (req, res): Promise<void> => {
     downloads: row.ws.downloads,
     solvers: row.ws.solvers,
     fileUrl: row.ws.fileUrl,
-    isFree: row.ws.isFree,
     createdAt: row.ws.createdAt,
   });
 });
