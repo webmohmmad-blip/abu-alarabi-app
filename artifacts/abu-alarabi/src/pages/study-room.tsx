@@ -65,7 +65,7 @@ export default function StudyRoom() {
     createSession.mutate(
       { 
         data: {
-          subjectId: 1, // Mock
+          subjectId: task?.subjectId ?? 1,
           type: timerMode,
           plannedMinutes: totalTime / 60,
           taskId: selectedTask || undefined

@@ -193,6 +193,68 @@ router.post("/exams/:id/start", requireAuth, async (req, res): Promise<void> => 
   });
 });
 
+// ─── Get attempt (for exam resume / take page) ───────────────────────────────
+router.get(
+  "/exams/attempts/:attemptId",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const aReq = req as AuthRequest;
+    const rawId = Array.isArray(req.params.attemptId)
+      ? req.params.attemptId[0]
+      : req.params.attemptId;
+    const attemptId = parseInt(rawId, 10);
+
+    const [attempt] = await db
+      .select()
+      .from(examAttemptsTable)
+      .where(and(eq(examAttemptsTable.id, attemptId), eq(examAttemptsTable.userId, aReq.userId)));
+
+    if (!attempt) {
+      res.status(404).json({ error: "المحاولة غير موجودة" });
+      return;
+    }
+
+    const [exam] = await db.select().from(examsTable).where(eq(examsTable.id, attempt.examId));
+
+    const questions = await db.select().from(questionsTable).where(eq(questionsTable.examId, attempt.examId));
+
+    const questionsWithChoices = await Promise.all(
+      questions.map(async (q) => {
+        const choices = await db.select().from(questionChoicesTable).where(eq(questionChoicesTable.questionId, q.id));
+        return {
+          id: q.id,
+          text: q.text,
+          type: q.type,
+          order: q.order,
+          score: parseFloat(q.score),
+          imageUrl: q.imageUrl,
+          choices: choices.map((c) => ({ id: c.choiceKey, text: c.text, imageUrl: c.imageUrl })),
+        };
+      })
+    );
+
+    const savedAnswersArr = await db
+      .select()
+      .from(attemptAnswersTable)
+      .where(eq(attemptAnswersTable.attemptId, attemptId));
+
+    const savedAnswers: Record<number, string> = {};
+    for (const a of savedAnswersArr) {
+      if (a.answer) savedAnswers[a.questionId] = a.answer;
+    }
+
+    res.json({
+      id: attempt.id,
+      examId: attempt.examId,
+      title: exam?.title ?? "",
+      startedAt: attempt.startedAt,
+      durationMinutes: exam?.durationMinutes ?? 60,
+      questions: questionsWithChoices,
+      savedAnswers,
+    });
+  }
+);
+
 router.post(
   "/exams/attempts/:attemptId/answer",
   requireAuth,

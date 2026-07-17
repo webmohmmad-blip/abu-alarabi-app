@@ -104,35 +104,40 @@ export default function DossierDetail() {
           </div>
         </div>
         
-        {/* Mock PDF Area */}
-        <div className="flex-1 overflow-auto p-4 flex flex-col items-center">
-          <div className="w-full max-w-4xl bg-white aspect-[1/1.4] rounded-sm shadow-2xl relative flex items-center justify-center text-black/20">
-            <div className="text-center">
-              <BookOpen className="w-24 h-24 mx-auto mb-4 opacity-50" />
-              <p className="text-2xl font-bold">محتوى الصفحة {currentPage}</p>
-              <p className="text-sm mt-2 opacity-60">محاكاة لعارض الملفات PDF</p>
+        {/* Real PDF viewer */}
+        <div className="flex-1 overflow-hidden relative">
+          {dossier.fileUrl ? (
+            <iframe
+              src={`${dossier.fileUrl}#toolbar=0&navpanes=0&page=${currentPage}`}
+              title={dossier.title}
+              className="w-full h-full border-0"
+              style={{ minHeight: "calc(100vh - 128px)" }}
+            />
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-white/40 bg-gray-900">
+              <BookOpen className="w-24 h-24 mb-4 opacity-40" />
+              <p className="text-xl font-bold">لا يوجد ملف PDF لهذه الدوسية</p>
+              <p className="text-sm mt-2 opacity-60">يرجى التواصل مع الأستاذ</p>
             </div>
-          </div>
-          
+          )}
+
           {/* Pagination Controls */}
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur border border-white/20 p-2 rounded-full flex items-center gap-4 shadow-2xl">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="text-white hover:bg-white/20 rounded-full"
               disabled={currentPage <= 1}
               onClick={() => handlePageChange(currentPage - 1)}
             >
               <ChevronRight className="w-6 h-6" />
             </Button>
-            
             <div className="w-32 px-4">
               <Progress value={(currentPage / dossier.pageCount) * 100} className="h-1.5 bg-white/20 [&>div]:bg-primary" />
             </div>
-
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="text-white hover:bg-white/20 rounded-full"
               disabled={currentPage >= dossier.pageCount}
               onClick={() => handlePageChange(currentPage + 1)}

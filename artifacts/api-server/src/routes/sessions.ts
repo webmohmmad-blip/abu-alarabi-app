@@ -82,7 +82,7 @@ router.post("/sessions", requireAuth, async (req, res): Promise<void> => {
       plannedMinutes,
       pauseCount: 0,
       taskId: taskId ?? null,
-      goal: goal ?? null,
+      goal: goal || "",
     })
     .returning();
 

@@ -7,7 +7,7 @@ import {
   achievementsTable,
   userAchievementsTable,
 } from "@workspace/db";
-import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireAuth, type AuthRequest, comparePassword, hashPassword } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -112,6 +112,92 @@ router.patch(
       tawjihiYear: profile?.tawjihiYear ?? new Date().getFullYear(),
       joinedAt: user.createdAt,
     });
+  }
+);
+
+// ─── Change password ─────────────────────────────────────────────────────────
+router.post(
+  "/users/change-password",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const aReq = req as AuthRequest;
+    const { currentPassword, newPassword } = req.body as {
+      currentPassword: string;
+      newPassword: string;
+    };
+
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ error: "يرجى إدخال كلمة المرور الحالية والجديدة" });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      res.status(400).json({ error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" });
+      return;
+    }
+
+    const [user] = await db
+      .select({ id: usersTable.id, passwordHash: usersTable.passwordHash })
+      .from(usersTable)
+      .where(eq(usersTable.id, aReq.userId));
+
+    if (!user) {
+      res.status(404).json({ error: "المستخدم غير موجود" });
+      return;
+    }
+
+    const isValid = await comparePassword(currentPassword, user.passwordHash);
+    if (!isValid) {
+      res.status(400).json({ error: "كلمة المرور الحالية غير صحيحة" });
+      return;
+    }
+
+    const newHash = await hashPassword(newPassword);
+    await db
+      .update(usersTable)
+      .set({ passwordHash: newHash })
+      .where(eq(usersTable.id, aReq.userId));
+
+    res.json({ message: "تم تحديث كلمة المرور بنجاح" });
+  }
+);
+
+// ─── Delete account (soft delete) ────────────────────────────────────────────
+router.delete(
+  "/users/account",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const aReq = req as AuthRequest;
+    const { password } = req.body as { password: string };
+
+    if (!password) {
+      res.status(400).json({ error: "يرجى إدخال كلمة المرور للتأكيد" });
+      return;
+    }
+
+    const [user] = await db
+      .select({ id: usersTable.id, passwordHash: usersTable.passwordHash })
+      .from(usersTable)
+      .where(eq(usersTable.id, aReq.userId));
+
+    if (!user) {
+      res.status(404).json({ error: "المستخدم غير موجود" });
+      return;
+    }
+
+    const isValid = await comparePassword(password, user.passwordHash);
+    if (!isValid) {
+      res.status(400).json({ error: "كلمة المرور غير صحيحة" });
+      return;
+    }
+
+    // Soft delete
+    await db
+      .update(usersTable)
+      .set({ status: "deleted" } as any)
+      .where(eq(usersTable.id, aReq.userId));
+
+    res.json({ message: "تم حذف الحساب بنجاح" });
   }
 );
 
