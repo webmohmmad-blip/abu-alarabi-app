@@ -10,10 +10,10 @@ import { useState } from "react";
 import {
   BookOpen, FileText, PenTool, Plus, Trash2, Pencil,
   ChevronDown, ChevronRight, Search, GripVertical, Layers,
-  X, Check,
+  X, Check, AlertCircle,
 } from "lucide-react";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Subject {
   id: number;
@@ -22,9 +22,6 @@ interface Subject {
   field: string | null;
   color: string | null;
   iconUrl: string | null;
-  dossierCount: number;
-  worksheetCount: number;
-  examCount: number;
 }
 
 interface Unit {
@@ -41,45 +38,56 @@ interface Dossier {
   grade: string;
   pageCount: number;
   downloads: number;
+  fileUrl: string | null;
   createdAt: string;
 }
 
-// ─── Hooks ──────────────────────────────────────────────────────────────────
-
-function useSubjects() {
-  return useQuery({
-    queryKey: ["/api/subjects"],
-    queryFn: () => customFetch<Subject[]>("/api/subjects", { method: "GET" }),
-  });
+interface Worksheet {
+  id: number;
+  title: string;
+  subjectId: number;
+  grade: string;
+  difficulty: string | null;
+  questionCount: number | null;
+  estimatedMinutes: number | null;
+  fileUrl: string | null;
+  downloads: number;
 }
 
-function useUnits(subjectId: number | null) {
-  return useQuery({
+// ─── Hooks ───────────────────────────────────────────────────────────────────
+
+const useSubjects = () =>
+  useQuery({ queryKey: ["/api/subjects"], queryFn: () => customFetch<Subject[]>("/api/subjects", { method: "GET" }) });
+
+const useUnits = (subjectId: number | null) =>
+  useQuery({
     queryKey: ["/api/admin/subjects", subjectId, "units"],
-    queryFn: () =>
-      customFetch<Unit[]>(`/api/admin/subjects/${subjectId}/units`, { method: "GET" }),
+    queryFn: () => customFetch<Unit[]>(`/api/admin/subjects/${subjectId}/units`, { method: "GET" }),
     enabled: subjectId !== null,
   });
-}
 
-function useDossiers() {
-  return useQuery({
-    queryKey: ["/api/dossiers"],
-    queryFn: () =>
-      customFetch<{ items: Dossier[]; total: number }>(`/api/dossiers?limit=100`, { method: "GET" }),
+const useDossiers = (subjectId: number) =>
+  useQuery({
+    queryKey: ["/api/dossiers", subjectId],
+    queryFn: () => customFetch<{ items: Dossier[]; total: number }>(`/api/dossiers?subjectId=${subjectId}&limit=100`, { method: "GET" }),
   });
-}
 
-// ─── Main Page ───────────────────────────────────────────────────────────────
+const useWorksheets = (subjectId: number) =>
+  useQuery({
+    queryKey: ["/api/worksheets", subjectId],
+    queryFn: () => customFetch<{ items: Worksheet[]; total: number }>(`/api/worksheets?subjectId=${subjectId}&limit=100`, { method: "GET" }),
+  });
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminContent() {
   const { data: subjects, isLoading } = useSubjects();
-  const { data: dossierData } = useDossiers();
   const [expandedSubject, setExpandedSubject] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"units" | "dossiers" | "worksheets" | "exams">("units");
   const [showAddSubject, setShowAddSubject] = useState(false);
   const [showAddDossier, setShowAddDossier] = useState<number | null>(null);
+  const [showAddWorksheet, setShowAddWorksheet] = useState<number | null>(null);
   const qc = useQueryClient();
 
   const deleteSubject = useMutation({
@@ -87,37 +95,25 @@ export default function AdminContent() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/subjects"] }),
   });
 
-  const deleteDossier = useMutation({
-    mutationFn: (id: number) => customFetch(`/api/admin/dossiers/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/dossiers"] }),
-  });
-
-  const filteredSubjects = subjects?.filter(s =>
+  const filtered = subjects?.filter(s =>
     search ? s.name.includes(search) || s.grade.includes(search) : true
   );
-
-  const dossiersForSubject = (subjectId: number) =>
-    dossierData?.items.filter(d => d.subjectId === subjectId) ?? [];
 
   return (
     <AdminLayout>
       <div className="space-y-6">
 
-        {/* Header */}
+        {/* Page header */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">إدارة المحتوى</h1>
             <p className="text-muted-foreground text-sm mt-0.5">
-              المسارات الأكاديمية للغة العربية — وحداتها، دوسياتها، وامتحاناتها
+              المسارات الأكاديمية للغة العربية — وحداتها، دوسياتها، وأوراق العمل
             </p>
           </div>
-          <Button
-            onClick={() => setShowAddSubject(true)}
-            className="bg-primary hover:bg-primary/90 gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            إضافة مسار جديد
+          <Button onClick={() => setShowAddSubject(true)} className="bg-primary hover:bg-primary/90 gap-2">
+            <Plus className="w-4 h-4" /> إضافة مسار جديد
           </Button>
         </motion.div>
 
@@ -137,7 +133,7 @@ export default function AdminContent() {
         </Card>
 
         {/* Empty state */}
-        {!isLoading && filteredSubjects?.length === 0 && (
+        {!isLoading && filtered?.length === 0 && (
           <Card className="bg-white/5 border-white/10">
             <CardContent className="p-12 text-center">
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -145,7 +141,7 @@ export default function AdminContent() {
               </div>
               <h3 className="text-lg font-bold text-white mb-2">لا توجد مسارات بعد</h3>
               <p className="text-muted-foreground text-sm mb-6">
-                أضف مساراتك الأكاديمية (توجيهي، أول ثانوي، دورات...) ثم أضف الوحدات والمحتوى داخل كل مسار.
+                أضف مساراتك الأكاديمية ثم أضف وحداتها، دوسياتها، وأوراق العمل.
               </p>
               <Button onClick={() => setShowAddSubject(true)} className="gap-2">
                 <Plus className="w-4 h-4" /> إضافة أول مسار
@@ -154,34 +150,27 @@ export default function AdminContent() {
           </Card>
         )}
 
-        {/* Subjects tree */}
+        {/* Subjects list */}
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full bg-white/5 rounded-2xl" />)}
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredSubjects?.map((subject, i) => {
+            {filtered?.map((subject, i) => {
               const isExpanded = expandedSubject === subject.id;
-              const dossiers = dossiersForSubject(subject.id);
-
               return (
                 <motion.div key={subject.id} initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                   <Card className="bg-white/5 border-white/10 overflow-hidden">
 
-                    {/* Subject row */}
+                    {/* Row */}
                     <div
-                      onClick={() => {
-                        setExpandedSubject(isExpanded ? null : subject.id);
-                        setActiveTab("units");
-                      }}
+                      onClick={() => { setExpandedSubject(isExpanded ? null : subject.id); setActiveTab("units"); }}
                       className="w-full flex items-center gap-4 p-5 hover:bg-white/5 transition-colors cursor-pointer select-none"
                     >
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white font-black text-base"
-                        style={{ backgroundColor: subject.color ?? "#5A2D82" }}
-                      >
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white font-black text-base"
+                        style={{ backgroundColor: subject.color ?? "#5A2D82" }}>
                         {subject.name.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0 text-right">
@@ -190,83 +179,51 @@ export default function AdminContent() {
                           الصف {subject.grade}{subject.field ? ` • ${subject.field}` : ""}
                         </div>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" />{subject.dossierCount ?? 0}</span>
-                        <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" />{subject.worksheetCount ?? 0}</span>
-                        <span className="flex items-center gap-1"><PenTool className="w-3.5 h-3.5" />{subject.examCount ?? 0}</span>
-                      </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            if (confirm(`حذف مسار "${subject.name}"؟`)) deleteSubject.mutate(subject.id);
-                          }}
+                          onClick={e => { e.stopPropagation(); if (confirm(`حذف مسار "${subject.name}"؟`)) deleteSubject.mutate(subject.id); }}
                           className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                        {isExpanded
-                          ? <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                          : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                        {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                       </div>
                     </div>
 
-                    {/* Expanded panel */}
+                    {/* Expanded */}
                     {isExpanded && (
                       <div className="border-t border-white/10 bg-black/10">
-                        {/* Tabs */}
                         <div className="flex gap-1 px-5 pt-4">
                           {[
-                            { key: "units" as const, label: "الوحدات والمواد", icon: Layers },
+                            { key: "units" as const, label: "الوحدات", icon: Layers },
                             { key: "dossiers" as const, label: "الدوسيات", icon: BookOpen },
                             { key: "worksheets" as const, label: "أوراق العمل", icon: FileText },
                             { key: "exams" as const, label: "الامتحانات", icon: PenTool },
                           ].map(tab => (
-                            <button
-                              key={tab.key}
-                              onClick={() => setActiveTab(tab.key)}
-                              className={`flex items-center gap-1.5 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${activeTab === tab.key ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white"}`}
-                            >
-                              <tab.icon className="w-3.5 h-3.5" />
-                              {tab.label}
+                            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                              className={`flex items-center gap-1.5 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${activeTab === tab.key ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white"}`}>
+                              <tab.icon className="w-3.5 h-3.5" />{tab.label}
                             </button>
                           ))}
                         </div>
-
                         <div className="p-5">
-                          {activeTab === "units" && (
-                            <UnitsPanel subjectId={subject.id} qc={qc} />
-                          )}
+                          {activeTab === "units" && <UnitsPanel subjectId={subject.id} qc={qc} />}
                           {activeTab === "dossiers" && (
-                            <div className="space-y-2">
-                              <button
-                                onClick={() => setShowAddDossier(subject.id)}
-                                className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 mb-3 transition-colors"
-                              >
-                                <Plus className="w-4 h-4" />إضافة دوسيه
-                              </button>
-                              {dossiers.length === 0 ? (
-                                <p className="text-sm text-muted-foreground py-4 text-center">لا توجد دوسيات لهذا المسار بعد.</p>
-                              ) : (
-                                dossiers.map(d => (
-                                  <div key={d.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-white/5 transition-colors">
-                                    <div>
-                                      <p className="text-sm font-medium text-white">{d.title}</p>
-                                      <p className="text-xs text-muted-foreground">{d.pageCount} صفحة • {d.downloads.toLocaleString("ar")} تنزيل</p>
-                                    </div>
-                                    <button
-                                      onClick={() => { if (confirm(`حذف "${d.title}"؟`)) deleteDossier.mutate(d.id); }}
-                                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                ))
-                              )}
-                            </div>
+                            <DossiersPanel
+                              subjectId={subject.id}
+                              qc={qc}
+                              onAdd={() => setShowAddDossier(subject.id)}
+                            />
                           )}
-                          {(activeTab === "worksheets" || activeTab === "exams") && (
-                            <p className="text-sm text-muted-foreground py-4 text-center">سيتم إضافة هذه الإدارة قريبًا.</p>
+                          {activeTab === "worksheets" && (
+                            <WorksheetsPanel
+                              subjectId={subject.id}
+                              qc={qc}
+                              onAdd={() => setShowAddWorksheet(subject.id)}
+                            />
+                          )}
+                          {activeTab === "exams" && (
+                            <p className="text-sm text-muted-foreground py-4 text-center">إدارة الامتحانات ستُضاف قريباً.</p>
                           )}
                         </div>
                       </div>
@@ -279,31 +236,31 @@ export default function AdminContent() {
         )}
       </div>
 
-      {/* Modals */}
       {showAddSubject && (
         <AddSubjectModal
           onClose={() => setShowAddSubject(false)}
-          onSuccess={() => {
-            setShowAddSubject(false);
-            qc.invalidateQueries({ queryKey: ["/api/subjects"] });
-          }}
+          onSuccess={() => { setShowAddSubject(false); qc.invalidateQueries({ queryKey: ["/api/subjects"] }); }}
         />
       )}
       {showAddDossier !== null && (
         <AddDossierModal
           subjectId={showAddDossier}
           onClose={() => setShowAddDossier(null)}
-          onSuccess={() => {
-            setShowAddDossier(null);
-            qc.invalidateQueries({ queryKey: ["/api/dossiers"] });
-          }}
+          onSuccess={() => { setShowAddDossier(null); qc.invalidateQueries({ queryKey: ["/api/dossiers", showAddDossier] }); }}
+        />
+      )}
+      {showAddWorksheet !== null && (
+        <AddWorksheetModal
+          subjectId={showAddWorksheet}
+          onClose={() => setShowAddWorksheet(null)}
+          onSuccess={() => { setShowAddWorksheet(null); qc.invalidateQueries({ queryKey: ["/api/worksheets", showAddWorksheet] }); }}
         />
       )}
     </AdminLayout>
   );
 }
 
-// ─── Units Panel ─────────────────────────────────────────────────────────────
+// ─── Units Panel ──────────────────────────────────────────────────────────────
 
 function UnitsPanel({ subjectId, qc }: { subjectId: number; qc: ReturnType<typeof useQueryClient> }) {
   const { data: units, isLoading } = useUnits(subjectId);
@@ -312,121 +269,164 @@ function UnitsPanel({ subjectId, qc }: { subjectId: number; qc: ReturnType<typeo
   const [editTitle, setEditTitle] = useState("");
 
   const addUnit = useMutation({
-    mutationFn: (title: string) =>
-      customFetch(`/api/admin/subjects/${subjectId}/units`, {
-        method: "POST",
-        body: JSON.stringify({ title }),
-      }),
-    onSuccess: () => {
-      setNewTitle("");
-      qc.invalidateQueries({ queryKey: ["/api/admin/subjects", subjectId, "units"] });
-    },
+    mutationFn: (title: string) => customFetch(`/api/admin/subjects/${subjectId}/units`, { method: "POST", body: JSON.stringify({ title }) }),
+    onSuccess: () => { setNewTitle(""); qc.invalidateQueries({ queryKey: ["/api/admin/subjects", subjectId, "units"] }); },
   });
-
   const updateUnit = useMutation({
-    mutationFn: ({ id, title }: { id: number; title: string }) =>
-      customFetch(`/api/admin/units/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ title }),
-      }),
-    onSuccess: () => {
-      setEditingId(null);
-      qc.invalidateQueries({ queryKey: ["/api/admin/subjects", subjectId, "units"] });
-    },
+    mutationFn: ({ id, title }: { id: number; title: string }) => customFetch(`/api/admin/units/${id}`, { method: "PATCH", body: JSON.stringify({ title }) }),
+    onSuccess: () => { setEditingId(null); qc.invalidateQueries({ queryKey: ["/api/admin/subjects", subjectId, "units"] }); },
   });
-
   const deleteUnit = useMutation({
-    mutationFn: (id: number) =>
-      customFetch(`/api/admin/units/${id}`, { method: "DELETE" }),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["/api/admin/subjects", subjectId, "units"] }),
+    mutationFn: (id: number) => customFetch(`/api/admin/units/${id}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/admin/subjects", subjectId, "units"] }),
   });
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground mb-3">
-        الوحدات والمواد هي التصنيفات الداخلية لهذا المسار (مثل: النحو والصرف، البلاغة، الأدب والنصوص...).
-      </p>
-
-      {isLoading ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full bg-white/5 rounded-lg" />)}
-        </div>
-      ) : units?.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-4">لا توجد وحدات بعد. أضف أول وحدة أدناه.</p>
-      ) : (
-        <div className="space-y-2">
-          {units?.map((unit, idx) => (
-            <div key={unit.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/5 group">
-              <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-              <span className="text-xs font-bold text-muted-foreground/60 w-6 shrink-0">{idx + 1}</span>
-
-              {editingId === unit.id ? (
-                <>
-                  <Input
-                    value={editTitle}
-                    onChange={e => setEditTitle(e.target.value)}
-                    className="flex-1 h-8 bg-white/10 border-white/20 text-white text-sm"
-                    autoFocus
-                    onKeyDown={e => {
-                      if (e.key === "Enter") updateUnit.mutate({ id: unit.id, title: editTitle });
-                      if (e.key === "Escape") setEditingId(null);
-                    }}
-                  />
-                  <button
-                    onClick={() => updateUnit.mutate({ id: unit.id, title: editTitle })}
-                    className="p-1.5 text-success hover:bg-success/10 rounded transition-colors"
-                  >
-                    <Check className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="p-1.5 text-muted-foreground hover:text-white rounded transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <span className="flex-1 text-sm text-white">{unit.title}</span>
-                  <button
-                    onClick={() => { setEditingId(unit.id); setEditTitle(unit.title); }}
-                    className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-white transition-all"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => { if (confirm(`حذف وحدة "${unit.title}"؟`)) deleteUnit.mutate(unit.id); }}
-                    className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Add unit input */}
+      <p className="text-xs text-muted-foreground">الوحدات هي التصنيفات الداخلية للمسار (مثال: النحو، البلاغة، الأدب...).</p>
+      {isLoading ? <Skeleton className="h-24 bg-white/5 rounded-xl" /> :
+        units?.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">أضف أول وحدة أدناه.</p> : (
+          <div className="space-y-2">
+            {units?.map((unit, idx) => (
+              <div key={unit.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/5 group">
+                <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                <span className="text-xs font-bold text-muted-foreground/60 w-6 shrink-0">{idx + 1}</span>
+                {editingId === unit.id ? (
+                  <>
+                    <Input value={editTitle} onChange={e => setEditTitle(e.target.value)}
+                      className="flex-1 h-8 bg-white/10 border-white/20 text-white text-sm" autoFocus
+                      onKeyDown={e => { if (e.key === "Enter") updateUnit.mutate({ id: unit.id, title: editTitle }); if (e.key === "Escape") setEditingId(null); }} />
+                    <button onClick={() => updateUnit.mutate({ id: unit.id, title: editTitle })} className="p-1.5 text-green-400 hover:bg-green-500/10 rounded transition-colors"><Check className="w-4 h-4" /></button>
+                    <button onClick={() => setEditingId(null)} className="p-1.5 text-muted-foreground hover:text-white rounded transition-colors"><X className="w-4 h-4" /></button>
+                  </>
+                ) : (
+                  <>
+                    <span className="flex-1 text-sm text-white">{unit.title}</span>
+                    <button onClick={() => { setEditingId(unit.id); setEditTitle(unit.title); }} className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-white transition-all"><Pencil className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => { if (confirm(`حذف "${unit.title}"؟`)) deleteUnit.mutate(unit.id); }} className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       <div className="flex gap-2 mt-4">
-        <Input
-          placeholder="اسم الوحدة الجديدة (مثال: النحو والصرف)..."
-          value={newTitle}
-          onChange={e => setNewTitle(e.target.value)}
+        <Input placeholder="اسم الوحدة الجديدة..." value={newTitle} onChange={e => setNewTitle(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && newTitle.trim()) addUnit.mutate(newTitle.trim()); }}
-          className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-muted-foreground"
-        />
-        <Button
-          onClick={() => { if (newTitle.trim()) addUnit.mutate(newTitle.trim()); }}
-          disabled={!newTitle.trim() || addUnit.isPending}
-          size="sm"
-          className="gap-1.5 shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          إضافة
+          className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-muted-foreground" />
+        <Button onClick={() => { if (newTitle.trim()) addUnit.mutate(newTitle.trim()); }} disabled={!newTitle.trim() || addUnit.isPending} size="sm" className="gap-1.5 shrink-0">
+          <Plus className="w-4 h-4" /> إضافة
         </Button>
       </div>
+    </div>
+  );
+}
+
+// ─── Dossiers Panel ───────────────────────────────────────────────────────────
+
+function DossiersPanel({ subjectId, qc, onAdd }: { subjectId: number; qc: ReturnType<typeof useQueryClient>; onAdd: () => void }) {
+  const { data, isLoading } = useDossiers(subjectId);
+  const items = data?.items ?? [];
+
+  const del = useMutation({
+    mutationFn: (id: number) => customFetch(`/api/admin/dossiers/${id}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/dossiers", subjectId] }),
+  });
+
+  return (
+    <div className="space-y-2">
+      <button onClick={onAdd} className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 mb-3 transition-colors font-medium">
+        <Plus className="w-4 h-4" /> إضافة دوسيه جديد
+      </button>
+      {isLoading ? <Skeleton className="h-20 bg-white/5 rounded-xl" /> :
+        items.length === 0 ? <p className="text-sm text-muted-foreground py-4 text-center">لا توجد دوسيات لهذا المسار بعد.</p> : (
+          <div className="space-y-2">
+            {items.map(d => (
+              <div key={d.id} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-white/5 hover:bg-white/8 transition-colors group">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <BookOpen className="w-4 h-4 text-primary/70" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{d.title}</p>
+                    <p className="text-xs text-muted-foreground">{d.pageCount} صفحة • {(d.downloads ?? 0).toLocaleString("ar")} تنزيل</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {d.fileUrl && (
+                    <a href={d.fileUrl} target="_blank" rel="noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-secondary transition-colors text-xs opacity-0 group-hover:opacity-100">
+                      فتح
+                    </a>
+                  )}
+                  <button onClick={() => { if (confirm(`حذف "${d.title}"؟`)) del.mutate(d.id); }}
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+    </div>
+  );
+}
+
+// ─── Worksheets Panel ─────────────────────────────────────────────────────────
+
+const DIFFICULTY_LABEL: Record<string, string> = { easy: "سهل", medium: "متوسط", hard: "صعب" };
+const DIFFICULTY_COLOR: Record<string, string> = { easy: "text-green-400", medium: "text-yellow-400", hard: "text-red-400" };
+
+function WorksheetsPanel({ subjectId, qc, onAdd }: { subjectId: number; qc: ReturnType<typeof useQueryClient>; onAdd: () => void }) {
+  const { data, isLoading } = useWorksheets(subjectId);
+  const items = data?.items ?? [];
+
+  const del = useMutation({
+    mutationFn: (id: number) => customFetch(`/api/admin/worksheets/${id}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/worksheets", subjectId] }),
+  });
+
+  return (
+    <div className="space-y-2">
+      <button onClick={onAdd} className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 mb-3 transition-colors font-medium">
+        <Plus className="w-4 h-4" /> إضافة ورقة عمل جديدة
+      </button>
+      {isLoading ? <Skeleton className="h-20 bg-white/5 rounded-xl" /> :
+        items.length === 0 ? <p className="text-sm text-muted-foreground py-4 text-center">لا توجد أوراق عمل لهذا المسار بعد.</p> : (
+          <div className="space-y-2">
+            {items.map(w => (
+              <div key={w.id} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-white/5 hover:bg-white/8 transition-colors group">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4 text-secondary/70" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{w.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {w.difficulty && <span className={DIFFICULTY_COLOR[w.difficulty] ?? ""}>{DIFFICULTY_LABEL[w.difficulty] ?? w.difficulty}</span>}
+                      {w.questionCount && <span>• {w.questionCount} سؤال</span>}
+                      {w.estimatedMinutes && <span>• {w.estimatedMinutes} دقيقة</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {w.fileUrl && (
+                    <a href={w.fileUrl} target="_blank" rel="noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-secondary transition-colors text-xs opacity-0 group-hover:opacity-100">
+                      فتح
+                    </a>
+                  )}
+                  <button onClick={() => { if (confirm(`حذف "${w.title}"؟`)) del.mutate(w.id); }}
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
     </div>
   );
 }
@@ -436,109 +436,56 @@ function UnitsPanel({ subjectId, qc }: { subjectId: number; qc: ReturnType<typeo
 const PALETTE = ["#5A2D82", "#0D9BB5", "#C79A2D", "#2FA84F", "#E05252", "#6366F1", "#F59E0B", "#10B981"];
 
 function AddSubjectModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const [form, setForm] = useState({
-    name: "",
-    grade: "12",
-    field: "all",
-    color: "#5A2D82",
-  });
+  const [form, setForm] = useState({ name: "", grade: "12", field: "all", color: "#5A2D82" });
   const [error, setError] = useState("");
 
   const save = useMutation({
-    mutationFn: () =>
-      customFetch("/api/admin/subjects", { method: "POST", body: JSON.stringify(form) }),
+    mutationFn: () => customFetch("/api/admin/subjects", { method: "POST", body: JSON.stringify(form) }),
     onSuccess,
     onError: (e: any) => setError(e.message ?? "خطأ في الحفظ"),
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" dir="rtl">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-[#1a1030] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">إضافة مسار دراسي جديد</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-white transition-colors">
-            <X className="w-5 h-5" />
-          </button>
+    <Modal title="إضافة مسار دراسي جديد" onClose={onClose}>
+      <div className="space-y-4">
+        <Field label="اسم المسار">
+          <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+            className="bg-white/5 border-white/10 text-white" placeholder="مثال: توجيهي، دورة الإعراب..." autoFocus />
+        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="الصف الدراسي">
+            <Select value={form.grade} onChange={v => setForm({ ...form, grade: v })}
+              options={["7","8","9","10","11","12","توجيهي","عام"].map(g => ({ value: g, label: g }))} />
+          </Field>
+          <Field label="الفرع">
+            <Select value={form.field} onChange={v => setForm({ ...form, field: v })}
+              options={[
+                { value: "all", label: "جميع الفروع" },
+                { value: "علمي", label: "علمي" },
+                { value: "أدبي", label: "أدبي" },
+                { value: "صناعي", label: "صناعي" },
+                { value: "زراعي", label: "زراعي" },
+              ]} />
+          </Field>
         </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm text-muted-foreground mb-1.5 block">اسم المسار</label>
-            <Input
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              className="bg-white/5 border-white/10 text-white"
-              placeholder="مثال: توجيهي، أول ثانوي، دورة الإعراب..."
-              autoFocus
-            />
+        <Field label="اللون">
+          <div className="flex gap-2 flex-wrap">
+            {PALETTE.map(color => (
+              <button key={color} onClick={() => setForm({ ...form, color })}
+                className={`w-8 h-8 rounded-full transition-all ${form.color === color ? "ring-2 ring-white ring-offset-2 ring-offset-[#1a1030] scale-110" : "hover:scale-105"}`}
+                style={{ backgroundColor: color }} />
+            ))}
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">الصف الدراسي</label>
-              <select
-                value={form.grade}
-                onChange={e => setForm({ ...form, grade: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm"
-              >
-                {["7","8","9","10","11","12","توجيهي","عام"].map(g => (
-                  <option key={g} value={g} className="bg-[#1a1030]">{g}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">الفرع</label>
-              <select
-                value={form.field}
-                onChange={e => setForm({ ...form, field: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm"
-              >
-                <option value="all" className="bg-[#1a1030]">جميع الفروع</option>
-                <option value="علمي" className="bg-[#1a1030]">علمي</option>
-                <option value="أدبي" className="bg-[#1a1030]">أدبي</option>
-                <option value="صناعي" className="bg-[#1a1030]">صناعي</option>
-                <option value="زراعي" className="bg-[#1a1030]">زراعي</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm text-muted-foreground mb-2 block">اللون</label>
-            <div className="flex gap-2 flex-wrap">
-              {PALETTE.map(color => (
-                <button
-                  key={color}
-                  onClick={() => setForm({ ...form, color })}
-                  className={`w-8 h-8 rounded-full transition-all ${form.color === color ? "ring-2 ring-white ring-offset-2 ring-offset-[#1a1030] scale-110" : "hover:scale-105"}`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {error && <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">{error}</p>}
-        </div>
-
-        <div className="flex gap-3 mt-6">
-          <Button
-            onClick={() => save.mutate()}
-            disabled={!form.name.trim() || save.isPending}
-            className="flex-1 bg-primary hover:bg-primary/90"
-          >
-            {save.isPending ? "جاري الحفظ..." : "حفظ المسار"}
-          </Button>
-          <Button variant="outline" onClick={onClose}
-            className="border-white/10 bg-white/5 text-white hover:bg-white/10">
-            إلغاء
-          </Button>
-        </div>
-      </motion.div>
-    </div>
+        </Field>
+        {error && <ErrorMsg>{error}</ErrorMsg>}
+      </div>
+      <ModalActions>
+        <Button onClick={() => save.mutate()} disabled={!form.name.trim() || save.isPending} className="flex-1 bg-primary hover:bg-primary/90">
+          {save.isPending ? "جاري الحفظ..." : "حفظ المسار"}
+        </Button>
+        <Button variant="outline" onClick={onClose} className="border-white/10 bg-white/5 text-white hover:bg-white/10">إلغاء</Button>
+      </ModalActions>
+    </Modal>
   );
 }
 
@@ -549,69 +496,169 @@ function AddDossierModal({ subjectId, onClose, onSuccess }: { subjectId: number;
   const [error, setError] = useState("");
 
   const save = useMutation({
-    mutationFn: () =>
-      customFetch("/api/admin/dossiers", {
-        method: "POST",
-        body: JSON.stringify({ ...form, subjectId, pageCount: Number(form.pageCount) }),
-      }),
+    mutationFn: () => customFetch("/api/admin/dossiers", {
+      method: "POST",
+      body: JSON.stringify({ ...form, subjectId, pageCount: Number(form.pageCount) }),
+    }),
     onSuccess,
     onError: (e: any) => setError(e.message ?? "خطأ"),
   });
 
   return (
+    <Modal title="إضافة دوسيه جديد" onClose={onClose}>
+      <div className="space-y-4">
+        <Field label="عنوان الدوسيه">
+          <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+            className="bg-white/5 border-white/10 text-white" placeholder="عنوان الدوسيه..." autoFocus />
+        </Field>
+        <Field label="الوصف (اختياري)">
+          <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+            className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2.5 text-sm resize-none h-20"
+            placeholder="وصف مختصر..." />
+        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="الصف">
+            <Input value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })}
+              className="bg-white/5 border-white/10 text-white" placeholder="12" />
+          </Field>
+          <Field label="عدد الصفحات">
+            <Input type="number" value={form.pageCount || ""}
+              onChange={e => setForm({ ...form, pageCount: parseInt(e.target.value) || 0 })}
+              className="bg-white/5 border-white/10 text-white" placeholder="0" />
+          </Field>
+        </div>
+        <Field label="رابط الملف (PDF)">
+          <Input value={form.fileUrl} onChange={e => setForm({ ...form, fileUrl: e.target.value })}
+            className="bg-white/5 border-white/10 text-white" placeholder="https://..." dir="ltr" />
+        </Field>
+        <Field label="رابط الغلاف (اختياري)">
+          <Input value={form.coverUrl} onChange={e => setForm({ ...form, coverUrl: e.target.value })}
+            className="bg-white/5 border-white/10 text-white" placeholder="https://..." dir="ltr" />
+        </Field>
+        {error && <ErrorMsg>{error}</ErrorMsg>}
+      </div>
+      <ModalActions>
+        <Button onClick={() => save.mutate()} disabled={!form.title.trim() || save.isPending} className="flex-1 bg-primary hover:bg-primary/90">
+          {save.isPending ? "جاري الحفظ..." : "حفظ الدوسيه"}
+        </Button>
+        <Button variant="outline" onClick={onClose} className="border-white/10 bg-white/5 text-white hover:bg-white/10">إلغاء</Button>
+      </ModalActions>
+    </Modal>
+  );
+}
+
+// ─── Add Worksheet Modal ──────────────────────────────────────────────────────
+
+function AddWorksheetModal({ subjectId, onClose, onSuccess }: { subjectId: number; onClose: () => void; onSuccess: () => void }) {
+  const [form, setForm] = useState({ title: "", grade: "12", difficulty: "medium", questionCount: 0, estimatedMinutes: 0, fileUrl: "" });
+  const [error, setError] = useState("");
+
+  const save = useMutation({
+    mutationFn: () => customFetch("/api/admin/worksheets", {
+      method: "POST",
+      body: JSON.stringify({
+        ...form,
+        subjectId,
+        questionCount: Number(form.questionCount) || null,
+        estimatedMinutes: Number(form.estimatedMinutes) || null,
+      }),
+    }),
+    onSuccess,
+    onError: (e: any) => setError(e.message ?? "خطأ"),
+  });
+
+  return (
+    <Modal title="إضافة ورقة عمل جديدة" onClose={onClose}>
+      <div className="space-y-4">
+        <Field label="عنوان ورقة العمل">
+          <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+            className="bg-white/5 border-white/10 text-white" placeholder="عنوان ورقة العمل..." autoFocus />
+        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="الصف">
+            <Input value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })}
+              className="bg-white/5 border-white/10 text-white" placeholder="12" />
+          </Field>
+          <Field label="مستوى الصعوبة">
+            <Select value={form.difficulty} onChange={v => setForm({ ...form, difficulty: v })}
+              options={[
+                { value: "easy", label: "سهل" },
+                { value: "medium", label: "متوسط" },
+                { value: "hard", label: "صعب" },
+              ]} />
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="عدد الأسئلة">
+            <Input type="number" value={form.questionCount || ""}
+              onChange={e => setForm({ ...form, questionCount: parseInt(e.target.value) || 0 })}
+              className="bg-white/5 border-white/10 text-white" placeholder="0" />
+          </Field>
+          <Field label="الوقت المقدر (دقيقة)">
+            <Input type="number" value={form.estimatedMinutes || ""}
+              onChange={e => setForm({ ...form, estimatedMinutes: parseInt(e.target.value) || 0 })}
+              className="bg-white/5 border-white/10 text-white" placeholder="0" />
+          </Field>
+        </div>
+        <Field label="رابط الملف (PDF)">
+          <Input value={form.fileUrl} onChange={e => setForm({ ...form, fileUrl: e.target.value })}
+            className="bg-white/5 border-white/10 text-white" placeholder="https://..." dir="ltr" />
+        </Field>
+        {error && <ErrorMsg>{error}</ErrorMsg>}
+      </div>
+      <ModalActions>
+        <Button onClick={() => save.mutate()} disabled={!form.title.trim() || save.isPending} className="flex-1 bg-primary hover:bg-primary/90">
+          {save.isPending ? "جاري الحفظ..." : "حفظ ورقة العمل"}
+        </Button>
+        <Button variant="outline" onClick={onClose} className="border-white/10 bg-white/5 text-white hover:bg-white/10">إلغاء</Button>
+      </ModalActions>
+    </Modal>
+  );
+}
+
+// ─── Shared primitives ────────────────────────────────────────────────────────
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" dir="rtl">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-[#1a1030] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
-      >
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+        className="bg-[#1a1030] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">إضافة دوسيه جديد</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-white transition-colors">
-            <X className="w-5 h-5" />
-          </button>
+          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <button onClick={onClose} className="text-muted-foreground hover:text-white transition-colors"><X className="w-5 h-5" /></button>
         </div>
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm text-muted-foreground mb-1.5 block">العنوان</label>
-            <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-              className="bg-white/5 border-white/10 text-white" placeholder="عنوان الدوسيه..." autoFocus />
-          </div>
-          <div>
-            <label className="text-sm text-muted-foreground mb-1.5 block">الوصف</label>
-            <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2.5 text-sm resize-none h-20"
-              placeholder="وصف مختصر..." />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">الصف</label>
-              <Input value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })}
-                className="bg-white/5 border-white/10 text-white" placeholder="12" />
-            </div>
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">عدد الصفحات</label>
-              <Input type="number" value={form.pageCount}
-                onChange={e => setForm({ ...form, pageCount: parseInt(e.target.value) || 0 })}
-                className="bg-white/5 border-white/10 text-white" />
-            </div>
-          </div>
-          <div>
-            <label className="text-sm text-muted-foreground mb-1.5 block">رابط الملف (PDF)</label>
-            <Input value={form.fileUrl} onChange={e => setForm({ ...form, fileUrl: e.target.value })}
-              className="bg-white/5 border-white/10 text-white" placeholder="https://..." dir="ltr" />
-          </div>
-          {error && <p className="text-sm text-red-400">{error}</p>}
-        </div>
-        <div className="flex gap-3 mt-6">
-          <Button onClick={() => save.mutate()} disabled={!form.title.trim() || save.isPending}
-            className="flex-1 bg-primary hover:bg-primary/90">
-            {save.isPending ? "جاري الحفظ..." : "حفظ"}
-          </Button>
-          <Button variant="outline" onClick={onClose}
-            className="border-white/10 bg-white/5 text-white hover:bg-white/10">إلغاء</Button>
-        </div>
+        {children}
       </motion.div>
+    </div>
+  );
+}
+
+function ModalActions({ children }: { children: React.ReactNode }) {
+  return <div className="flex gap-3 mt-6">{children}</div>;
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-sm text-muted-foreground mb-1.5 block">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function Select({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
+  return (
+    <select value={value} onChange={e => onChange(e.target.value)}
+      className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm">
+      {options.map(o => <option key={o.value} value={o.value} className="bg-[#1a1030]">{o.label}</option>)}
+    </select>
+  );
+}
+
+function ErrorMsg({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />{children}
     </div>
   );
 }

@@ -542,6 +542,33 @@ router.delete("/dossiers/:id", async (req, res) => {
   res.status(204).send();
 });
 
+// ─── WORKSHEETS (admin CRUD) ─────────────────────────────────────────────────
+router.post("/worksheets", async (req, res) => {
+  const { title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl } = req.body;
+  const [w] = await db
+    .insert(worksheetsTable)
+    .values({ title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl })
+    .returning();
+  res.status(201).json(w);
+});
+
+router.patch("/worksheets/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const { title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl } = req.body;
+  const [w] = await db
+    .update(worksheetsTable)
+    .set({ title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl })
+    .where(eq(worksheetsTable.id, id))
+    .returning();
+  res.json(w);
+});
+
+router.delete("/worksheets/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  await db.update(worksheetsTable).set({ deletedAt: new Date() } as any).where(eq(worksheetsTable.id, id));
+  res.status(204).send();
+});
+
 // ─── EXAMS (admin CRUD) ──────────────────────────────────────────────────────
 router.post("/exams", async (req, res) => {
   const data = req.body;
