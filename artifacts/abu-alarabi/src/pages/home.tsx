@@ -190,54 +190,112 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════
-          ACADEMIC TRACKS
+          TEACHER PROFILE — محمد الساحوري
       ═══════════════════════════════════════════════ */}
-      <section className="py-24">
+      <section className="py-24 overflow-hidden">
         <div className="container mx-auto px-6">
-          <div className="max-w-xl mb-14">
-            <p className="text-sm font-bold text-primary uppercase tracking-widest mb-4">المسارات الأكاديمية</p>
-            <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight">
-              محتوى مُصمَّم لكل مرحلة
-            </h2>
-            <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
-              سواء كنت في التوجيهي أو تريد تأسيس قواعدك في اللغة العربية — لديك مسار مخصص يناسبك.
-            </p>
-          </div>
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {TRACKS.map((track, i) => (
-              <motion.div
-                key={track.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.07, duration: 0.4 }}
-              >
-                <Link href="/dossiers">
-                  <div className="group relative flex items-center gap-5 p-6 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer overflow-hidden">
-                    {/* Color accent line */}
-                    <div
-                      className="absolute right-0 top-0 bottom-0 w-1 rounded-l-full opacity-60 group-hover:opacity-100 transition-opacity"
-                      style={{ backgroundColor: track.color }}
-                    />
+            {/* Image column */}
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative order-last lg:order-first"
+            >
+              {/* Decorative rings */}
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/20 via-secondary/10 to-transparent" />
+              <div className="absolute -top-6 -right-6 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+              <div className="absolute -bottom-6 -left-6 w-48 h-48 bg-secondary/5 rounded-full blur-2xl" />
 
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-black shrink-0 shadow-sm"
-                      style={{ backgroundColor: track.color }}
-                    >
-                      {track.label.charAt(0)}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-foreground text-base">{track.label}</div>
-                      <div className="text-sm text-muted-foreground mt-0.5">{track.sub}</div>
-                    </div>
-
-                    <ArrowLeft className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary group-hover:-translate-x-1 transition-all duration-200 shrink-0" />
+              {/* Photo frame */}
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/20 border border-primary/10">
+                <img
+                  src="/teacher-sahouri.jpg"
+                  alt="الأستاذ محمد الساحوري — أبو العربي"
+                  className="w-full object-cover object-top"
+                  style={{ aspectRatio: "4/5", maxHeight: "560px" }}
+                />
+                {/* Overlay gradient at bottom */}
+                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-foreground/40 to-transparent" />
+                <div className="absolute bottom-4 right-4 left-4 flex items-end justify-between">
+                  <div>
+                    <p className="text-white font-black text-lg leading-tight">محمد الساحوري</p>
+                    <p className="text-white/70 text-sm">أبو العربي</p>
                   </div>
-                </Link>
-              </motion.div>
-            ))}
+                  {/* Verified badge */}
+                  <div className="flex items-center gap-1.5 bg-accent/90 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                    <Star className="w-3.5 h-3.5 fill-white" />
+                    مصحح وزاري معتمد
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Content column */}
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="space-y-8"
+            >
+              <div>
+                <p className="text-sm font-bold text-primary uppercase tracking-widest mb-4">عن الأستاذ</p>
+                <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-5">
+                  خبرة تُحدث<br />
+                  <span className="text-primary">الفارق الحقيقي</span>
+                </h2>
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  الأستاذ محمد الساحوري — أبو العربي — مدرّس لغة عربية بخبرة ثماني سنوات في تدريس التوجيهي والمراحل الثانوية.
+                  يُقدّم محتوىً أكاديمياً عميقاً وأسلوباً تعليمياً واضحاً يجعل اللغة العربية سهلة وممتعة.
+                </p>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { val: "+٨", lbl: "سنوات خبرة", icon: Clock, color: "#5A2D82" },
+                  { val: "+١٠٠٠", lbl: "طالب وطالبة", icon: Users, color: "#0D9BB5" },
+                  { val: "✓", lbl: "مصحح وزاري معتمد", icon: Trophy, color: "#C79A2D" },
+                ].map(({ val, lbl, icon: Icon, color }) => (
+                  <div key={lbl} className="bg-card border border-border rounded-2xl p-4 text-center hover:border-primary/20 hover:shadow-sm transition-all">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3"
+                      style={{ backgroundColor: `${color}15` }}>
+                      <Icon className="w-5 h-5" style={{ color }} />
+                    </div>
+                    <div className="text-2xl font-black text-foreground leading-tight">{val}</div>
+                    <div className="text-xs text-muted-foreground mt-1 leading-tight">{lbl}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Highlights */}
+              <div className="space-y-3">
+                {[
+                  "مصحح في امتحانات التوجيهي الوزارية الرسمية",
+                  "متخصص في اللغة العربية لطلاب الثانوي والتوجيهي",
+                  "ثماني سنوات من التدريس الميداني المتواصل",
+                  "أكثر من ألف طالب أنجز دراستهم تحت إشرافه",
+                ].map((point, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                    </div>
+                    <span className="text-muted-foreground leading-snug">{point}</span>
+                  </div>
+                ))}
+              </div>
+
+              <Link href="/dossiers">
+                <Button size="lg" className="gap-2 h-13 px-8 text-base font-bold shadow-lg shadow-primary/25 mt-2">
+                  <BookOpen className="w-5 h-5" />
+                  تصفح محتوى الأستاذ
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+              </Link>
+            </motion.div>
           </div>
         </div>
       </section>
