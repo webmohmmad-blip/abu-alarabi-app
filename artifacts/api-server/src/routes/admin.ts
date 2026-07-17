@@ -11,6 +11,7 @@ import {
   permissionsTable,
   rolePermissionsTable,
   subjectsTable,
+  unitsTable,
   dossiersTable,
   worksheetsTable,
   examsTable,
@@ -467,6 +468,50 @@ router.patch("/subjects/:id", async (req, res) => {
 router.delete("/subjects/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   await db.delete(subjectsTable).where(eq(subjectsTable.id, id));
+  res.status(204).send();
+});
+
+// ─── UNITS (admin CRUD within a subject) ─────────────────────────────────────
+router.get("/subjects/:id/units", async (req, res): Promise<void> => {
+  const subjectId = parseInt(req.params.id);
+  const units = await db
+    .select()
+    .from(unitsTable)
+    .where(eq(unitsTable.subjectId, subjectId))
+    .orderBy(unitsTable.order);
+  res.json(units);
+});
+
+router.post("/subjects/:id/units", async (req, res): Promise<void> => {
+  const subjectId = parseInt(req.params.id);
+  const { title, order } = req.body;
+  if (!title) { res.status(400).json({ error: "عنوان الوحدة مطلوب" }); return; }
+  const maxOrder = await db
+    .select({ m: sql<number>`COALESCE(MAX(${unitsTable.order}), 0)` })
+    .from(unitsTable)
+    .where(eq(unitsTable.subjectId, subjectId));
+  const nextOrder = (maxOrder[0]?.m ?? 0) + 1;
+  const [unit] = await db
+    .insert(unitsTable)
+    .values({ subjectId, title, order: order ?? nextOrder })
+    .returning();
+  res.status(201).json(unit);
+});
+
+router.patch("/units/:id", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  const { title, order } = req.body;
+  const [unit] = await db
+    .update(unitsTable)
+    .set({ ...(title !== undefined && { title }), ...(order !== undefined && { order }) })
+    .where(eq(unitsTable.id, id))
+    .returning();
+  res.json(unit);
+});
+
+router.delete("/units/:id", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  await db.delete(unitsTable).where(eq(unitsTable.id, id));
   res.status(204).send();
 });
 
