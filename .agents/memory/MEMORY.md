@@ -1,0 +1,1 @@
+- [Abu Al-Arabi Platform Architecture](abu-alarabi-arch.md) — full-stack Tawjihi education platform; auth uses JWT Bearer tokens, not sessions.

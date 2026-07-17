@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "منصة أبو العربي"
+version = "1.0.0"
+id = "artifacts/abu-alarabi"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20986
+
+[services.development]
+run = "pnpm --filter @workspace/abu-alarabi run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/abu-alarabi", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/abu-alarabi/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20986"
+BASE_PATH = "/"

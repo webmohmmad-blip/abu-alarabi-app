@@ -3,20 +3,46 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: منصة أبو العربي - API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User profile and settings
+  - name: subjects
+    description: Academic subjects
+  - name: dossiers
+    description: Study dossiers (PDF files)
+  - name: worksheets
+    description: Worksheets
+  - name: exams
+    description: Computer-based exams
+  - name: quiz
+    description: Weekly quiz
+  - name: studyplan
+    description: Smart study planner
+  - name: sessions
+    description: Study sessions (study room)
+  - name: notes
+    description: Smart notes
+  - name: statistics
+    description: Student statistics
+  - name: dashboard
+    description: Dashboard and summaries
+  - name: notifications
+    description: Notifications
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +50,799 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── AUTH ───────────────────────────────────────────────
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new student account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "400":
+          description: Validation error
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with phone and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout current session
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+
+  # ─── ONBOARDING ────────────────────────────────────────
+  /auth/onboarding:
+    post:
+      operationId: completeOnboarding
+      tags: [auth]
+      summary: Complete student onboarding wizard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingInput"
+      responses:
+        "200":
+          description: Onboarding complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # ─── USER PROFILE ───────────────────────────────────────
+  /users/profile:
+    get:
+      operationId: getProfile
+      tags: [users]
+      summary: Get student profile
+      responses:
+        "200":
+          description: Student profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentProfile"
+    patch:
+      operationId: updateProfile
+      tags: [users]
+      summary: Update profile fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentProfile"
+
+  /users/achievements:
+    get:
+      operationId: getAchievements
+      tags: [users]
+      summary: Get student badges and achievements
+      responses:
+        "200":
+          description: Achievements list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Achievement"
+
+  # ─── SUBJECTS ───────────────────────────────────────────
+  /subjects:
+    get:
+      operationId: listSubjects
+      tags: [subjects]
+      summary: List all subjects
+      responses:
+        "200":
+          description: Subjects list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+
+  /subjects/{id}:
+    get:
+      operationId: getSubject
+      tags: [subjects]
+      summary: Get subject details with units and progress
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Subject detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubjectDetail"
+
+  # ─── DOSSIERS ───────────────────────────────────────────
+  /dossiers:
+    get:
+      operationId: listDossiers
+      tags: [dossiers]
+      summary: List dossiers with filters
+      parameters:
+        - name: subjectId
+          in: query
+          schema:
+            type: integer
+        - name: grade
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dossiers list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DossierList"
+
+  /dossiers/{id}:
+    get:
+      operationId: getDossier
+      tags: [dossiers]
+      summary: Get dossier details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dossier detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dossier"
+
+  /dossiers/{id}/favorite:
+    post:
+      operationId: toggleDossierFavorite
+      tags: [dossiers]
+      summary: Toggle dossier favorite
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Favorite toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteResult"
+
+  /dossiers/{id}/progress:
+    patch:
+      operationId: updateDossierProgress
+      tags: [dossiers]
+      summary: Update reading progress for a dossier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DossierProgressUpdate"
+      responses:
+        "200":
+          description: Progress updated
+
+  # ─── WORKSHEETS ─────────────────────────────────────────
+  /worksheets:
+    get:
+      operationId: listWorksheets
+      tags: [worksheets]
+      summary: List worksheets with filters
+      parameters:
+        - name: subjectId
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Worksheets list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorksheetList"
+
+  /worksheets/{id}:
+    get:
+      operationId: getWorksheet
+      tags: [worksheets]
+      summary: Get worksheet details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Worksheet detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Worksheet"
+
+  # ─── EXAMS ──────────────────────────────────────────────
+  /exams:
+    get:
+      operationId: listExams
+      tags: [exams]
+      summary: List available exams
+      parameters:
+        - name: subjectId
+          in: query
+          schema:
+            type: integer
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Exams list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Exam"
+
+  /exams/{id}:
+    get:
+      operationId: getExam
+      tags: [exams]
+      summary: Get exam details and instructions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Exam detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExamDetail"
+
+  /exams/{id}/start:
+    post:
+      operationId: startExam
+      tags: [exams]
+      summary: Start an exam attempt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Exam attempt started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExamAttempt"
+
+  /exams/attempts/{attemptId}/answer:
+    post:
+      operationId: submitAnswer
+      tags: [exams]
+      summary: Submit an answer for a question in an attempt
+      parameters:
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerInput"
+      responses:
+        "200":
+          description: Answer saved
+
+  /exams/attempts/{attemptId}/submit:
+    post:
+      operationId: submitExam
+      tags: [exams]
+      summary: Submit an exam attempt for final grading
+      parameters:
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Exam result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExamResult"
+
+  /exams/results:
+    get:
+      operationId: listExamResults
+      tags: [exams]
+      summary: List past exam results for current user
+      responses:
+        "200":
+          description: Results list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ExamResult"
+
+  # ─── WEEKLY QUIZ ────────────────────────────────────────
+  /quiz/current:
+    get:
+      operationId: getCurrentQuiz
+      tags: [quiz]
+      summary: Get the current weekly quiz
+      responses:
+        "200":
+          description: Current quiz
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeeklyQuiz"
+
+  /quiz/{id}/start:
+    post:
+      operationId: startQuiz
+      tags: [quiz]
+      summary: Start the weekly quiz attempt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Quiz attempt started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExamAttempt"
+
+  /quiz/leaderboard:
+    get:
+      operationId: getQuizLeaderboard
+      tags: [quiz]
+      summary: Get weekly quiz leaderboard
+      responses:
+        "200":
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  # ─── STUDY PLAN ─────────────────────────────────────────
+  /studyplan:
+    get:
+      operationId: getStudyPlan
+      tags: [studyplan]
+      summary: Get current student's study plan with today's tasks
+      responses:
+        "200":
+          description: Study plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyPlan"
+
+  /studyplan/tasks:
+    get:
+      operationId: listStudyTasks
+      tags: [studyplan]
+      summary: List study tasks with filters
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: subjectId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tasks list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudyTask"
+
+  /studyplan/tasks/{id}/complete:
+    post:
+      operationId: completeStudyTask
+      tags: [studyplan]
+      summary: Mark a study task as complete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCompletionInput"
+      responses:
+        "200":
+          description: Task completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyTask"
+
+  /studyplan/rebuild:
+    post:
+      operationId: rebuildStudyPlan
+      tags: [studyplan]
+      summary: Rebuild/regenerate the study plan
+      responses:
+        "200":
+          description: New plan generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyPlan"
+
+  # ─── STUDY SESSIONS ─────────────────────────────────────
+  /sessions:
+    get:
+      operationId: listStudySessions
+      tags: [sessions]
+      summary: List student's study sessions
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+        - name: subjectId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sessions list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudySession"
+    post:
+      operationId: createStudySession
+      tags: [sessions]
+      summary: Start a new study session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudySessionInput"
+      responses:
+        "201":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudySession"
+
+  /sessions/{id}:
+    patch:
+      operationId: updateStudySession
+      tags: [sessions]
+      summary: Update session (pause, resume, end)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudySessionUpdate"
+      responses:
+        "200":
+          description: Session updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudySession"
+
+  # ─── NOTES ──────────────────────────────────────────────
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List student's notes
+      parameters:
+        - name: subjectId
+          in: query
+          schema:
+            type: integer
+        - name: dossierId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+    post:
+      operationId: createNote
+      tags: [notes]
+      summary: Create a new note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: Note created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /notes/{id}:
+    patch:
+      operationId: updateNote
+      tags: [notes]
+      summary: Update a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteUpdate"
+      responses:
+        "200":
+          description: Note updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+    delete:
+      operationId: deleteNote
+      tags: [notes]
+      summary: Delete a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Note deleted
+
+  # ─── STATISTICS ─────────────────────────────────────────
+  /statistics:
+    get:
+      operationId: getStatistics
+      tags: [statistics]
+      summary: Get student statistics and analytics
+      responses:
+        "200":
+          description: Statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Statistics"
+
+  /statistics/subjects:
+    get:
+      operationId: getSubjectStatistics
+      tags: [statistics]
+      summary: Get per-subject statistics
+      responses:
+        "200":
+          description: Subject statistics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubjectStat"
+
+  # ─── DASHBOARD ──────────────────────────────────────────
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get home dashboard summary (today's tasks, streak, recent activity, platform stats)
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+
+  /dashboard/platform-stats:
+    get:
+      operationId: getPlatformStats
+      tags: [dashboard]
+      summary: Get public platform statistics (total students, dossiers, etc.)
+      responses:
+        "200":
+          description: Platform statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStats"
+
+  # ─── NOTIFICATIONS ──────────────────────────────────────
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications for current user
+      responses:
+        "200":
+          description: Notifications list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Marked read
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +850,909 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    # ─── AUTH ─────────────────────────────────────────────
+    RegisterInput:
+      type: object
+      required: [fullName, phone, password, confirmPassword]
+      properties:
+        fullName:
+          type: string
+          minLength: 3
+        phone:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        confirmPassword:
+          type: string
+
+    LoginInput:
+      type: object
+      required: [phone, password]
+      properties:
+        phone:
+          type: string
+        password:
+          type: string
+        rememberMe:
+          type: boolean
+
+    AuthResult:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+        onboardingRequired:
+          type: boolean
+
+    User:
+      type: object
+      required: [id, fullName, phone, role, createdAt]
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [student, teacher, admin, super_admin]
+        avatarUrl:
+          type: ["string", "null"]
+        onboardingCompleted:
+          type: boolean
+        createdAt:
+          type: string
+
+    OnboardingInput:
+      type: object
+      required: [grade, field, availableHoursPerDay, studyDays, goal, studyStyle]
+      properties:
+        grade:
+          type: string
+        field:
+          type: string
+        school:
+          type: string
+        tawjihiYear:
+          type: integer
+        isRepeating:
+          type: boolean
+        subjectIds:
+          type: array
+          items:
+            type: integer
+        subjectLevels:
+          type: object
+          additionalProperties:
+            type: string
+        availableHoursPerDay:
+          type: number
+        studyDays:
+          type: array
+          items:
+            type: string
+        goal:
+          type: string
+        studyStyle:
+          type: string
+
+    # ─── PROFILE ─────────────────────────────────────────
+    StudentProfile:
+      type: object
+      required: [id, fullName, phone, grade, field, goal, studyHoursPerDay, streakDays, totalStudyMinutes]
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        phone:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        grade:
+          type: string
+        field:
+          type: string
+        school:
+          type: ["string", "null"]
+        goal:
+          type: string
+        studyHoursPerDay:
+          type: number
+        studyDays:
+          type: array
+          items:
+            type: string
+        streakDays:
+          type: integer
+        totalStudyMinutes:
+          type: integer
+        totalSessions:
+          type: integer
+        totalExams:
+          type: integer
+        averageScore:
+          type: number
+        tawjihiYear:
+          type: integer
+        joinedAt:
+          type: string
+
+    ProfileUpdate:
+      type: object
+      properties:
+        fullName:
+          type: string
+        avatarUrl:
+          type: string
+        goal:
+          type: string
+        studyHoursPerDay:
+          type: number
+        studyDays:
+          type: array
+          items:
+            type: string
+        school:
+          type: string
+
+    Achievement:
+      type: object
+      required: [id, title, description, icon, earnedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        earnedAt:
+          type: ["string", "null"]
+        isEarned:
+          type: boolean
+
+    # ─── SUBJECTS ─────────────────────────────────────────
+    Subject:
+      type: object
+      required: [id, name, grade, field]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        grade:
+          type: string
+        field:
+          type: string
+        iconUrl:
+          type: ["string", "null"]
+        color:
+          type: string
+        totalUnits:
+          type: integer
+        totalLessons:
+          type: integer
+        studentProgress:
+          type: ["number", "null"]
+
+    SubjectDetail:
+      type: object
+      required: [id, name, grade, field, units]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        grade:
+          type: string
+        field:
+          type: string
+        units:
+          type: array
+          items:
+            $ref: "#/components/schemas/Unit"
+        studentProgress:
+          type: ["number", "null"]
+
+    Unit:
+      type: object
+      required: [id, title, order, totalLessons]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        order:
+          type: integer
+        totalLessons:
+          type: integer
+        totalDossiers:
+          type: integer
+        progress:
+          type: ["number", "null"]
+
+    # ─── DOSSIERS ─────────────────────────────────────────
+    Dossier:
+      type: object
+      required: [id, title, subjectId, subjectName, grade, pageCount, downloads, rating]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        grade:
+          type: string
+        pageCount:
+          type: integer
+        fileSize:
+          type: string
+        downloads:
+          type: integer
+        views:
+          type: integer
+        rating:
+          type: number
+        coverUrl:
+          type: ["string", "null"]
+        fileUrl:
+          type: ["string", "null"]
+        isFavorite:
+          type: boolean
+        readingProgress:
+          type: integer
+        lastReadPage:
+          type: integer
+        isFree:
+          type: boolean
+        createdAt:
+          type: string
+
+    DossierList:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Dossier"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    FavoriteResult:
+      type: object
+      required: [isFavorite]
+      properties:
+        isFavorite:
+          type: boolean
+
+    DossierProgressUpdate:
+      type: object
+      required: [currentPage]
+      properties:
+        currentPage:
+          type: integer
+
+    # ─── WORKSHEETS ───────────────────────────────────────
+    Worksheet:
+      type: object
+      required: [id, title, subjectId, subjectName, grade, difficulty, questionCount]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        grade:
+          type: string
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+        questionCount:
+          type: integer
+        estimatedMinutes:
+          type: integer
+        downloads:
+          type: integer
+        solvers:
+          type: integer
+        fileUrl:
+          type: ["string", "null"]
+        isFree:
+          type: boolean
+        createdAt:
+          type: string
+
+    WorksheetList:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Worksheet"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    # ─── EXAMS ───────────────────────────────────────────
+    Exam:
+      type: object
+      required: [id, title, subjectId, subjectName, questionCount, durationMinutes, type, difficulty]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        questionCount:
+          type: integer
+        durationMinutes:
+          type: integer
+        type:
+          type: string
+          enum: [full, unit, lesson, weekly, diagnostic, ministerial]
+        difficulty:
+          type: string
+          enum: [easy, medium, hard, ministerial]
+        totalParticipants:
+          type: integer
+        averageScore:
+          type: ["number", "null"]
+        isFree:
+          type: boolean
+        isAvailable:
+          type: boolean
+        userAttempts:
+          type: integer
+        maxAttempts:
+          type: integer
+
+    ExamDetail:
+      type: object
+      required: [id, title, subjectId, subjectName, questionCount, durationMinutes, type, instructions]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        questionCount:
+          type: integer
+        durationMinutes:
+          type: integer
+        type:
+          type: string
+        instructions:
+          type: string
+        passingScore:
+          type: number
+        totalScore:
+          type: number
+        canGoBack:
+          type: boolean
+        canSkip:
+          type: boolean
+        showResultImmediately:
+          type: boolean
+        randomizeQuestions:
+          type: boolean
+        randomizeChoices:
+          type: boolean
+        deductOnWrong:
+          type: boolean
+        userAttempts:
+          type: integer
+        maxAttempts:
+          type: integer
+
+    ExamAttempt:
+      type: object
+      required: [id, examId, startedAt, durationMinutes, questions]
+      properties:
+        id:
+          type: integer
+        examId:
+          type: integer
+        startedAt:
+          type: string
+        durationMinutes:
+          type: integer
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExamQuestion"
+        savedAnswers:
+          type: object
+          additionalProperties:
+            type: string
+
+    ExamQuestion:
+      type: object
+      required: [id, text, type, order]
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        type:
+          type: string
+          enum: [mcq, true_false, fill_blank, matching, ordering, short_answer, essay]
+        order:
+          type: integer
+        score:
+          type: number
+        imageUrl:
+          type: ["string", "null"]
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionChoice"
+
+    QuestionChoice:
+      type: object
+      required: [id, text]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+
+    AnswerInput:
+      type: object
+      required: [questionId, answer]
+      properties:
+        questionId:
+          type: integer
+        answer:
+          type: string
+
+    ExamResult:
+      type: object
+      required: [id, examId, examTitle, score, totalScore, percentage, passed, timeTakenMinutes, correctCount, wrongCount, unansweredCount]
+      properties:
+        id:
+          type: integer
+        examId:
+          type: integer
+        examTitle:
+          type: string
+        subjectName:
+          type: string
+        score:
+          type: number
+        totalScore:
+          type: number
+        percentage:
+          type: number
+        passed:
+          type: boolean
+        timeTakenMinutes:
+          type: integer
+        correctCount:
+          type: integer
+        wrongCount:
+          type: integer
+        unansweredCount:
+          type: integer
+        rank:
+          type: ["integer", "null"]
+        completedAt:
+          type: string
+
+    # ─── WEEKLY QUIZ ─────────────────────────────────────
+    WeeklyQuiz:
+      type: object
+      required: [id, title, subjectName, startsAt, endsAt, questionCount, durationMinutes, participants]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        subjectName:
+          type: string
+        startsAt:
+          type: string
+        endsAt:
+          type: string
+        questionCount:
+          type: integer
+        durationMinutes:
+          type: integer
+        participants:
+          type: integer
+        prizes:
+          type: ["string", "null"]
+        hasParticipated:
+          type: boolean
+        userRank:
+          type: ["integer", "null"]
+
+    LeaderboardEntry:
+      type: object
+      required: [rank, displayName, score, timeTakenSeconds]
+      properties:
+        rank:
+          type: integer
+        displayName:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        score:
+          type: number
+        timeTakenSeconds:
+          type: integer
+        governorate:
+          type: ["string", "null"]
+        badgeIcon:
+          type: ["string", "null"]
+        isCurrentUser:
+          type: boolean
+
+    # ─── STUDY PLAN ─────────────────────────────────────
+    StudyPlan:
+      type: object
+      required: [id, goal, todayTasks, weeklyProgress, upcomingExams, recommendation]
+      properties:
+        id:
+          type: integer
+        goal:
+          type: string
+        availableHoursPerDay:
+          type: number
+        todayTasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudyTask"
+        weeklyProgress:
+          type: number
+        streakDays:
+          type: integer
+        upcomingExams:
+          type: array
+          items:
+            $ref: "#/components/schemas/UpcomingExam"
+        overdueTasks:
+          type: integer
+        recommendation:
+          type: string
+
+    StudyTask:
+      type: object
+      required: [id, title, subjectName, type, status, durationMinutes, scheduledAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        subjectName:
+          type: string
+        subjectColor:
+          type: string
+        type:
+          type: string
+          enum: [read_dossier, watch_video, solve_worksheet, take_exam, review, flashcards, free]
+        status:
+          type: string
+          enum: [pending, in_progress, completed, overdue, skipped]
+        durationMinutes:
+          type: integer
+        scheduledAt:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        linkedContentId:
+          type: ["integer", "null"]
+        linkedContentType:
+          type: ["string", "null"]
+
+    TaskCompletionInput:
+      type: object
+      required: [actualMinutes, comprehensionLevel]
+      properties:
+        actualMinutes:
+          type: integer
+        comprehensionLevel:
+          type: string
+          enum: [fully, mostly, needs_review, not_understood]
+        notes:
+          type: string
+
+    UpcomingExam:
+      type: object
+      required: [subjectName, examDate, daysLeft]
+      properties:
+        subjectName:
+          type: string
+        examDate:
+          type: string
+        daysLeft:
+          type: integer
+
+    # ─── STUDY SESSIONS ──────────────────────────────────
+    StudySession:
+      type: object
+      required: [id, subjectId, subjectName, type, status, startedAt, plannedMinutes]
+      properties:
+        id:
+          type: integer
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        type:
+          type: string
+          enum: [pomodoro, balanced, deep_focus, quick_review, custom, exam]
+        status:
+          type: string
+          enum: [active, paused, completed, abandoned]
+        startedAt:
+          type: string
+        endedAt:
+          type: ["string", "null"]
+        plannedMinutes:
+          type: integer
+        actualMinutes:
+          type: ["integer", "null"]
+        focusScore:
+          type: ["number", "null"]
+        pauseCount:
+          type: integer
+        taskId:
+          type: ["integer", "null"]
+        noteCount:
+          type: integer
+
+    StudySessionInput:
+      type: object
+      required: [subjectId, type, plannedMinutes]
+      properties:
+        subjectId:
+          type: integer
+        type:
+          type: string
+        plannedMinutes:
+          type: integer
+        taskId:
+          type: integer
+        timerMode:
+          type: string
+        goal:
+          type: string
+
+    StudySessionUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [paused, completed, abandoned]
+        comprehensionLevel:
+          type: string
+        focusLevel:
+          type: string
+        actualMinutes:
+          type: integer
+
+    # ─── NOTES ───────────────────────────────────────────
+    Note:
+      type: object
+      required: [id, title, content, subjectId, subjectName, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        dossierId:
+          type: ["integer", "null"]
+        sessionId:
+          type: ["integer", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        isPinned:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    NoteInput:
+      type: object
+      required: [title, content, subjectId]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        subjectId:
+          type: integer
+        dossierId:
+          type: integer
+        sessionId:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+
+    NoteUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        isPinned:
+          type: boolean
+
+    # ─── STATISTICS ──────────────────────────────────────
+    Statistics:
+      type: object
+      required: [totalStudyMinutes, totalSessions, totalExams, averageScore, streakDays, completionRate]
+      properties:
+        totalStudyMinutes:
+          type: integer
+        totalSessions:
+          type: integer
+        totalExams:
+          type: integer
+        averageScore:
+          type: number
+        streakDays:
+          type: integer
+        completionRate:
+          type: number
+        weeklyMinutes:
+          type: array
+          items:
+            type: integer
+        monthlyProgress:
+          type: number
+        bestSubject:
+          type: ["string", "null"]
+        weakestSubject:
+          type: ["string", "null"]
+        totalDossiersRead:
+          type: integer
+        totalWorksheetsCompleted:
+          type: integer
+
+    SubjectStat:
+      type: object
+      required: [subjectId, subjectName, studyMinutes, examAverage, progress]
+      properties:
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        studyMinutes:
+          type: integer
+        examAverage:
+          type: number
+        progress:
+          type: number
+        level:
+          type: string
+          enum: [weak, average, good, excellent]
+        subjectColor:
+          type: string
+
+    # ─── DASHBOARD ───────────────────────────────────────
+    Dashboard:
+      type: object
+      required: [greeting, todayGoalMinutes, todayDoneMinutes, todayTasks, streakDays, nextTask, platformStats]
+      properties:
+        greeting:
+          type: string
+        todayGoalMinutes:
+          type: integer
+        todayDoneMinutes:
+          type: integer
+        todayTasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudyTask"
+        streakDays:
+          type: integer
+        nextTask:
+          type: ["string", "null"]
+        overdueTasks:
+          type: integer
+        upcomingExam:
+          type: ["string", "null"]
+        weeklyProgress:
+          type: number
+        platformStats:
+          $ref: "#/components/schemas/PlatformStats"
+        latestDossiers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Dossier"
+        currentQuiz:
+          $ref: "#/components/schemas/WeeklyQuiz"
+
+    PlatformStats:
+      type: object
+      required: [totalStudents, totalDossiers, totalWorksheets, totalExams, totalDownloads, totalStudyHours]
+      properties:
+        totalStudents:
+          type: integer
+        totalDossiers:
+          type: integer
+        totalWorksheets:
+          type: integer
+        totalExams:
+          type: integer
+        totalDownloads:
+          type: integer
+        totalStudyHours:
+          type: integer
+
+    # ─── NOTIFICATIONS ───────────────────────────────────
+    Notification:
+      type: object
+      required: [id, title, message, type, isRead, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [session_reminder, new_dossier, quiz_started, review_due, goal_achieved, exam_result]
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+        actionUrl:
+          type: ["string", "null"]
