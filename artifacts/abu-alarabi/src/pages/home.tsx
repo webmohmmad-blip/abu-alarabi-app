@@ -1,314 +1,443 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { 
-  BookOpen, 
-  Trophy, 
-  Users, 
-  Star, 
-  PlayCircle, 
-  FileText, 
-  Clock, 
-  BrainCircuit, 
-  Target, 
-  CheckCircle2,
+import {
+  BookOpen,
+  FileText,
+  PenTool,
+  BrainCircuit,
   ChevronLeft,
-  PenTool
+  Star,
+  Users,
+  Clock,
+  Target,
+  Sparkles,
+  Trophy,
+  ArrowLeft,
 } from "lucide-react";
-import { useGetPlatformStats, useListDossiers, useGetCurrentQuiz } from "@workspace/api-client-react";
+import { useGetPlatformStats, useListDossiers } from "@workspace/api-client-react";
 
-// Mock animated counter for stats
-const StatCard = ({ title, value, icon: Icon, delay }: { title: string, value: string | number, icon: any, delay: number }) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay, duration: 0.5 }}
-    className="bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-white shadow-xl shadow-primary/5 flex flex-col items-center justify-center text-center gap-3"
-  >
-    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
-      <Icon className="w-7 h-7" />
-    </div>
-    <h4 className="text-4xl font-black text-secondary">{value}</h4>
-    <p className="text-sm font-bold text-muted-foreground">{title}</p>
-  </motion.div>
-);
+const TRACKS = [
+  { label: "توجيهي", sub: "الصف الثاني عشر", color: "#5A2D82" },
+  { label: "أول ثانوي", sub: "الصف الحادي عشر", color: "#0D9BB5" },
+  { label: "التاسع", sub: "الصف التاسع", color: "#C79A2D" },
+  { label: "دورة الإعراب", sub: "النحو والصرف", color: "#2FA84F" },
+  { label: "دورة البلاغة", sub: "الأساليب البلاغية", color: "#5A2D82" },
+  { label: "مراجعة نهائية", sub: "تحضير الامتحانات", color: "#0D9BB5" },
+];
+
+const FEATURES = [
+  {
+    icon: BookOpen,
+    title: "الدوسيات",
+    desc: "ملزمات شاملة لكل وحدة من وحدات اللغة العربية، مُعدَّة بعناية من الأستاذ محمد الساحوري.",
+    accent: "#5A2D82",
+  },
+  {
+    icon: PenTool,
+    title: "الامتحانات الوزارية",
+    desc: "محاكاة دقيقة للامتحانات الوزارية مع تصليح فوري وتحليل شامل للأداء.",
+    accent: "#0D9BB5",
+  },
+  {
+    icon: FileText,
+    title: "أوراق العمل",
+    desc: "تدريبات مستهدفة على مستوى كل قاعدة نحوية وكل أسلوب بلاغي في المنهاج.",
+    accent: "#C79A2D",
+  },
+  {
+    icon: BrainCircuit,
+    title: "غرفة الدراسة",
+    desc: "بيئة تركيز خالية من المشتتات، مع مؤقت بومودورو وتتبع ساعات الدراسة.",
+    accent: "#2FA84F",
+  },
+];
 
 export default function Home() {
   const { data: stats } = useGetPlatformStats({ query: { enabled: true } });
-  const { data: dossiersList } = useListDossiers({ limit: 4 }, { query: { enabled: true } });
-  const { data: currentQuiz } = useGetCurrentQuiz({ query: { enabled: true } });
-
-  const services = [
-    { title: "الدوسيات الشاملة", desc: "أقوى الملازم لكل المواد بأسلوب مبسط وشامل.", icon: BookOpen, color: "text-primary", bg: "bg-primary/10" },
-    { title: "أوراق العمل", desc: "اختبر فهمك بعد كل درس بأوراق عمل تفاعلية.", icon: FileText, color: "text-secondary", bg: "bg-secondary/10" },
-    { title: "الامتحانات الوزارية", desc: "محاكاة حقيقية للامتحانات الوزارية مع التصليح الفوري.", icon: CheckCircle2, color: "text-accent", bg: "bg-accent/10" },
-    { title: "الكويز الأسبوعي", desc: "تحدَّ نفسك وزملائك أسبوعياً واربح جوائز قيمة.", icon: Trophy, color: "text-success", bg: "bg-success/10" },
-    { title: "الخطة الدراسية", desc: "خطة ذكية تتكيف مع مستواك ووقتك المتاح.", icon: Target, color: "text-primary", bg: "bg-primary/10" },
-    { title: "غرفة الدراسة", desc: "بيئة تركيز خالية من المشتتات مع مؤقت بومودورو.", icon: BrainCircuit, color: "text-secondary", bg: "bg-secondary/10" },
-  ];
+  const { data: dossiersList } = useListDossiers({ limit: 3 }, { query: { enabled: true } });
 
   return (
     <MainLayout>
-      {/* HERO SECTION */}
-      <section className="relative overflow-hidden pt-20 pb-32 lg:pt-32 lg:pb-40">
-        <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-3xl -z-10"></div>
-        
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div 
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="space-y-8"
+
+      {/* ═══════════════════════════════════════════════
+          HERO — dark, premium, Arabic-language focused
+      ═══════════════════════════════════════════════ */}
+      <section className="relative min-h-screen flex items-center bg-foreground overflow-hidden">
+
+        {/* Background Arabic letter ع — decorative */}
+        <div
+          className="absolute left-0 top-1/2 -translate-y-1/2 select-none pointer-events-none"
+          style={{
+            fontSize: "clamp(320px, 45vw, 700px)",
+            lineHeight: 1,
+            fontFamily: "Tajawal, sans-serif",
+            fontWeight: 900,
+            color: "rgba(90,45,130,0.08)",
+            userSelect: "none",
+          }}
+          aria-hidden
+        >
+          ع
+        </div>
+
+        {/* Glow blobs */}
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/3 w-64 h-64 bg-secondary/15 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="relative z-10 container mx-auto px-6 py-24">
+          <div className="max-w-3xl mr-auto">
+
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 mb-10"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-primary/20 shadow-sm text-primary font-bold text-sm">
-                <Star className="w-4 h-4 fill-accent text-accent" />
-                المنصة التعليمية الأولى في الأردن
-              </div>
-              <h1 className="text-5xl lg:text-7xl font-black leading-tight text-foreground">
-                رحلتك نحو <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">العلامة الكاملة</span> تبدأ من هنا
-              </h1>
-              <p className="text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl">
-                مع الأستاذ محمد الساحوري (أبو العربي)، طريقك للتفوق في التوجيهي أصبح أوضح. دوسيات، امتحانات، خطط دراسية، ومتابعة مستمرة.
-              </p>
-              <div className="flex flex-wrap items-center gap-4 pt-4">
-                <Button size="lg" asChild className="text-lg px-8">
-                  <Link href="/register">ابدأ الآن مجاناً</Link>
-                </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8 gap-2 bg-white/50 backdrop-blur-sm">
-                  <PlayCircle className="w-5 h-5" />
-                  كيف تعمل المنصة؟
-                </Button>
-              </div>
-              <div className="flex items-center gap-6 pt-4 text-sm font-bold text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-success" />
-                  أكثر من 50,000 طالب
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-success" />
-                  محتوى محدث 2024
-                </div>
+              <div className="flex items-center gap-2 border border-primary/40 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-bold backdrop-blur-sm">
+                <Sparkles className="w-4 h-4 text-accent fill-accent" />
+                المنصة المتخصصة في اللغة العربية
               </div>
             </motion.div>
-            
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+
+            {/* Heading */}
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-5xl md:text-7xl font-black leading-[1.1] text-white mb-8"
+              style={{ letterSpacing: "-0.01em" }}
+            >
+              أتقن العربية.
+              <br />
+              <span
+                className="text-transparent"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, #C79A2D 0%, #e8c060 50%, #C79A2D 100%)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                }}
+              >
+                افهمها. تفوق.
+              </span>
+            </motion.h1>
+
+            {/* Sub */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative"
+              className="text-lg md:text-xl text-white/60 leading-relaxed mb-12 max-w-xl"
+              style={{ fontWeight: 400 }}
             >
-              {/* Abstract Hero Visual - mimicking a student's premium dashboard */}
-              <div className="relative z-10 bg-white/40 backdrop-blur-2xl border border-white shadow-2xl shadow-primary/10 rounded-3xl p-6 rotate-2 hover:rotate-0 transition-transform duration-500">
-                <div className="flex items-center justify-between mb-6 border-b border-black/5 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl shadow-inner">ع</div>
-                    <div>
-                      <h3 className="font-bold text-lg">أحمد عبدالله</h3>
-                      <p className="text-xs text-primary font-bold">طالب علمي - 2006</p>
-                    </div>
-                  </div>
-                  <div className="bg-success/10 text-success px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                    <Target className="w-3 h-3" />
-                    الهدف: 99%
-                  </div>
+              مع الأستاذ محمد الساحوري — أبو العربي — طريقك لإتقان اللغة العربية والتفوق في التوجيهي أصبح
+              أوضح وأسهل من أي وقت مضى.
+            </motion.p>
+
+            {/* CTAs */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-wrap gap-4 items-center"
+            >
+              <Link href="/register">
+                <Button
+                  size="lg"
+                  className="h-14 px-10 text-base font-bold shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-shadow"
+                >
+                  ابدأ رحلتك الآن
+                </Button>
+              </Link>
+              <Link href="/dossiers">
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  className="h-14 px-8 text-base font-bold text-white/80 hover:text-white hover:bg-white/10 gap-2"
+                >
+                  تصفح الدوسيات
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+              </Link>
+            </motion.div>
+
+            {/* Micro-stats */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="flex flex-wrap items-center gap-8 mt-16 pt-8 border-t border-white/10"
+            >
+              {[
+                { val: stats?.totalStudents ? `+${Number(stats.totalStudents).toLocaleString("ar")}` : "+٥٠٫٠٠٠", lbl: "طالب وطالبة" },
+                { val: stats?.totalDossiers ? `${stats.totalDossiers}+` : "١٥٠+", lbl: "دوسية وملخص" },
+                { val: stats?.totalExams ? `${stats.totalExams}+` : "٣٢٠+", lbl: "امتحان وزاري" },
+              ].map((s) => (
+                <div key={s.lbl}>
+                  <div className="text-2xl font-black text-white">{s.val}</div>
+                  <div className="text-sm text-white/50 mt-0.5">{s.lbl}</div>
                 </div>
-                <div className="space-y-4">
-                  <div className="h-4 bg-black/5 rounded-full w-3/4"></div>
-                  <div className="h-4 bg-black/5 rounded-full w-1/2"></div>
-                  <div className="h-4 bg-black/5 rounded-full w-5/6"></div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mt-6 pt-4">
-                    <div className="bg-primary/5 rounded-xl p-4 border border-primary/10">
-                      <div className="text-primary font-black text-2xl mb-1">98%</div>
-                      <div className="text-xs font-bold text-muted-foreground">معدل الامتحانات</div>
-                    </div>
-                    <div className="bg-secondary/5 rounded-xl p-4 border border-secondary/10">
-                      <div className="text-secondary font-black text-2xl mb-1">142</div>
-                      <div className="text-xs font-bold text-muted-foreground">ساعة دراسية</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Decorative elements behind the card */}
-              <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/20 rounded-full blur-2xl"></div>
-              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/20 rounded-full blur-2xl"></div>
+              ))}
             </motion.div>
           </div>
         </div>
+
+        {/* Bottom fade */}
+        <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
       </section>
 
-      {/* STATS SECTION */}
-      <section className="py-20 bg-primary/5 border-y border-primary/10">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-10">
-            <StatCard title="طالب وطالبة" value={stats?.totalStudents || "+50,000"} icon={Users} delay={0} />
-            <StatCard title="دوسية وملخص" value={stats?.totalDossiers || "150+"} icon={BookOpen} delay={0.1} />
-            <StatCard title="امتحان وزاري ومقترح" value={stats?.totalExams || "320+"} icon={PenTool} delay={0.2} />
-            <StatCard title="ساعة دراسية عبر المنصة" value={stats?.totalStudyHours || "+1.2M"} icon={Clock} delay={0.3} />
-          </div>
-        </div>
-      </section>
-
-      {/* SERVICES SECTION */}
-      <section className="py-24 relative">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-5xl font-black mb-6">كل ما تحتاجه في <span className="text-primary">مكان واحد</span></h2>
-            <p className="text-lg text-muted-foreground">
-              صممنا منصة أبو العربي لتكون الأداة الشاملة التي تغنيك عن أي مصادر أخرى. كل زاوية في المنصة صممت لرفع إنتاجيتك وعلامتك.
+      {/* ═══════════════════════════════════════════════
+          ACADEMIC TRACKS
+      ═══════════════════════════════════════════════ */}
+      <section className="py-24">
+        <div className="container mx-auto px-6">
+          <div className="max-w-xl mb-14">
+            <p className="text-sm font-bold text-primary uppercase tracking-widest mb-4">المسارات الأكاديمية</p>
+            <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight">
+              محتوى مُصمَّم لكل مرحلة
+            </h2>
+            <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
+              سواء كنت في التوجيهي أو تريد تأسيس قواعدك في اللغة العربية — لديك مسار مخصص يناسبك.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service, idx) => (
-              <motion.div 
-                key={idx}
-                initial={{ opacity: 0, y: 30 }}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {TRACKS.map((track, i) => (
+              <motion.div
+                key={track.label}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: idx * 0.1, duration: 0.5 }}
+                transition={{ delay: i * 0.07, duration: 0.4 }}
               >
-                <Card className="h-full hover:-translate-y-2 transition-transform duration-300 hover:shadow-2xl hover:shadow-primary/10 cursor-pointer group">
-                  <CardContent className="p-8">
-                    <div className={`w-16 h-16 rounded-2xl ${service.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                      <service.icon className={`w-8 h-8 ${service.color}`} />
+                <Link href="/dossiers">
+                  <div className="group relative flex items-center gap-5 p-6 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer overflow-hidden">
+                    {/* Color accent line */}
+                    <div
+                      className="absolute right-0 top-0 bottom-0 w-1 rounded-l-full opacity-60 group-hover:opacity-100 transition-opacity"
+                      style={{ backgroundColor: track.color }}
+                    />
+
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-black shrink-0 shadow-sm"
+                      style={{ backgroundColor: track.color }}
+                    >
+                      {track.label.charAt(0)}
                     </div>
-                    <h3 className="text-xl font-bold mb-3">{service.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{service.desc}</p>
-                  </CardContent>
-                </Card>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-foreground text-base">{track.label}</div>
+                      <div className="text-sm text-muted-foreground mt-0.5">{track.sub}</div>
+                    </div>
+
+                    <ArrowLeft className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary group-hover:-translate-x-1 transition-all duration-200 shrink-0" />
+                  </div>
+                </Link>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FEATURED DOSSIERS */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-end mb-12">
+      {/* ═══════════════════════════════════════════════
+          FEATURES — 4-grid, spacious, clean
+      ═══════════════════════════════════════════════ */}
+      <section className="py-24 bg-muted/30 border-y border-border">
+        <div className="container mx-auto px-6">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <p className="text-sm font-bold text-primary uppercase tracking-widest mb-4">أدوات التعلم</p>
+            <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight">
+              كل ما تحتاجه في مكان واحد
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {FEATURES.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className="group bg-card border border-border rounded-2xl p-7 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+              >
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-6"
+                  style={{ backgroundColor: `${f.accent}15` }}
+                >
+                  <f.icon className="w-6 h-6" style={{ color: f.accent }} />
+                </div>
+                <h3 className="text-lg font-bold text-foreground mb-3">{f.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════
+          DOSSIERS PREVIEW
+      ═══════════════════════════════════════════════ */}
+      <section className="py-24">
+        <div className="container mx-auto px-6">
+          <div className="flex items-end justify-between mb-12">
             <div>
-              <h2 className="text-3xl md:text-4xl font-black mb-4">أحدث الدوسيات</h2>
-              <p className="text-muted-foreground">حمّل أقوى الدوسيات والملخصات لجميع المواد.</p>
+              <p className="text-sm font-bold text-primary uppercase tracking-widest mb-3">أحدث الإصدارات</p>
+              <h2 className="text-4xl font-black text-foreground">الدوسيات المتاحة</h2>
             </div>
-            <Button variant="outline" asChild className="hidden md:flex gap-2">
+            <Button variant="outline" asChild className="hidden md:flex gap-2 h-11">
               <Link href="/dossiers">
-                عرض الكل
+                جميع الدوسيات
                 <ChevronLeft className="w-4 h-4" />
               </Link>
             </Button>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {dossiersList?.items?.map((dossier) => (
-              <Card key={dossier.id} className="overflow-hidden group hover:shadow-xl transition-all duration-300">
-                <div className="h-48 bg-muted relative overflow-hidden flex items-center justify-center">
-                  {dossier.coverUrl ? (
-                    <img src={dossier.coverUrl} alt={dossier.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <BookOpen className="w-16 h-16 text-primary/20" />
-                  )}
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-primary text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
-                    {dossier.subjectName}
+          <div className="grid md:grid-cols-3 gap-6">
+            {dossiersList?.items?.slice(0, 3).map((dossier, i) => (
+              <motion.div
+                key={dossier.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <Link href={`/dossiers/${dossier.id}`}>
+                  <div className="group border border-border bg-card rounded-2xl overflow-hidden hover:shadow-xl hover:border-primary/20 transition-all duration-300 cursor-pointer h-full flex flex-col">
+                    {/* Cover */}
+                    <div className="h-44 bg-muted relative overflow-hidden flex items-center justify-center">
+                      {dossier.coverUrl ? (
+                        <img
+                          src={dossier.coverUrl}
+                          alt={dossier.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                            <BookOpen className="w-8 h-8 text-primary/40" />
+                          </div>
+                        </div>
+                      )}
+                      {dossier.subjectName && (
+                        <div className="absolute top-3 right-3 bg-foreground/80 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                          {dossier.subjectName}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Body */}
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="font-bold text-base text-foreground mb-2 line-clamp-2 flex-1">
+                        {dossier.title}
+                      </h3>
+                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <FileText className="w-3.5 h-3.5" />
+                            {dossier.pageCount} صفحة
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm font-bold text-accent">
+                          <Star className="w-3.5 h-3.5 fill-accent" />
+                          {Number(dossier.rating).toFixed(1)}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <CardContent className="p-5">
-                  <h3 className="font-bold text-lg mb-2 line-clamp-1">{dossier.title}</h3>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                    <div className="flex items-center gap-1"><FileText className="w-4 h-4"/> {dossier.pageCount} صفحة</div>
-                    <div className="flex items-center gap-1"><Star className="w-4 h-4 text-accent fill-accent"/> {dossier.rating}</div>
-                  </div>
-                  <Button className="w-full" asChild>
-                    <Link href={`/dossiers/${dossier.id}`}>تحميل الدوسية</Link>
-                  </Button>
-                </CardContent>
-              </Card>
+                </Link>
+              </motion.div>
             ))}
+
+            {/* Fallback cards if no dossiers yet */}
+            {(!dossiersList?.items || dossiersList.items.length === 0) &&
+              ["نحو وصرف — توجيهي", "البلاغة والأدب — توجيهي", "مراجعة شاملة — توجيهي"].map((title, i) => (
+                <motion.div
+                  key={title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="border border-border bg-card rounded-2xl overflow-hidden h-64 flex items-center justify-center"
+                >
+                  <div className="text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                      <BookOpen className="w-7 h-7 text-primary/40" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">{title}</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">قريباً</p>
+                  </div>
+                </motion.div>
+              ))}
           </div>
-          
+
           <Button variant="outline" asChild className="w-full mt-8 md:hidden">
             <Link href="/dossiers">عرض كل الدوسيات</Link>
           </Button>
         </div>
       </section>
 
-      {/* WEEKLY QUIZ BANNER */}
-      {currentQuiz && (
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="bg-gradient-to-r from-primary to-[#3a1a59] rounded-3xl p-8 md:p-12 text-white shadow-2xl shadow-primary/20 relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
-              
-              <div className="grid md:grid-cols-2 gap-8 items-center relative z-10">
-                <div>
-                  <div className="inline-block bg-accent text-accent-foreground font-bold px-4 py-1.5 rounded-full text-sm mb-6 flex items-center gap-2 w-max">
-                    <Trophy className="w-4 h-4" />
-                    تحدي الأسبوع
-                  </div>
-                  <h2 className="text-3xl md:text-5xl font-black mb-4">{currentQuiz.title}</h2>
-                  <p className="text-white/80 text-lg mb-8 leading-relaxed max-w-md">
-                    شارك في الكويز الأسبوعي لمادة {currentQuiz.subjectName} وتنافس مع آلاف الطلاب للفوز بجوائز قيمة ومراكز متقدمة في لوحة الشرف!
-                  </p>
-                  <Button size="lg" variant="secondary" asChild className="text-lg px-8 text-secondary-foreground shadow-lg shadow-black/20">
-                    <Link href="/quiz">شارك الآن</Link>
-                  </Button>
+      {/* ═══════════════════════════════════════════════
+          SOCIAL PROOF — numbers, clean
+      ═══════════════════════════════════════════════ */}
+      <section className="py-20 bg-foreground">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {[
+              { val: stats?.totalStudents ? `+${Number(stats.totalStudents).toLocaleString("ar")}` : "+٥٠,٠٠٠", lbl: "طالب وطالبة", icon: Users },
+              { val: stats?.totalDossiers ? `${stats.totalDossiers}+` : "١٥٠+", lbl: "دوسية وملخص", icon: BookOpen },
+              { val: stats?.totalExams ? `${stats.totalExams}+` : "٣٢٠+", lbl: "امتحان وزاري", icon: PenTool },
+              { val: stats?.totalStudyHours ? `+${Number(stats.totalStudyHours).toLocaleString("ar")}` : "+١.٢M", lbl: "ساعة دراسية", icon: Clock },
+            ].map(({ val, lbl, icon: Icon }) => (
+              <div key={lbl}>
+                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                  <Icon className="w-6 h-6 text-primary" />
                 </div>
-                
-                <div className="flex justify-center md:justify-end">
-                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 text-center w-full max-w-sm">
-                    <div className="text-sm font-bold text-white/70 mb-2">الوقت المتبقي لانتهاء التحدي</div>
-                    <div className="text-4xl font-black tabular-nums tracking-widest text-accent mb-6" dir="ltr">
-                      24:59:59
-                    </div>
-                    <div className="flex justify-between border-t border-white/10 pt-4 text-sm font-bold">
-                      <div>
-                        <div className="text-white/60 mb-1">المشاركين</div>
-                        <div className="text-xl">{currentQuiz.participants}</div>
-                      </div>
-                      <div>
-                        <div className="text-white/60 mb-1">عدد الأسئلة</div>
-                        <div className="text-xl">{currentQuiz.questionCount}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <div className="text-3xl md:text-4xl font-black text-white mb-1">{val}</div>
+                <div className="text-sm text-white/50">{lbl}</div>
               </div>
-            </motion.div>
-          </div>
-        </section>
-      )}
-
-      {/* CTA SECTION */}
-      <section className="py-24 bg-background">
-        <div className="container mx-auto px-4 text-center max-w-3xl">
-          <h2 className="text-4xl md:text-6xl font-black mb-8 leading-tight">
-            لا تضيع المزيد من الوقت، <br />
-            <span className="text-primary">مستقبلك بانتظارك!</span>
-          </h2>
-          <p className="text-xl text-muted-foreground mb-10">
-            انضم الآن إلى عائلة أبو العربي، واستمتع بتجربة دراسية فريدة تضمن لك التفوق بأقل جهد وأعلى كفاءة.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button size="lg" asChild className="text-lg px-12 h-14">
-              <Link href="/register">سجل مجاناً الآن</Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="text-lg px-12 h-14 bg-white">
-              <Link href="/login">لدي حساب مسبقاً</Link>
-            </Button>
+            ))}
           </div>
         </div>
       </section>
+
+      {/* ═══════════════════════════════════════════════
+          CTA — simple, elegant, strong
+      ═══════════════════════════════════════════════ */}
+      <section className="py-32">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-2xl mx-auto text-center"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-8">
+              <Trophy className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black text-foreground leading-tight mb-6">
+              ابدأ رحلتك
+              <br />
+              <span className="text-primary">مع أبو العربي</span>
+            </h2>
+            <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
+              انضم إلى آلاف الطلاب الذين اختاروا المنصة الأولى في الأردن لتعلم اللغة العربية وإتقانها.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button size="lg" asChild className="h-14 px-12 text-base font-bold shadow-lg shadow-primary/30">
+                <Link href="/register">سجل الآن — مجاناً</Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild className="h-14 px-12 text-base font-bold">
+                <Link href="/login">لدي حساب</Link>
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
     </MainLayout>
   );
 }

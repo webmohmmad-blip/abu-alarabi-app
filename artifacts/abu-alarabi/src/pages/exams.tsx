@@ -105,7 +105,7 @@ export default function Exams() {
             onClick={() => setSubjectId(undefined)}
             size="sm"
           >
-            جميع المواد
+            جميع المسارات
           </Button>
           {subjects?.map(subject => (
             <Button 

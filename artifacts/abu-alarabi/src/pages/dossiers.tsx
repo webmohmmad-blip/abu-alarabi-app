@@ -27,7 +27,7 @@ export default function Dossiers() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <h1 className="text-3xl font-black mb-2">مكتبة الدوسيات</h1>
-            <p className="text-muted-foreground">تصفح وحمل أقوى الدوسيات والملخصات لجميع المواد.</p>
+            <p className="text-muted-foreground">تصفح وحمل أقوى الدوسيات والملخصات في اللغة العربية.</p>
           </div>
           
           <div className="flex items-center gap-3 w-full md:w-auto">

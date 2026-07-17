@@ -40,8 +40,8 @@ export default function Onboarding() {
   };
 
   const steps = [
-    { id: 1, title: "المرحلة الدراسية", icon: GraduationCap },
-    { id: 2, title: "اختيار المواد", icon: BookOpen },
+    { id: 1, title: "الفرع الدراسي", icon: GraduationCap },
+    { id: 2, title: "مساراتك في العربية", icon: BookOpen },
     { id: 3, title: "تقييم المستوى", icon: Target },
     { id: 4, title: "الوقت المتاح", icon: Clock },
     { id: 5, title: "هدفك الدراسي", icon: Sparkles },
@@ -128,8 +128,8 @@ export default function Onboarding() {
 
               {step === 2 && (
                 <div className="flex-1 flex flex-col">
-                  <h2 className="text-2xl font-black mb-2">اختر المواد التي ترغب بمتابعتها</h2>
-                  <p className="text-muted-foreground mb-8">يمكنك تغيير ذلك لاحقاً من الإعدادات.</p>
+                  <h2 className="text-2xl font-black mb-2">اختر مساراتك في اللغة العربية</h2>
+                  <p className="text-muted-foreground mb-8">حدّد الوحدات والمسارات التي ستدرسها. يمكنك تغيير ذلك لاحقاً.</p>
                   
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto max-h-[300px] p-1">
                     {subjectsList?.map(subject => {
@@ -193,7 +193,7 @@ export default function Onboarding() {
                     })}
                     {formData.subjectIds.length === 0 && (
                       <div className="text-center py-10 text-muted-foreground">
-                        يرجى العودة للخطوة السابقة واختيار مادة واحدة على الأقل.
+                        يرجى العودة للخطوة السابقة واختيار مسار دراسي واحد على الأقل.
                       </div>
                     )}
                   </div>
@@ -263,7 +263,7 @@ export default function Onboarding() {
                   
                   <div className="grid gap-4 flex-1">
                     {[
-                      { id: 'نجاح', title: 'النجاح فقط', desc: 'تجاوز جميع المواد بنجاح للحصول على الشهادة' },
+                      { id: 'نجاح', title: 'النجاح فقط', desc: 'اجتياز مادة اللغة العربية بنجاح والحصول على الشهادة' },
                       { id: '80+', title: 'جيد جداً (80%+)', desc: 'دخول تخصصات جيدة في الجامعات الحكومية' },
                       { id: '90+', title: 'امتياز (90%+)', desc: 'المنافسة على تخصصات القمة (هندسة، صيدلة...)' },
                       { id: '95+', title: 'طب ومكرمات (95%+)', desc: 'دخول الطب البشري أو طب الأسنان' },

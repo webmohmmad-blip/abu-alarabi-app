@@ -89,7 +89,7 @@ export default function AdminContent() {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">إدارة المحتوى</h1>
-            <p className="text-muted-foreground text-sm mt-0.5">المواد الدراسية والدوسيات والامتحانات</p>
+            <p className="text-muted-foreground text-sm mt-0.5">المسارات الأكاديمية للغة العربية — دوسيات، أوراق عمل، امتحانات</p>
           </div>
         </motion.div>
 
@@ -99,7 +99,7 @@ export default function AdminContent() {
             <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="البحث في المواد..."
+                placeholder="البحث في المسارات..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pr-9 bg-white/5 border-white/10 text-white placeholder:text-muted-foreground"

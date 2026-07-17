@@ -75,7 +75,7 @@ export default function Statistics() {
             </div>
             إحصائيات الأداء
           </h1>
-          <p className="text-muted-foreground mt-2">راقب تقدمك وتطور مستواك في جميع المواد.</p>
+          <p className="text-muted-foreground mt-2">راقب تقدمك وتطور مستواك في اللغة العربية.</p>
         </div>
 
         {/* Hero Stats */}
