@@ -171,12 +171,12 @@ export default function AdminContent() {
                   <Card className="bg-white/5 border-white/10 overflow-hidden">
 
                     {/* Subject row */}
-                    <button
+                    <div
                       onClick={() => {
                         setExpandedSubject(isExpanded ? null : subject.id);
                         setActiveTab("units");
                       }}
-                      className="w-full flex items-center gap-4 p-5 hover:bg-white/5 transition-colors text-right"
+                      className="w-full flex items-center gap-4 p-5 hover:bg-white/5 transition-colors cursor-pointer select-none"
                     >
                       <div
                         className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white font-black text-base"
@@ -209,7 +209,7 @@ export default function AdminContent() {
                           ? <ChevronDown className="w-4 h-4 text-muted-foreground" />
                           : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                       </div>
-                    </button>
+                    </div>
 
                     {/* Expanded panel */}
                     {isExpanded && (

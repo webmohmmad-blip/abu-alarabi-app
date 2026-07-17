@@ -86,9 +86,9 @@ export default function Notes() {
   };
 
   // Filter local search since API might not have text search
-  const filteredNotes = notesList?.items.filter(n => 
+  const filteredNotes = (Array.isArray(notesList) ? notesList : []).filter(n => 
     n.title.includes(search) || n.content.includes(search)
-  ) || [];
+  );
 
   return (
     <DashboardLayout>

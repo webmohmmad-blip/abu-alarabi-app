@@ -60,7 +60,7 @@ export default function StudyRoom() {
 
   const handleStart = () => {
     // If no task selected, just use a dummy subjectId 1 for now (in real app, user selects subject if no task)
-    const task = tasksData?.items.find(t => t.id === selectedTask);
+    const task = tasksData?.find(t => t.id === selectedTask);
     
     createSession.mutate(
       { 
@@ -174,11 +174,11 @@ export default function StudyRoom() {
                 </div>
               </div>
 
-              {tasksData?.items && tasksData.items.length > 0 && (
+              {tasksData && tasksData.length > 0 && (
                 <div>
                   <h3 className="font-bold mb-4">اربط بجلسة مع مهمة (اختياري)</h3>
                   <div className="max-h-40 overflow-y-auto space-y-2 pr-2">
-                    {tasksData.items.map(task => (
+                    {tasksData.map(task => (
                       <button
                         key={task.id}
                         onClick={() => setSelectedTask(task.id === selectedTask ? null : task.id)}
