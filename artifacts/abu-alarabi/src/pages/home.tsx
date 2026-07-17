@@ -164,24 +164,6 @@ export default function Home() {
               </Link>
             </motion.div>
 
-            {/* Micro-stats */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="flex flex-wrap items-center gap-8 mt-16 pt-8 border-t border-white/10"
-            >
-              {[
-                { val: stats?.totalStudents ? `+${Number(stats.totalStudents).toLocaleString("ar")}` : "+٥٠٫٠٠٠", lbl: "طالب وطالبة" },
-                { val: stats?.totalDossiers ? `${stats.totalDossiers}+` : "١٥٠+", lbl: "دوسية وملخص" },
-                { val: stats?.totalExams ? `${stats.totalExams}+` : "٣٢٠+", lbl: "امتحان وزاري" },
-              ].map((s) => (
-                <div key={s.lbl}>
-                  <div className="text-2xl font-black text-white">{s.val}</div>
-                  <div className="text-sm text-white/50 mt-0.5">{s.lbl}</div>
-                </div>
-              ))}
-            </motion.div>
           </div>
         </div>
 
