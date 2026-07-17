@@ -1,3 +1,4 @@
 - [Abu Al-Arabi Platform Architecture](abu-alarabi-arch.md) — full-stack Tawjihi education platform; auth uses JWT Bearer tokens, not sessions.
 - [Product Vision & Design Rules](abu-alarabi-vision.md) — core philosophy: Arabic-only, premium design, fixed palette, RTL-first, no payments ever. Read before any UI work.
 - [Full-stack Audit 2026-07-17](audit-2026-07-17.md) — sessions goal bug, security headers, settings wiring, exam real data, PDF viewer, auth logout all fixed.
+- [ACMS Implementation](acms-2026-07-17.md) — summaries table+API+pages, exam question builder (7 types), content status workflow, admin nav updated.

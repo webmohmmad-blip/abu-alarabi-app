@@ -12,6 +12,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
 import { subjectsTable } from "./subjects";
+import { contentStatusEnum } from "./content";
 
 export const examTypeEnum = pgEnum("exam_type", [
   "full",
@@ -63,6 +64,11 @@ export const examsTable = pgTable("exams", {
   deductOnWrong: boolean("deduct_on_wrong").notNull().default(false),
   maxAttempts: integer("max_attempts").notNull().default(3),
   isAvailable: boolean("is_available").notNull().default(true),
+  status: contentStatusEnum("status").notNull().default("draft"),
+  questionCount: integer("question_count").notNull().default(0),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

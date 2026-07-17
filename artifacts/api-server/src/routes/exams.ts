@@ -38,15 +38,20 @@ router.get("/exams", async (req, res): Promise<void> => {
       title: exam.title,
       subjectId: exam.subjectId,
       subjectName: subjectName ?? "",
-      questionCount: 0,
+      questionCount: (exam as any).questionCount ?? 0,
       durationMinutes: exam.durationMinutes,
       type: exam.type,
       difficulty: exam.difficulty,
+      totalScore: exam.totalScore,
+      passingScore: exam.passingScore,
+      instructions: exam.instructions,
+      status: (exam as any).status ?? "draft",
       totalParticipants: 0,
       averageScore: null,
       isAvailable: exam.isAvailable,
       userAttempts: 0,
       maxAttempts: exam.maxAttempts,
+      createdAt: exam.createdAt,
     }))
   );
 });

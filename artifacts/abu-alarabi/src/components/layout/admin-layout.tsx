@@ -17,6 +17,8 @@ import {
   ChevronLeft,
   BookText,
   MessageSquareWarning,
+  PenTool,
+  AlignLeft,
 } from "lucide-react";
 import { useLogout } from "@workspace/api-client-react";
 
@@ -25,6 +27,8 @@ const adminNavItems = [
   { name: "المستخدمون", href: "/admin/users", icon: Users },
   { name: "المجموعات", href: "/admin/groups", icon: Users2 },
   { name: "المحتوى", href: "/admin/content", icon: BookOpen },
+  { name: "الامتحانات", href: "/admin/exams", icon: PenTool },
+  { name: "الملخصات", href: "/admin/summaries", icon: AlignLeft },
   { name: "الصلاحيات", href: "/admin/roles", icon: ShieldCheck },
   { name: "الإعلانات", href: "/admin/announcements", icon: Megaphone },
   { name: "التقارير", href: "/admin/reports", icon: BarChart3 },

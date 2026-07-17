@@ -570,9 +570,26 @@ router.delete("/worksheets/:id", async (req, res) => {
 });
 
 // ─── EXAMS (admin CRUD) ──────────────────────────────────────────────────────
+router.get("/exams", async (req, res) => {
+  const exams = await db
+    .select()
+    .from(examsTable)
+    .where(isNull(examsTable.deletedAt))
+    .orderBy(desc(examsTable.createdAt));
+  res.json({ items: exams });
+});
+
 router.post("/exams", async (req, res) => {
-  const data = req.body;
-  const [exam] = await db.insert(examsTable).values(data).returning();
+  const { title, subjectId, type, durationMinutes, maxAttempts, passingScore, totalScore, instructions, status, isAvailable } = req.body;
+  const [exam] = await db.insert(examsTable).values({
+    title, subjectId: parseInt(subjectId), type: type ?? "full",
+    durationMinutes: durationMinutes ?? 60, maxAttempts: maxAttempts ?? 3,
+    passingScore: passingScore ?? "50", totalScore: totalScore ?? "100",
+    instructions: instructions ?? null,
+    status: status ?? "draft",
+    isAvailable: isAvailable ?? false,
+    questionCount: 0,
+  } as any).returning();
   res.status(201).json(exam);
 });
 

@@ -14,6 +14,14 @@ import { subjectsTable } from "./subjects";
 
 export const difficultyEnum = pgEnum("difficulty", ["easy", "medium", "hard"]);
 
+export const contentStatusEnum = pgEnum("content_status", [
+  "draft",
+  "published",
+  "archived",
+  "hidden",
+  "scheduled",
+]);
+
 // ─── DOSSIERS ───────────────────────────────────────────
 export const dossiersTable = pgTable("dossiers", {
   id: serial("id").primaryKey(),
@@ -30,6 +38,10 @@ export const dossiersTable = pgTable("dossiers", {
   downloads: integer("downloads").notNull().default(0),
   views: integer("views").notNull().default(0),
   rating: numeric("rating", { precision: 3, scale: 1 }).notNull().default("0"),
+  status: contentStatusEnum("status").notNull().default("published"),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -93,6 +105,10 @@ export const worksheetsTable = pgTable("worksheets", {
   fileUrl: text("file_url"),
   downloads: integer("downloads").notNull().default(0),
   solvers: integer("solvers").notNull().default(0),
+  status: contentStatusEnum("status").notNull().default("published"),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -110,6 +126,32 @@ export const insertWorksheetSchema = createInsertSchema(worksheetsTable).omit({
 });
 export type InsertWorksheet = z.infer<typeof insertWorksheetSchema>;
 export type Worksheet = typeof worksheetsTable.$inferSelect;
+
+// ─── SUMMARIES ───────────────────────────────────────────────────────────────
+export const summaryTypeEnum = pgEnum("summary_type", ["text", "pdf", "print"]);
+
+export const summariesTable = pgTable("summaries", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  subjectId: integer("subject_id")
+    .notNull()
+    .references(() => subjectsTable.id, { onDelete: "cascade" }),
+  grade: text("grade").notNull(),
+  type: summaryTypeEnum("type").notNull().default("text"),
+  content: text("content"), // rich text / markdown for "text" type
+  fileUrl: text("file_url"), // PDF URL for pdf/print types
+  status: contentStatusEnum("status").notNull().default("draft"),
+  views: integer("views").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+});
+
+export type Summary = typeof summariesTable.$inferSelect;
 
 // ─── VIDEOS (External Embed Only) ───────────────────────────────────────────
 export const videoProviderEnum = pgEnum("video_provider", [
