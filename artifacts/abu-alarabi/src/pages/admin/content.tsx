@@ -10,7 +10,7 @@ import { useState } from "react";
 import {
   BookOpen, FileText, PenTool, Plus, Trash2, Pencil,
   ChevronDown, ChevronRight, Search, GripVertical, Layers,
-  X, Check, AlertCircle,
+  X, Check, AlertCircle, Video, Eye, ExternalLink,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -80,6 +80,29 @@ const useWorksheets = (subjectId: number) =>
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+// ─── Video types & hooks ─────────────────────────────────────────────────────
+
+interface AdminVideo {
+  id: number;
+  title: string;
+  subjectId: number;
+  subjectName: string;
+  grade: string;
+  provider: string;
+  videoUrl: string;
+  embedUrl: string;
+  durationMinutes: number | null;
+  coverUrl: string | null;
+  views: number;
+  isPublished: boolean;
+  createdAt: string;
+}
+
+const useAdminVideos = () =>
+  useQuery({ queryKey: ["/api/admin/videos"], queryFn: () => customFetch<AdminVideo[]>("/api/admin/videos", { method: "GET" }) });
+
+const providerLabel = (p: string) => ({ youtube: "YouTube", vimeo: "Vimeo", bunny: "Bunny Stream", cloudflare: "Cloudflare", other: "خارجي" }[p] ?? p);
+
 export default function AdminContent() {
   const { data: subjects, isLoading } = useSubjects();
   const [expandedSubject, setExpandedSubject] = useState<number | null>(null);
@@ -88,6 +111,8 @@ export default function AdminContent() {
   const [showAddSubject, setShowAddSubject] = useState(false);
   const [showAddDossier, setShowAddDossier] = useState<number | null>(null);
   const [showAddWorksheet, setShowAddWorksheet] = useState<number | null>(null);
+  const [showAddVideo, setShowAddVideo] = useState(false);
+  const [videosExpanded, setVideosExpanded] = useState(false);
   const qc = useQueryClient();
 
   const deleteSubject = useMutation({
@@ -116,6 +141,14 @@ export default function AdminContent() {
             <Plus className="w-4 h-4" /> إضافة مسار جديد
           </Button>
         </motion.div>
+
+        {/* Videos section */}
+        <VideosSection
+          expanded={videosExpanded}
+          onToggle={() => setVideosExpanded(!videosExpanded)}
+          onAdd={() => setShowAddVideo(true)}
+          qc={qc}
+        />
 
         {/* Search */}
         <Card className="bg-white/5 border-white/10">
@@ -254,6 +287,13 @@ export default function AdminContent() {
           subjectId={showAddWorksheet}
           onClose={() => setShowAddWorksheet(null)}
           onSuccess={() => { setShowAddWorksheet(null); qc.invalidateQueries({ queryKey: ["/api/worksheets", showAddWorksheet] }); }}
+        />
+      )}
+      {showAddVideo && (
+        <AddVideoModal
+          subjects={subjects ?? []}
+          onClose={() => setShowAddVideo(false)}
+          onSuccess={() => { setShowAddVideo(false); qc.invalidateQueries({ queryKey: ["/api/admin/videos"] }); }}
         />
       )}
     </AdminLayout>
@@ -609,6 +649,237 @@ function AddWorksheetModal({ subjectId, onClose, onSuccess }: { subjectId: numbe
       <ModalActions>
         <Button onClick={() => save.mutate()} disabled={!form.title.trim() || save.isPending} className="flex-1 bg-primary hover:bg-primary/90">
           {save.isPending ? "جاري الحفظ..." : "حفظ ورقة العمل"}
+        </Button>
+        <Button variant="outline" onClick={onClose} className="border-white/10 bg-white/5 text-white hover:bg-white/10">إلغاء</Button>
+      </ModalActions>
+    </Modal>
+  );
+}
+
+// ─── Videos Section ───────────────────────────────────────────────────────────
+
+function VideosSection({
+  expanded, onToggle, onAdd, qc,
+}: {
+  expanded: boolean;
+  onToggle: () => void;
+  onAdd: () => void;
+  qc: ReturnType<typeof useQueryClient>;
+}) {
+  const { data: videos, isLoading } = useAdminVideos();
+
+  const del = useMutation({
+    mutationFn: (id: number) => customFetch(`/api/admin/videos/${id}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/admin/videos"] }),
+  });
+
+  const togglePublish = useMutation({
+    mutationFn: ({ id, isPublished }: { id: number; isPublished: boolean }) =>
+      customFetch(`/api/admin/videos/${id}`, { method: "PATCH", body: JSON.stringify({ isPublished }) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/admin/videos"] }),
+  });
+
+  return (
+    <Card className="bg-white/5 border-white/10 overflow-hidden">
+      {/* Header row */}
+      <div
+        onClick={onToggle}
+        className="flex items-center gap-4 p-5 hover:bg-white/5 transition-colors cursor-pointer select-none"
+      >
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-primary/20">
+          <Video className="w-5 h-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-white">مكتبة الفيديوهات</div>
+          <div className="text-sm text-muted-foreground">
+            فيديوهات مضمّنة من YouTube / Vimeo / Bunny / Cloudflare — {videos?.length ?? 0} فيديو
+          </div>
+        </div>
+        <Button
+          onClick={(e) => { e.stopPropagation(); onAdd(); }}
+          size="sm"
+          className="gap-1.5 bg-primary/20 hover:bg-primary/30 text-primary shrink-0 border-0"
+        >
+          <Plus className="w-4 h-4" /> إضافة فيديو
+        </Button>
+        {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+      </div>
+
+      {/* Expanded content */}
+      {expanded && (
+        <div className="border-t border-white/10 bg-black/10 p-5">
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 bg-white/5 rounded-xl" />)}
+            </div>
+          ) : videos?.length === 0 ? (
+            <div className="text-center py-8">
+              <Video className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">لا توجد فيديوهات بعد — أضف أول فيديو من الزر أعلاه.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {videos?.map((v) => (
+                <div key={v.id} className="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/8 transition-colors group">
+                  {/* Thumbnail */}
+                  <div className="w-16 h-10 rounded-lg overflow-hidden bg-black/40 shrink-0">
+                    {v.coverUrl ? (
+                      <img src={v.coverUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Video className="w-4 h-4 text-muted-foreground/40" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-white text-sm truncate">{v.title}</div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
+                      <span>{v.subjectName}</span>
+                      <span>·</span>
+                      <span className="capitalize">{providerLabel(v.provider)}</span>
+                      {v.durationMinutes && <><span>·</span><span>{v.durationMinutes} د</span></>}
+                      <span>·</span>
+                      <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{v.views}</span>
+                    </div>
+                  </div>
+
+                  {/* Published badge */}
+                  <button
+                    onClick={() => togglePublish.mutate({ id: v.id, isPublished: !v.isPublished })}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-colors ${v.isPublished ? "bg-green-500/10 text-green-400 hover:bg-green-500/20" : "bg-muted/30 text-muted-foreground hover:bg-muted/50"}`}
+                  >
+                    {v.isPublished ? "منشور" : "مسودة"}
+                  </button>
+
+                  {/* Actions */}
+                  <a href={v.videoUrl} target="_blank" rel="noopener noreferrer"
+                    className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-white transition-all"
+                    onClick={e => e.stopPropagation()}>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                  <button
+                    onClick={() => { if (confirm(`حذف "${v.title}"؟`)) del.mutate(v.id); }}
+                    className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ─── Add Video Modal ──────────────────────────────────────────────────────────
+
+interface Subject { id: number; name: string; grade: string; field: string | null; color: string | null; iconUrl: string | null; }
+
+function AddVideoModal({ subjects, onClose, onSuccess }: { subjects: Subject[]; onClose: () => void; onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    title: "", description: "", subjectId: subjects[0]?.id ?? 0, grade: "",
+    provider: "youtube" as string, videoUrl: "", durationMinutes: "", coverUrl: "",
+  });
+  const [error, setError] = useState("");
+
+  const save = useMutation({
+    mutationFn: () => customFetch("/api/admin/videos", {
+      method: "POST",
+      body: JSON.stringify({
+        ...form,
+        durationMinutes: form.durationMinutes ? parseInt(form.durationMinutes) : undefined,
+      }),
+    }),
+    onSuccess,
+    onError: () => setError("حدث خطأ أثناء الحفظ. تأكد من صحة البيانات."),
+  });
+
+  const providerOptions = [
+    { value: "youtube", label: "YouTube" },
+    { value: "vimeo", label: "Vimeo" },
+    { value: "bunny", label: "Bunny Stream" },
+    { value: "cloudflare", label: "Cloudflare Stream" },
+    { value: "other", label: "مزود آخر" },
+  ];
+
+  const placeholders: Record<string, string> = {
+    youtube: "https://www.youtube.com/watch?v=xxxx أو https://youtu.be/xxxx",
+    vimeo: "https://vimeo.com/123456789",
+    bunny: "https://iframe.mediadelivery.net/embed/libraryId/videoId",
+    cloudflare: "https://iframe.cloudflarestream.com/videoId",
+    other: "https://...",
+  };
+
+  return (
+    <Modal title="إضافة فيديو جديد" onClose={onClose}>
+      <div className="space-y-4">
+        <Field label="عنوان الفيديو *">
+          <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+            className="bg-white/5 border-white/10 text-white" placeholder="مثال: شرح درس الفاعل" />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="المادة الدراسية *">
+            <Select value={String(form.subjectId)} onChange={v => setForm({ ...form, subjectId: parseInt(v) })}
+              options={subjects.map(s => ({ value: String(s.id), label: `${s.name} (${s.grade})` }))} />
+          </Field>
+          <Field label="الصف *">
+            <Input value={form.grade} onChange={e => setForm({ ...form, grade: e.target.value })}
+              className="bg-white/5 border-white/10 text-white" placeholder="مثال: الثاني عشر" />
+          </Field>
+        </div>
+
+        <Field label="مزوّد الفيديو *">
+          <Select value={form.provider} onChange={v => setForm({ ...form, provider: v })} options={providerOptions} />
+        </Field>
+
+        <Field label="رابط الفيديو *">
+          <Input value={form.videoUrl} onChange={e => setForm({ ...form, videoUrl: e.target.value })}
+            className="bg-white/5 border-white/10 text-white font-mono text-xs" placeholder={placeholders[form.provider]}
+            dir="ltr" />
+          <p className="text-[11px] text-muted-foreground mt-1">
+            {form.provider === "youtube"
+              ? "أدخل رابط المشاهدة العادي أو المختصر — سيتم تحويله تلقائياً لرابط تضمين."
+              : form.provider === "bunny" || form.provider === "cloudflare"
+              ? "أدخل رابط الـ embed مباشرةً من لوحة تحكم المزوّد."
+              : "أدخل رابط الفيديو المباشر."}
+          </p>
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="مدة الفيديو (دقيقة)">
+            <Input type="number" value={form.durationMinutes} onChange={e => setForm({ ...form, durationMinutes: e.target.value })}
+              className="bg-white/5 border-white/10 text-white" placeholder="45" />
+          </Field>
+          <Field label="رابط صورة الغلاف (اختياري)">
+            <Input value={form.coverUrl} onChange={e => setForm({ ...form, coverUrl: e.target.value })}
+              className="bg-white/5 border-white/10 text-white font-mono text-xs" placeholder="https://..." dir="ltr" />
+          </Field>
+        </div>
+
+        <Field label="وصف مختصر (اختياري)">
+          <Input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+            className="bg-white/5 border-white/10 text-white" placeholder="ملخص محتوى الفيديو" />
+        </Field>
+
+        {form.provider === "youtube" && form.videoUrl && (
+          <p className="text-[11px] text-muted-foreground bg-white/5 rounded-lg p-2 font-mono" dir="ltr">
+            💡 YouTube thumbnails تُولَّد تلقائياً — لا حاجة لرابط غلاف.
+          </p>
+        )}
+
+        {error && <ErrorMsg>{error}</ErrorMsg>}
+      </div>
+      <ModalActions>
+        <Button
+          onClick={() => save.mutate()}
+          disabled={!form.title.trim() || !form.videoUrl.trim() || !form.grade.trim() || save.isPending}
+          className="flex-1 bg-primary hover:bg-primary/90"
+        >
+          {save.isPending ? "جاري الحفظ..." : "إضافة الفيديو"}
         </Button>
         <Button variant="outline" onClick={onClose} className="border-white/10 bg-white/5 text-white hover:bg-white/10">إلغاء</Button>
       </ModalActions>

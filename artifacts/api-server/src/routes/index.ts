@@ -14,6 +14,7 @@ import dashboardRouter from "./dashboard";
 import notificationsRouter from "./notifications";
 import commentsRouter from "./comments";
 import flashcardsRouter from "./flashcards";
+import videosRouter from "./videos";
 import adminRouter from "./admin";
 
 const router: IRouter = Router();
@@ -32,6 +33,7 @@ router.use(statisticsRouter);
 router.use(dashboardRouter);
 router.use(notificationsRouter);
 router.use("/comments", commentsRouter);
+router.use(videosRouter);
 router.use("/admin", adminRouter);
 // Flashcards routes — handled directly inside the file at /flashcard-decks and /flashcards
 router.use(flashcardsRouter);

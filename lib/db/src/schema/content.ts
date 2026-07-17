@@ -110,3 +110,44 @@ export const insertWorksheetSchema = createInsertSchema(worksheetsTable).omit({
 });
 export type InsertWorksheet = z.infer<typeof insertWorksheetSchema>;
 export type Worksheet = typeof worksheetsTable.$inferSelect;
+
+// ─── VIDEOS (External Embed Only) ───────────────────────────────────────────
+export const videoProviderEnum = pgEnum("video_provider", [
+  "youtube",
+  "vimeo",
+  "bunny",
+  "cloudflare",
+  "other",
+]);
+
+export const videosTable = pgTable("videos", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  subjectId: integer("subject_id")
+    .notNull()
+    .references(() => subjectsTable.id, { onDelete: "cascade" }),
+  grade: text("grade").notNull(),
+  provider: videoProviderEnum("provider").notNull().default("youtube"),
+  videoUrl: text("video_url").notNull(),
+  durationMinutes: integer("duration_minutes"),
+  coverUrl: text("cover_url"),
+  views: integer("views").notNull().default(0),
+  order: integer("order").notNull().default(0),
+  isPublished: integer("is_published").notNull().default(1), // 1=published, 0=draft
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+});
+
+export const insertVideoSchema = createInsertSchema(videosTable).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  views: true,
+});
+export type InsertVideo = z.infer<typeof insertVideoSchema>;
+export type Video = typeof videosTable.$inferSelect;

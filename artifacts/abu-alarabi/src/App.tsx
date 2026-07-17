@@ -23,6 +23,7 @@ import Notes from '@/pages/notes';
 import Statistics from '@/pages/statistics';
 import Profile from '@/pages/profile';
 import Settings from '@/pages/settings';
+import Videos from '@/pages/videos';
 
 // Admin pages
 import AdminDashboard from '@/pages/admin/index';
@@ -66,6 +67,7 @@ function Router() {
       <Route path="/study-plan" component={StudyPlan} />
       <Route path="/study-room" component={StudyRoom} />
       <Route path="/notes" component={Notes} />
+      <Route path="/videos" component={Videos} />
       <Route path="/statistics" component={Statistics} />
       <Route path="/profile" component={Profile} />
       <Route path="/settings" component={Settings} />
