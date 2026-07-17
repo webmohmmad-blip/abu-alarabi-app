@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useCompleteOnboarding, useListSubjects } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,12 +9,21 @@ import {
   Settings, GraduationCap, Sparkles, TestTubes, Leaf,
   CheckCircle2, AlertCircle,
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const TOTAL_STEPS = 6;
 
 export default function Onboarding() {
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
+
+  // If onboarding already completed, go straight to dashboard
+  useEffect(() => {
+    if (user?.onboardingCompleted) {
+      setLocation("/dashboard");
+    }
+  }, [user, setLocation]);
   const [submitError, setSubmitError] = useState("");
   const completeMutation = useCompleteOnboarding();
   const { data: subjectsList, isLoading: subjectsLoading } = useListSubjects();
