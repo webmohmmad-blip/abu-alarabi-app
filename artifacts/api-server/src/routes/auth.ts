@@ -19,6 +19,9 @@ import {
 
 const router: IRouter = Router();
 
+/** Roles that require a real password — never allowed via phone-only flow */
+const PRIVILEGED_ROLES = ["admin", "super_admin", "moderator", "teacher", "assistant_teacher"];
+
 function userResponse(user: typeof usersTable.$inferSelect) {
   return {
     id: user.id,
@@ -32,6 +35,11 @@ function userResponse(user: typeof usersTable.$inferSelect) {
   };
 }
 
+// ─── REGISTER ────────────────────────────────────────────────────────────────
+// Accepts: { fullName, phone }
+// • New phone   → create student account + return JWT
+// • Existing student phone → auto-login (return JWT)
+// • Existing privileged phone → reject (must use password login)
 router.post("/auth/register", async (req, res): Promise<void> => {
   const parsed = RegisterBody.safeParse(req.body);
   if (!parsed.success) {
@@ -40,19 +48,24 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   }
   const { fullName, phone } = parsed.data;
 
-  // Phone already registered → auto-login
   const [existing] = await db
     .select()
     .from(usersTable)
     .where(eq(usersTable.phone, phone));
 
   if (existing) {
+    // Privileged accounts must go through the password login flow
+    if (PRIVILEGED_ROLES.includes(existing.role)) {
+      res.status(403).json({ error: "هذا الحساب يتطلب كلمة مرور للدخول" });
+      return;
+    }
+    // Student: auto-login by phone
     const token = signToken({ userId: existing.id, role: existing.role });
     res.json({ user: userResponse(existing), token });
     return;
   }
 
-  // New user — random password hash (passwordless flow)
+  // New user — passwordless student account
   const passwordHash = await hashPassword(crypto.randomUUID());
   const [user] = await db
     .insert(usersTable)
@@ -71,6 +84,11 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   res.status(201).json({ user: userResponse(user), token });
 });
 
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+// Accepts: { phone, password? }
+// • Student + no password   → phone-only login (passwordless flow)
+// • Any role + password     → verify password
+// • Privileged role + no password → reject
 router.post("/auth/login", async (req, res): Promise<void> => {
   const parsed = LoginBody.safeParse(req.body);
   if (!parsed.success) {
@@ -89,11 +107,17 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  // If caller supplies a password (admin flow), verify it
   if (password) {
+    // Password provided — verify it (works for all roles including admins)
     const valid = await comparePassword(password, user.passwordHash);
     if (!valid) {
       res.status(401).json({ error: "رقم الهاتف أو كلمة المرور غير صحيحة" });
+      return;
+    }
+  } else {
+    // No password — only allowed for student accounts
+    if (PRIVILEGED_ROLES.includes(user.role)) {
+      res.status(401).json({ error: "هذا الحساب يتطلب كلمة مرور للدخول" });
       return;
     }
   }
@@ -102,10 +126,12 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   res.json({ user: userResponse(user), token });
 });
 
+// ─── LOGOUT ───────────────────────────────────────────────────────────────────
 router.post("/auth/logout", (_req, res): void => {
   res.json({ success: true });
 });
 
+// ─── ME ───────────────────────────────────────────────────────────────────────
 router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
   const [user] = await db
