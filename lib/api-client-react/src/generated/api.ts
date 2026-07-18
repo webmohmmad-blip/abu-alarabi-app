@@ -81,7 +81,6 @@ import type {
   NoteInput,
   NoteUpdate,
   Notification,
-  OnboardingInput,
   Permission,
   PlatformReport,
   PlatformStats,
@@ -483,71 +482,6 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Err
 
 
 
-
-export const getCompleteOnboardingUrl = () => {
-
-
-
-
-  return `/api/auth/onboarding`
-}
-
-export const completeOnboarding = async (onboardingInput: OnboardingInput, options?: RequestInit): Promise<User> => {
-
-  return customFetch<User>(getCompleteOnboardingUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(onboardingInput)
-  }
-);}
-
-
-
-
-
-export const getCompleteOnboardingMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeOnboarding>>, TError,{data: BodyType<OnboardingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof completeOnboarding>>, TError,{data: BodyType<OnboardingInput>}, TContext> => {
-
-const mutationKey = ['completeOnboarding'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeOnboarding>>, {data: BodyType<OnboardingInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  completeOnboarding(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CompleteOnboardingMutationResult = NonNullable<Awaited<ReturnType<typeof completeOnboarding>>>
-    export type CompleteOnboardingMutationBody = BodyType<OnboardingInput>
-    export type CompleteOnboardingMutationError = ErrorType<unknown>
-
-    export const useCompleteOnboarding = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeOnboarding>>, TError,{data: BodyType<OnboardingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof completeOnboarding>>,
-        TError,
-        {data: BodyType<OnboardingInput>},
-        TContext
-      > => {
-      return useMutation(getCompleteOnboardingMutationOptions(options));
-    }
 
 export const getGetProfileUrl = () => {
 

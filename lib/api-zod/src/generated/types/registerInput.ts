@@ -10,7 +10,4 @@ export interface RegisterInput {
   /** @minLength 3 */
   fullName: string;
   phone: string;
-  /** @minLength 8 */
-  password: string;
-  confirmPassword: string;
 }

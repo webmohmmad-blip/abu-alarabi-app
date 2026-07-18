@@ -8,6 +8,6 @@
 
 export interface LoginInput {
   phone: string;
-  password: string;
+  password?: string;
   rememberMe?: boolean;
 }

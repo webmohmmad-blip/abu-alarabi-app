@@ -12,8 +12,6 @@ import { motion } from "framer-motion";
 
 const loginSchema = z.object({
   phone: z.string().min(10, "رقم الهاتف يجب أن يتكون من 10 أرقام على الأقل"),
-  password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
-  rememberMe: z.boolean().default(false).optional(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -24,11 +22,7 @@ export default function Login() {
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      phone: "",
-      password: "",
-      rememberMe: false,
-    },
+    defaultValues: { phone: "" },
   });
 
   const onSubmit = (data: LoginFormValues) => {
@@ -36,14 +30,8 @@ export default function Login() {
       { data },
       {
         onSuccess: (res) => {
-          // Store token
           localStorage.setItem("token", res.token);
-          
-          if (res.onboardingRequired) {
-            setLocation("/onboarding");
-          } else {
-            setLocation("/dashboard");
-          }
+          setLocation("/dashboard");
         },
       }
     );
@@ -51,11 +39,10 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
-      {/* Decorative blobs */}
       <div className="absolute top-0 left-0 w-full h-1/2 bg-primary/5 -skew-y-6 transform origin-top-left -z-10"></div>
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -z-10"></div>
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
@@ -72,67 +59,37 @@ export default function Login() {
         <Card className="p-8 shadow-2xl shadow-primary/10 border-white/60">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold mb-2">مرحباً بعودتك!</h1>
-            <p className="text-muted-foreground text-sm">قم بتسجيل الدخول لمتابعة دراستك وتفوقك.</p>
+            <p className="text-muted-foreground text-sm">أدخل رقم هاتفك للدخول إلى حسابك.</p>
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             {loginMutation.isError && (
               <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-sm font-bold flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 shrink-0" />
-                <span>رقم الهاتف أو كلمة المرور غير صحيحة.</span>
+                <span>رقم الهاتف غير مسجل. تحقق من الرقم أو أنشئ حساباً جديداً.</span>
               </div>
             )}
 
             <div className="space-y-2">
               <Label htmlFor="phone">رقم الهاتف</Label>
-              <Input 
-                id="phone" 
-                placeholder="079XXXXXXX" 
-                dir="ltr" 
+              <Input
+                id="phone"
+                placeholder="079XXXXXXX"
+                dir="ltr"
                 className="text-right"
-                {...form.register("phone")} 
+                {...form.register("phone")}
               />
               {form.formState.errors.phone && (
                 <p className="text-xs text-destructive font-bold">{form.formState.errors.phone.message}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">كلمة المرور</Label>
-                <Link href="/forgot-password" className="text-xs text-primary hover:underline font-bold">
-                  نسيت كلمة المرور؟
-                </Link>
-              </div>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="••••••••" 
-                dir="ltr"
-                className="text-right"
-                {...form.register("password")} 
-              />
-              {form.formState.errors.password && (
-                <p className="text-xs text-destructive font-bold">{form.formState.errors.password.message}</p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 pt-2">
-              <input 
-                type="checkbox" 
-                id="rememberMe" 
-                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                {...form.register("rememberMe")} 
-              />
-              <Label htmlFor="rememberMe" className="text-sm font-medium cursor-pointer">تذكرني على هذا الجهاز</Label>
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full h-14 text-lg mt-4" 
+            <Button
+              type="submit"
+              className="w-full h-14 text-lg mt-4"
               disabled={loginMutation.isPending}
             >
-              {loginMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "تسجيل الدخول"}
+              {loginMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "دخول"}
             </Button>
           </form>
 

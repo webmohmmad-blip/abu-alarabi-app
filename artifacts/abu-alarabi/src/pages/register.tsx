@@ -11,13 +11,8 @@ import { BookOpen, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const registerSchema = z.object({
-  fullName: z.string().min(3, "الاسم الرباعي مطلوب (3 أحرف على الأقل)"),
+  fullName: z.string().min(3, "الاسم يجب أن يكون 3 أحرف على الأقل"),
   phone: z.string().min(10, "رقم الهاتف يجب أن يتكون من 10 أرقام على الأقل"),
-  password: z.string().min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "كلمات المرور غير متطابقة",
-  path: ["confirmPassword"],
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -28,12 +23,7 @@ export default function Register() {
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      fullName: "",
-      phone: "",
-      password: "",
-      confirmPassword: "",
-    },
+    defaultValues: { fullName: "", phone: "" },
   });
 
   const onSubmit = (data: RegisterFormValues) => {
@@ -42,7 +32,7 @@ export default function Register() {
       {
         onSuccess: (res) => {
           localStorage.setItem("token", res.token);
-          setLocation("/onboarding");
+          setLocation("/dashboard");
         },
       }
     );
@@ -50,11 +40,10 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
-      {/* Decorative blobs */}
       <div className="absolute bottom-0 right-0 w-full h-1/2 bg-secondary/5 skew-y-6 transform origin-bottom-right -z-10"></div>
       <div className="absolute top-10 left-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10"></div>
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md my-8"
@@ -78,16 +67,16 @@ export default function Register() {
             {registerMutation.isError && (
               <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-sm font-bold flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 shrink-0" />
-                <span>حدث خطأ أثناء التسجيل. قد يكون رقم الهاتف مستخدماً بالفعل.</span>
+                <span>حدث خطأ أثناء التسجيل. حاول مجدداً.</span>
               </div>
             )}
 
             <div className="space-y-2">
               <Label htmlFor="fullName">الاسم الرباعي</Label>
-              <Input 
-                id="fullName" 
-                placeholder="أحمد عبدالله محمد..." 
-                {...form.register("fullName")} 
+              <Input
+                id="fullName"
+                placeholder="أحمد عبدالله محمد..."
+                {...form.register("fullName")}
               />
               {form.formState.errors.fullName && (
                 <p className="text-xs text-destructive font-bold">{form.formState.errors.fullName.message}</p>
@@ -96,45 +85,15 @@ export default function Register() {
 
             <div className="space-y-2">
               <Label htmlFor="phone">رقم الهاتف</Label>
-              <Input 
-                id="phone" 
-                placeholder="079XXXXXXX" 
-                dir="ltr" 
+              <Input
+                id="phone"
+                placeholder="079XXXXXXX"
+                dir="ltr"
                 className="text-right"
-                {...form.register("phone")} 
+                {...form.register("phone")}
               />
               {form.formState.errors.phone && (
                 <p className="text-xs text-destructive font-bold">{form.formState.errors.phone.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="••••••••" 
-                dir="ltr"
-                className="text-right"
-                {...form.register("password")} 
-              />
-              {form.formState.errors.password && (
-                <p className="text-xs text-destructive font-bold">{form.formState.errors.password.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">تأكيد كلمة المرور</Label>
-              <Input 
-                id="confirmPassword" 
-                type="password" 
-                placeholder="••••••••" 
-                dir="ltr"
-                className="text-right"
-                {...form.register("confirmPassword")} 
-              />
-              {form.formState.errors.confirmPassword && (
-                <p className="text-xs text-destructive font-bold">{form.formState.errors.confirmPassword.message}</p>
               )}
             </div>
 
@@ -143,9 +102,9 @@ export default function Register() {
               <span>بالنقر على "إنشاء حساب"، أنت توافق على شروط الاستخدام وسياسة الخصوصية الخاصة بمنصة أبو العربي.</span>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-14 text-lg mt-6" 
+            <Button
+              type="submit"
+              className="w-full h-14 text-lg mt-6"
               disabled={registerMutation.isPending}
             >
               {registerMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "إنشاء حساب"}

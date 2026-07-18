@@ -86,8 +86,6 @@ export * from './noteInput';
 export * from './noteUpdate';
 export * from './notification';
 export * from './notificationType';
-export * from './onboardingInput';
-export * from './onboardingInputSubjectLevels';
 export * from './permission';
 export * from './platformReport';
 export * from './platformReportData';

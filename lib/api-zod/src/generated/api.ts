@@ -18,15 +18,11 @@ export const HealthCheckResponse = zod.object({
 
 export const registerBodyFullNameMin = 3;
 
-export const registerBodyPasswordMin = 8;
-
 
 
 export const RegisterBody = zod.object({
   "fullName": zod.string().min(registerBodyFullNameMin),
-  "phone": zod.string(),
-  "password": zod.string().min(registerBodyPasswordMin),
-  "confirmPassword": zod.string()
+  "phone": zod.string()
 })
 
 export const RegisterResponse = zod.object({
@@ -41,14 +37,13 @@ export const RegisterResponse = zod.object({
   "isActive": zod.boolean().optional(),
   "createdAt": zod.string()
 }),
-  "token": zod.string(),
-  "onboardingRequired": zod.boolean().optional()
+  "token": zod.string()
 })
 
 
 export const LoginBody = zod.object({
   "phone": zod.string(),
-  "password": zod.string(),
+  "password": zod.string().optional(),
   "rememberMe": zod.boolean().optional()
 })
 
@@ -64,8 +59,7 @@ export const LoginResponse = zod.object({
   "isActive": zod.boolean().optional(),
   "createdAt": zod.string()
 }),
-  "token": zod.string(),
-  "onboardingRequired": zod.boolean().optional()
+  "token": zod.string()
 })
 
 
@@ -73,33 +67,6 @@ export const LogoutResponse = zod.unknown()
 
 
 export const GetMeResponse = zod.object({
-  "id": zod.number(),
-  "fullName": zod.string(),
-  "phone": zod.string(),
-  "email": zod.string().nullish(),
-  "role": zod.enum(['student', 'teacher', 'assistant_teacher', 'moderator', 'admin', 'super_admin']),
-  "avatarUrl": zod.string().nullish(),
-  "onboardingCompleted": zod.boolean().optional(),
-  "isActive": zod.boolean().optional(),
-  "createdAt": zod.string()
-})
-
-
-export const CompleteOnboardingBody = zod.object({
-  "grade": zod.string(),
-  "field": zod.string(),
-  "school": zod.string().optional(),
-  "tawjihiYear": zod.number().optional(),
-  "isRepeating": zod.boolean().optional(),
-  "subjectIds": zod.array(zod.number()).optional(),
-  "subjectLevels": zod.record(zod.string(), zod.string()).optional(),
-  "availableHoursPerDay": zod.number(),
-  "studyDays": zod.array(zod.string()),
-  "goal": zod.string(),
-  "studyStyle": zod.string()
-})
-
-export const CompleteOnboardingResponse = zod.object({
   "id": zod.number(),
   "fullName": zod.string(),
   "phone": zod.string(),

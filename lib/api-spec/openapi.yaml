@@ -109,24 +109,6 @@ paths:
         "401":
           description: Not authenticated
 
-  /auth/onboarding:
-    post:
-      operationId: completeOnboarding
-      tags: [auth]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/OnboardingInput"
-      responses:
-        "200":
-          description: Onboarding complete
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
-
   # ─── USER PROFILE ───────────────────────────────────────
   /users/profile:
     get:
@@ -1919,22 +1901,17 @@ components:
     # ─── AUTH ─────────────────────────────────────────────
     RegisterInput:
       type: object
-      required: [fullName, phone, password, confirmPassword]
+      required: [fullName, phone]
       properties:
         fullName:
           type: string
           minLength: 3
         phone:
           type: string
-        password:
-          type: string
-          minLength: 8
-        confirmPassword:
-          type: string
 
     LoginInput:
       type: object
-      required: [phone, password]
+      required: [phone]
       properties:
         phone:
           type: string
@@ -1951,8 +1928,6 @@ components:
           $ref: "#/components/schemas/User"
         token:
           type: string
-        onboardingRequired:
-          type: boolean
 
     User:
       type: object
@@ -1976,39 +1951,6 @@ components:
         isActive:
           type: boolean
         createdAt:
-          type: string
-
-    OnboardingInput:
-      type: object
-      required: [grade, field, availableHoursPerDay, studyDays, goal, studyStyle]
-      properties:
-        grade:
-          type: string
-        field:
-          type: string
-        school:
-          type: string
-        tawjihiYear:
-          type: integer
-        isRepeating:
-          type: boolean
-        subjectIds:
-          type: array
-          items:
-            type: integer
-        subjectLevels:
-          type: object
-          additionalProperties:
-            type: string
-        availableHoursPerDay:
-          type: number
-        studyDays:
-          type: array
-          items:
-            type: string
-        goal:
-          type: string
-        studyStyle:
           type: string
 
     # ─── PROFILE ─────────────────────────────────────────

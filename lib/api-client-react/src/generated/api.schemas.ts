@@ -13,14 +13,11 @@ export interface RegisterInput {
   /** @minLength 3 */
   fullName: string;
   phone: string;
-  /** @minLength 8 */
-  password: string;
-  confirmPassword: string;
 }
 
 export interface LoginInput {
   phone: string;
-  password: string;
+  password?: string;
   rememberMe?: boolean;
 }
 
@@ -53,23 +50,6 @@ export interface User {
 export interface AuthResult {
   user: User;
   token: string;
-  onboardingRequired?: boolean;
-}
-
-export type OnboardingInputSubjectLevels = {[key: string]: string};
-
-export interface OnboardingInput {
-  grade: string;
-  field: string;
-  school?: string;
-  tawjihiYear?: number;
-  isRepeating?: boolean;
-  subjectIds?: number[];
-  subjectLevels?: OnboardingInputSubjectLevels;
-  availableHoursPerDay: number;
-  studyDays: string[];
-  goal: string;
-  studyStyle: string;
 }
 
 export interface StudentProfile {
