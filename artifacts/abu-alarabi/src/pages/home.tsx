@@ -15,13 +15,6 @@ import {
   Sparkles,
   Trophy,
   ArrowLeft,
-  LayoutDashboard,
-  BookText,
-  Focus,
-  CalendarDays,
-  ChevronDown,
-  Flame,
-  GraduationCap,
 } from "lucide-react";
 import { useGetPlatformStats, useListDossiers } from "@workspace/api-client-react";
 
@@ -179,173 +172,36 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════
-          PLATFORM PREVIEW — dashboard strip showcase
+          NAV STRIP PREVIEW — بين الهيرو والأستاذ
       ═══════════════════════════════════════════════ */}
-      <section className="py-24 bg-muted/20 overflow-hidden">
-        <div className="container mx-auto px-6">
-
-          {/* Section label */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-14"
-          >
-            <p className="text-sm font-bold text-primary uppercase tracking-widest mb-4">لوحة التحكم</p>
-            <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-4">
-              منصة متكاملة في متناول يدك
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              كل أدواتك الدراسية في شريط واحد — تنتقل بينها بلمسة واحدة.
-            </p>
-          </motion.div>
-
-          {/* App mockup frame */}
-          <motion.div
-            initial={{ opacity: 0, y: 48 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-[0_32px_80px_-12px] shadow-primary/20 border border-border"
-          >
-            {/* ── Browser chrome ── */}
-            <div className="bg-[#110820] px-4 py-3 flex items-center gap-3 border-b border-white/10">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500/70" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
-                <div className="w-3 h-3 rounded-full bg-green-500/70" />
-              </div>
-              <div className="flex-1 bg-white/8 rounded-lg px-4 py-1.5 text-[11px] text-white/35 font-mono text-center select-none">
-                abu-alarabi.com/dashboard
-              </div>
+      <div className="overflow-x-auto scrollbar-hide w-full" style={{ backgroundColor: "#282a35" }}>
+        <div className="flex items-stretch min-w-max mx-auto" dir="rtl">
+          {[
+            { name: "لوحتي",                  active: true  },
+            { name: "الدوسيات",               active: false },
+            { name: "أوراق العمل",            active: false },
+            { name: "الامتحانات الإلكترونية", active: false },
+            { name: "الكويز الأسبوعي",        active: false },
+            { name: "غرفتي الدراسية",         active: false },
+          ].map((item, idx) => (
+            <div
+              key={item.name}
+              className="flex items-center select-none"
+              style={{ borderRight: idx !== 0 ? "1px solid rgba(255,255,255,0.08)" : "none" }}
+            >
+              <span
+                className="block px-5 py-3 text-sm whitespace-nowrap"
+                style={{
+                  color: item.active ? "#ffffff" : "rgba(255,255,255,0.72)",
+                  backgroundColor: item.active ? "#5A2D82" : "transparent",
+                }}
+              >
+                {item.name}
+              </span>
             </div>
-
-            {/* ── App header (mock) ── */}
-            <div className="bg-[#180d2e]/98 px-6 h-[60px] flex items-center justify-between border-b border-white/10">
-              {/* Logo */}
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white font-black text-base shadow-sm">ع</div>
-                <span className="text-white font-bold text-[15px] tracking-tight">أبو العربي</span>
-              </div>
-              {/* Right controls */}
-              <div className="flex items-center gap-2">
-                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/8 text-white/50 text-xs font-medium">
-                  <CalendarDays className="w-3.5 h-3.5" />
-                  <span>جدولك اليوم</span>
-                </div>
-                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/8">
-                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-[10px] font-black text-white">أ</div>
-                  <span className="text-white/70 text-xs font-medium hidden sm:block">أحمد السالم</span>
-                  <ChevronDown className="w-3 h-3 text-white/30 hidden sm:block" />
-                </div>
-              </div>
-            </div>
-
-            {/* ══ STUDENT NAV STRIP — the hero of this section ══ */}
-            <div className="overflow-x-auto scrollbar-hide" style={{ backgroundColor: "#282a35" }}>
-              <div className="flex items-stretch min-w-max" dir="rtl">
-                {[
-                  { name: "لوحتي",                  active: true  },
-                  { name: "الدوسيات",               active: false },
-                  { name: "أوراق العمل",            active: false },
-                  { name: "الامتحانات الإلكترونية", active: false },
-                  { name: "الكويز الأسبوعي",        active: false },
-                  { name: "غرفتي الدراسية",         active: false },
-                ].map((item, idx) => (
-                  <div
-                    key={item.name}
-                    className="flex items-center select-none"
-                    style={{ borderRight: idx !== 0 ? "1px solid rgba(255,255,255,0.08)" : "none" }}
-                  >
-                    <span
-                      className="block px-4 py-2.5 text-[13.5px] whitespace-nowrap"
-                      style={{
-                        color: item.active ? "#ffffff" : "rgba(255,255,255,0.75)",
-                        backgroundColor: item.active ? "#5A2D82" : "transparent",
-                      }}
-                    >
-                      {item.name}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ── Dashboard content preview ── */}
-            <div className="bg-background/60 p-5 md:p-8">
-
-              {/* Stat cards row */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-                {[
-                  { label: "الدوسيات المكتملة", val: "٣", icon: BookText,        color: "#5A2D82" },
-                  { label: "أوراق العمل",       val: "١٢", icon: FileText,       color: "#0D9BB5" },
-                  { label: "درجة الامتحان",     val: "٨٨٪", icon: GraduationCap, color: "#C79A2D" },
-                  { label: "يوم متواصل",        val: "٧🔥",  icon: Flame,         color: "#2FA84F" },
-                ].map((s) => (
-                  <div key={s.label} className="bg-card border border-border rounded-xl p-3.5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${s.color}18` }}>
-                        <s.icon className="w-3.5 h-3.5" style={{ color: s.color }} />
-                      </div>
-                      <span className="text-[11px] text-muted-foreground leading-tight">{s.label}</span>
-                    </div>
-                    <div className="text-xl font-black text-foreground">{s.val}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Content placeholder rows */}
-              <div className="grid md:grid-cols-2 gap-4">
-                {/* Recent dossiers */}
-                <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-bold text-foreground">آخر الدوسيات</span>
-                    <span className="text-xs text-primary font-medium">عرض الكل</span>
-                  </div>
-                  {["نحو وصرف — الوحدة الأولى", "البلاغة والأدب", "مراجعة نهائية"].map((t, i) => (
-                    <div key={t} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <BookText className="w-4 h-4 text-primary/60" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium text-foreground truncate">{t}</div>
-                        <div className="w-full bg-border rounded-full h-1 mt-1.5">
-                          <div className="bg-primary h-1 rounded-full" style={{ width: `${[70, 40, 15][i]}%` }} />
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground shrink-0">{[70, 40, 15][i]}٪</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Today's tasks */}
-                <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-bold text-foreground">مهام اليوم</span>
-                    <span className="text-xs text-muted-foreground">٢ من ٤</span>
-                  </div>
-                  {[
-                    { t: "مراجعة درس الفاعل",      done: true,  color: "#5A2D82" },
-                    { t: "ورقة عمل البلاغة",       done: true,  color: "#0D9BB5" },
-                    { t: "امتحان الوحدة الثالثة",  done: false, color: "#C79A2D" },
-                    { t: "الكويز الأسبوعي",         done: false, color: "#2FA84F" },
-                  ].map((item) => (
-                    <div key={item.t} className={`flex items-center gap-3 p-2.5 rounded-lg ${item.done ? "opacity-50" : "bg-muted/40"}`}>
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${item.done ? "bg-primary border-primary" : "border-border"}`}>
-                        {item.done && <div className="w-2 h-2 rounded-full bg-white" />}
-                      </div>
-                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                      <span className={`text-xs font-medium ${item.done ? "line-through text-muted-foreground" : "text-foreground"}`}>{item.t}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-          </motion.div>
+          ))}
         </div>
-      </section>
+      </div>
 
       {/* ═══════════════════════════════════════════════
           TEACHER PROFILE — محمد الساحوري
