@@ -470,9 +470,21 @@ export default function Home() {
             {/* JO Academy */}
             <a href="https://www.joacademy.com/teachers/%D9%85%D8%AD%D9%85%D8%AF-%D8%A7%D9%84%D8%B3%D8%A7%D8%AD%D9%88%D8%B1%D9%8A/shababeek" target="_blank" rel="noreferrer"
               className="group flex items-center gap-3 px-6 py-3.5 rounded-2xl border border-white/10 bg-white/5 hover:bg-[#0D9BB5]/10 hover:border-[#0D9BB5]/30 transition-all duration-200">
-              {/* JO Academy snowflake/asterisk logo */}
-              <svg className="w-5 h-5 text-[#1DA1F2]" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2a1 1 0 011 1v2.268l1.964-1.134a1 1 0 011 1.732L14 7l1.964 1.134a1 1 0 01-1 1.732L13 8.732V11h2.268l1.134-1.964a1 1 0 011.732 1L17 12l1.134 1.964a1 1 0 01-1.732 1L15.268 13H13v2.268l1.964 1.134a1 1 0 01-1 1.732L12 17l-1.964 1.134a1 1 0 01-1-1.732L11 15.268V13H8.732l-1.134 1.964a1 1 0 01-1.732-1L7 12 5.866 10.036a1 1 0 011.732-1L8.732 11H11V8.732L9.036 7.598a1 1 0 011-1.732L12 7l1.964-1.134V3a1 1 0 01-1-1z"/>
+              {/* JO Academy logo — dark asterisk + blue dots */}
+              <svg className="w-5 h-5" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* 6-arm asterisk body */}
+                <rect x="44" y="10" width="12" height="80" rx="6" fill="#0D3044"/>
+                <rect x="44" y="10" width="12" height="80" rx="6" fill="#0D3044" transform="rotate(60 50 50)"/>
+                <rect x="44" y="10" width="12" height="80" rx="6" fill="#0D3044" transform="rotate(120 50 50)"/>
+                {/* Center circle */}
+                <circle cx="50" cy="50" r="9" fill="#0D3044"/>
+                {/* Blue dots at tips */}
+                <circle cx="50" cy="7"  r="6" fill="#29ABE2"/>
+                <circle cx="50" cy="93" r="6" fill="#29ABE2"/>
+                <circle cx="87" cy="29" r="6" fill="#29ABE2"/>
+                <circle cx="13" cy="71" r="6" fill="#29ABE2"/>
+                <circle cx="87" cy="71" r="6" fill="#29ABE2"/>
+                <circle cx="13" cy="29" r="6" fill="#29ABE2"/>
               </svg>
               <span className="text-white font-semibold text-sm">JO Academy</span>
             </a>
