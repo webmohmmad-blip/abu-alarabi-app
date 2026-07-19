@@ -152,31 +152,59 @@ export function Header() {
 
         {/* ── Logo ── */}
         <Link href="/" className="flex items-center gap-3 group shrink-0">
-          {/* Ornamental ض — Arabic letter dad as logo mark */}
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shrink-0 overflow-hidden"
-            style={{ background: "linear-gradient(145deg, #5A2D82 0%, #3a1a59 100%)" }}
-          >
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Glow ring */}
-              <circle cx="18" cy="18" r="13" fill="white" fillOpacity="0.05"/>
-              {/* Gold dot accent — top right */}
-              <circle cx="26" cy="8" r="2.8" fill="#C79A2D"/>
-              {/* The ض letter — real unicode, styled */}
+          {/* Ornamental ض — calligraphy ring style */}
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-xl shrink-0 overflow-hidden bg-[#1a0030]">
+            <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                {/* Ring mask: keeps calligraphy text inside the annular ring only */}
+                <mask id="ringMask">
+                  <circle cx="50" cy="50" r="48" fill="white"/>
+                  <circle cx="50" cy="50" r="30" fill="black"/>
+                </mask>
+                {/* Center circle clip */}
+                <clipPath id="centerClip">
+                  <circle cx="50" cy="50" r="29"/>
+                </clipPath>
+              </defs>
+
+              {/* ── Outer dark background disc ── */}
+              <circle cx="50" cy="50" r="49" fill="#1a0030"/>
+
+              {/* ── Calligraphy ring: dark ring filled with tiny Arabic chars ── */}
+              <circle cx="50" cy="50" r="48" fill="#120022"/>
+              {/* Dense calligraphy texture — small Arabic words rotated around the ring */}
+              <g mask="url(#ringMask)" fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="white" fillOpacity="0.85" fontSize="10" fontWeight="600">
+                {/* Top arc */}
+                <text transform="rotate(-80 50 50) translate(50 8)">العربية</text>
+                <text transform="rotate(-50 50 50) translate(50 6)">لغة</text>
+                <text transform="rotate(-20 50 50) translate(50 7)">الضاد</text>
+                <text transform="rotate(10 50 50) translate(50 6)">بيان</text>
+                <text transform="rotate(40 50 50) translate(50 7)">كلام</text>
+                <text transform="rotate(70 50 50) translate(50 6)">أدب</text>
+                <text transform="rotate(100 50 50) translate(50 7)">نحو</text>
+                <text transform="rotate(130 50 50) translate(50 6)">صرف</text>
+                <text transform="rotate(160 50 50) translate(50 7)">بلاغة</text>
+                <text transform="rotate(190 50 50) translate(50 6)">فصحى</text>
+                <text transform="rotate(220 50 50) translate(50 7)">شعر</text>
+                <text transform="rotate(250 50 50) translate(50 6)">نثر</text>
+              </g>
+
+              {/* ── White inner circle ── */}
+              <circle cx="50" cy="50" r="30" fill="white"/>
+
+              {/* ── ض letter centred in white disc ── */}
               <text
-                x="18"
-                y="25"
+                x="50"
+                y="64"
                 textAnchor="middle"
-                fontSize="20"
-                fontWeight="700"
-                fontFamily="'Amiri', 'Scheherazade New', 'Traditional Arabic', serif"
-                fill="white"
-                letterSpacing="0"
+                fontSize="36"
+                fontWeight="900"
+                fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif"
+                fill="#2a0050"
+                clipPath="url(#centerClip)"
               >
                 ض
               </text>
-              {/* Decorative underline stroke */}
-              <line x1="9" y1="29" x2="27" y2="29" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeLinecap="round"/>
             </svg>
           </div>
           <span className="text-lg font-bold text-white tracking-tight">أبو العربي</span>
