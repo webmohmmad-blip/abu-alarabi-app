@@ -40,6 +40,8 @@ import AdminSettings from '@/pages/admin/settings';
 import AdminAudit from '@/pages/admin/audit';
 import AdminReports from '@/pages/admin/reports';
 import AdminAnnouncements from '@/pages/admin/announcements';
+import AdminWorksheets from '@/pages/admin/worksheets';
+import AdminQuiz from '@/pages/admin/quiz';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,6 +95,8 @@ function Router() {
       <Route path="/admin/audit" component={AdminAudit} />
       <Route path="/admin/reports" component={AdminReports} />
       <Route path="/admin/announcements" component={AdminAnnouncements} />
+      <Route path="/admin/worksheets" component={AdminWorksheets} />
+      <Route path="/admin/quiz" component={AdminQuiz} />
 
       <Route component={NotFound} />
     </Switch>

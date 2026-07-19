@@ -15,6 +15,7 @@ import {
   dossiersTable,
   worksheetsTable,
   examsTable,
+  weeklyQuizzesTable,
   commentsTable,
   commentReportsTable,
   studySessionsTable,
@@ -602,6 +603,65 @@ router.patch("/exams/:id", async (req, res) => {
 router.delete("/exams/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   await db.update(examsTable).set({ deletedAt: new Date() } as any).where(eq(examsTable.id, id));
+  res.status(204).send();
+});
+
+// ─── WEEKLY QUIZ ADMIN ───────────────────────────────────────────────────────
+router.get("/quiz", async (req, res) => {
+  const quizzes = await db
+    .select({
+      id: weeklyQuizzesTable.id,
+      title: weeklyQuizzesTable.title,
+      description: weeklyQuizzesTable.description,
+      subjectId: weeklyQuizzesTable.subjectId,
+      examId: weeklyQuizzesTable.examId,
+      startsAt: weeklyQuizzesTable.startsAt,
+      endsAt: weeklyQuizzesTable.endsAt,
+      prizes: weeklyQuizzesTable.prizes,
+      isActive: weeklyQuizzesTable.isActive,
+      createdAt: weeklyQuizzesTable.createdAt,
+      subjectName: subjectsTable.name,
+    })
+    .from(weeklyQuizzesTable)
+    .leftJoin(subjectsTable, eq(weeklyQuizzesTable.subjectId, subjectsTable.id))
+    .orderBy(desc(weeklyQuizzesTable.createdAt));
+  res.json({ items: quizzes });
+});
+
+router.post("/quiz", async (req, res) => {
+  const { title, description, subjectId, examId, startsAt, endsAt, prizes, isActive } = req.body;
+  const [quiz] = await db.insert(weeklyQuizzesTable).values({
+    title,
+    description: description ?? null,
+    subjectId: parseInt(subjectId),
+    examId: examId ? parseInt(examId) : null,
+    startsAt: new Date(startsAt),
+    endsAt: new Date(endsAt),
+    prizes: prizes ?? null,
+    isActive: isActive ?? true,
+  }).returning();
+  res.status(201).json(quiz);
+});
+
+router.patch("/quiz/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const { title, description, subjectId, examId, startsAt, endsAt, prizes, isActive } = req.body;
+  const updates: Record<string, any> = {};
+  if (title !== undefined) updates.title = title;
+  if (description !== undefined) updates.description = description;
+  if (subjectId !== undefined) updates.subjectId = parseInt(subjectId);
+  if (examId !== undefined) updates.examId = examId ? parseInt(examId) : null;
+  if (startsAt !== undefined) updates.startsAt = new Date(startsAt);
+  if (endsAt !== undefined) updates.endsAt = new Date(endsAt);
+  if (prizes !== undefined) updates.prizes = prizes;
+  if (isActive !== undefined) updates.isActive = isActive;
+  const [quiz] = await db.update(weeklyQuizzesTable).set(updates).where(eq(weeklyQuizzesTable.id, id)).returning();
+  res.json(quiz);
+});
+
+router.delete("/quiz/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  await db.delete(weeklyQuizzesTable).where(eq(weeklyQuizzesTable.id, id));
   res.status(204).send();
 });
 
