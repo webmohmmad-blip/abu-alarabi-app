@@ -16,6 +16,7 @@ import {
   FileText, ListTodo, ChevronLeft, ChevronRight, ZoomIn, ZoomOut,
   Search, Save, Loader2, StickyNote, Trash2, Pin, Plus, X,
   ArrowLeft, FolderOpen, Clock, AlignLeft, Upload, Settings,
+  Timer, Play, Pause, RotateCcw, Coffee,
 } from "lucide-react";
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -27,7 +28,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLi
 // Types
 // ──────────────────────────────────────────────────────────────────────────────
 type Tool = "hand" | "pen" | "highlighter" | "eraser" | "rect" | "circle" | "line" | "text";
-type Tab  = "notes" | "bookmarks";
+type Tab  = "notes" | "bookmarks" | "timer";
 
 interface Point { x: number; y: number; }
 interface Stroke {
@@ -135,6 +136,69 @@ export default function StudyRoom() {
   const pageInputRef   = useRef<HTMLInputElement>(null);
   const workspaceRef   = useRef<HTMLDivElement>(null);
   const saveTimerRef   = useRef<NodeJS.Timeout | null>(null);
+
+  // ── Pomodoro timer state ──────────────────────────────────────────────────────
+  const POMODORO_WORK    = 25 * 60;
+  const POMODORO_BREAK   = 5  * 60;
+  const POMODORO_LONG    = 15 * 60;
+  const [timerMode, setTimerMode]     = useState<"work" | "break" | "long">("work");
+  const [timerSeconds, setTimerSeconds] = useState(POMODORO_WORK);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [pomodoroCount, setPomodoroCount] = useState(0);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const timerTotalSeconds = timerMode === "work" ? POMODORO_WORK : timerMode === "break" ? POMODORO_BREAK : POMODORO_LONG;
+  const timerProgress = ((timerTotalSeconds - timerSeconds) / timerTotalSeconds) * 100;
+  const timerMins = String(Math.floor(timerSeconds / 60)).padStart(2, "0");
+  const timerSecs = String(timerSeconds % 60).padStart(2, "0");
+
+  const switchTimerMode = (mode: "work" | "break" | "long") => {
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    setTimerRunning(false);
+    setTimerMode(mode);
+    setTimerSeconds(mode === "work" ? POMODORO_WORK : mode === "break" ? POMODORO_BREAK : POMODORO_LONG);
+  };
+
+  const toggleTimer = () => {
+    setTimerRunning((r) => {
+      if (r) { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); return false; }
+      timerIntervalRef.current = setInterval(() => {
+        setTimerSeconds((s) => {
+          if (s <= 1) {
+            clearInterval(timerIntervalRef.current!);
+            setTimerRunning(false);
+            setTimerMode((m) => {
+              if (m === "work") {
+                setPomodoroCount((c) => {
+                  const next = c + 1;
+                  const nextMode = next % 4 === 0 ? "long" : "break";
+                  setTimerSeconds(nextMode === "break" ? POMODORO_BREAK : POMODORO_LONG);
+                  setTimerMode(nextMode);
+                  return next;
+                });
+              } else {
+                setTimerSeconds(POMODORO_WORK);
+                setTimerMode("work");
+              }
+              return m;
+            });
+            return 0;
+          }
+          return s - 1;
+        });
+      }, 1000);
+      return true;
+    });
+  };
+
+  const resetTimer = () => {
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    setTimerRunning(false);
+    setTimerSeconds(timerMode === "work" ? POMODORO_WORK : timerMode === "break" ? POMODORO_BREAK : POMODORO_LONG);
+  };
+
+  // Cleanup timer on unmount
+  useEffect(() => () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); }, []);
 
   // ── Notes state ──────────────────────────────────────────────────────────────
   const [noteText, setNoteText] = useState("");
@@ -669,7 +733,7 @@ export default function StudyRoom() {
           <aside className={`${sidebarBg} border-l flex flex-col w-72 shrink-0`} style={{ direction: "rtl" }}>
             {/* Tabs */}
             <div className="flex border-b border-gray-100 shrink-0">
-              {([ ["notes", StickyNote, "ملاحظات"], ["bookmarks", Bookmark, "إشارات"] ] as [Tab, React.ElementType, string][]).map(([tab, Icon, label]) => (
+              {([ ["notes", StickyNote, "ملاحظات"], ["bookmarks", Bookmark, "إشارات"], ["timer", Timer, "موقت"] ] as [Tab, React.ElementType, string][]).map(([tab, Icon, label]) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -729,6 +793,94 @@ export default function StudyRoom() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* POMODORO TIMER */}
+              {activeTab === "timer" && (
+                <div className="flex flex-col items-center gap-5 pt-4">
+                  {/* Mode selector */}
+                  <div className="flex gap-1 bg-gray-100 rounded-2xl p-1 w-full">
+                    {([ ["work", "تركيز"], ["break", "راحة"], ["long", "راحة طويلة"] ] as ["work"|"break"|"long", string][]).map(([m, label]) => (
+                      <button
+                        key={m}
+                        onClick={() => switchTimerMode(m)}
+                        className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${timerMode === m ? "bg-white shadow text-primary" : "text-gray-400 hover:text-gray-600"}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Circular progress */}
+                  <div className="relative w-44 h-44">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="44" fill="none" stroke="#f3f4f6" strokeWidth="6" />
+                      <circle
+                        cx="50" cy="50" r="44" fill="none"
+                        stroke={timerMode === "work" ? "hsl(var(--primary))" : "#22c55e"}
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        strokeDasharray={`${2 * Math.PI * 44}`}
+                        strokeDashoffset={`${2 * Math.PI * 44 * (1 - timerProgress / 100)}`}
+                        style={{ transition: "stroke-dashoffset 0.9s linear" }}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <div className={`text-4xl font-black tabular-nums ${timerMode === "work" ? "text-gray-900" : "text-green-600"}`}>
+                        {timerMins}:{timerSecs}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                        {timerMode === "work" ? <><Pencil className="w-3 h-3" /> تركيز</> : <><Coffee className="w-3 h-3" /> راحة</>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Controls */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={resetTimer}
+                      className="w-10 h-10 rounded-2xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                      title="إعادة تعيين"
+                    >
+                      <RotateCcw className="w-4 h-4 text-gray-500" />
+                    </button>
+                    <button
+                      onClick={toggleTimer}
+                      className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all ${
+                        timerRunning
+                          ? "bg-gray-900 hover:bg-gray-700"
+                          : timerMode === "work"
+                          ? "bg-primary hover:bg-primary/90 shadow-primary/30"
+                          : "bg-green-500 hover:bg-green-600 shadow-green-500/30"
+                      }`}
+                    >
+                      {timerRunning
+                        ? <Pause className="w-6 h-6 text-white" />
+                        : <Play className="w-6 h-6 text-white mr-0.5" />}
+                    </button>
+                    <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                      <span className="text-xs font-black text-primary">{pomodoroCount}</span>
+                    </div>
+                  </div>
+
+                  {/* Pomodoro count label */}
+                  <p className="text-xs text-gray-400 text-center">
+                    {pomodoroCount === 0
+                      ? "ابدأ جلستك الأولى 🎯"
+                      : `أتممت ${pomodoroCount} جلسة${pomodoroCount >= 4 ? " 🔥 رائع!" : ""}`}
+                  </p>
+
+                  {/* Tip */}
+                  <div className="w-full rounded-2xl bg-primary/5 border border-primary/10 p-3 text-center">
+                    <p className="text-xs text-primary/80 font-medium leading-relaxed">
+                      {timerMode === "work"
+                        ? "ركّز ٢٥ دقيقة دون انقطاع، ثم خذ راحة قصيرة."
+                        : timerMode === "break"
+                        ? "استرح ٥ دقائق — اشرب ماءً أو تمدد قليلاً."
+                        : "راحة طويلة ١٥ دقيقة — أنت تستحقها! 🎉"}
+                    </p>
+                  </div>
                 </div>
               )}
 
