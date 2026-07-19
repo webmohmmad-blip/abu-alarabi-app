@@ -527,22 +527,13 @@ export default function StudyRoom() {
 
           {/* Dossiers from platform */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-base">دوسيات المنصة</h2>
-              <Link href="/admin/content" className="text-xs text-primary hover:underline flex items-center gap-1">
-                <Settings className="w-3.5 h-3.5" /> إضافة دوسية (أدمن)
-              </Link>
-            </div>
+            <h2 className="font-bold text-base mb-3">دوسيات المنصة</h2>
 
             {dossiers?.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border p-10 text-center">
                 <FileText className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
                 <p className="font-semibold text-muted-foreground mb-1">لا توجد دوسيات بعد</p>
-                <p className="text-xs text-muted-foreground/70">يمكن للمشرف إضافة الدوسيات من لوحة التحكم</p>
-                <Link href="/admin/content"
-                  className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">
-                  <Plus className="w-4 h-4" /> إضافة دوسية الآن
-                </Link>
+                <p className="text-xs text-muted-foreground/70">ستظهر الدوسيات هنا بعد إضافتها من قِبل المشرف</p>
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 gap-3">
