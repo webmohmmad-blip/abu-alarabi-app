@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useGetDashboard } from "@workspace/api-client-react";
+import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Flame, 
@@ -15,12 +16,14 @@ import {
   Clock,
   Calendar,
   CheckCircle2,
-  Trophy
+  Trophy,
+  Star,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Dashboard() {
   const { data: dashboard, isLoading } = useGetDashboard({ query: { enabled: true } });
+  const { user } = useAuth();
 
   if (isLoading || !dashboard) {
     return (
@@ -49,45 +52,6 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-8">
         
-        {/* Greeting Hero */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-l from-primary to-primary/80 rounded-3xl p-8 md:p-10 text-white shadow-xl shadow-primary/20 relative overflow-hidden"
-        >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-          
-          <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-2 mb-2 text-white/80 font-medium">
-                <Calendar className="w-4 h-4" />
-                {new Date().toLocaleDateString('ar-JO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              </div>
-              <h1 className="text-3xl md:text-4xl font-black mb-3">{dashboard.greeting}</h1>
-              <p className="text-lg text-white/90 max-w-lg">
-                جاهز لتحقيق أهدافك اليوم؟ أكمل مهامك لزيادة سلسلة أيام دراستك.
-              </p>
-            </div>
-            
-            <div className="flex gap-4">
-              <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center min-w-[120px] border border-white/20">
-                <div className="flex items-center justify-center gap-2 text-white/80 font-bold text-sm mb-1">
-                  <Flame className="w-4 h-4 text-orange-400" /> سلسلة الأيام
-                </div>
-                <div className="text-3xl font-black tabular-nums">{dashboard.streakDays}</div>
-              </div>
-              <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center min-w-[120px] border border-white/20">
-                <div className="flex items-center justify-center gap-2 text-white/80 font-bold text-sm mb-1">
-                  <Target className="w-4 h-4 text-green-400" /> هدف اليوم
-                </div>
-                <div className="text-3xl font-black tabular-nums">
-                  {Math.round((dashboard.todayDoneMinutes / dashboard.todayGoalMinutes) * 100)}%
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
         {/* Today's Tasks */}
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
