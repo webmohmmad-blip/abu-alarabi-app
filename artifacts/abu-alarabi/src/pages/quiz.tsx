@@ -28,7 +28,10 @@ export default function Quiz() {
           </div>
           <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-xl border shadow-sm">
             <span className="text-sm font-bold text-muted-foreground">رصيد نقاطك:</span>
-            <span className="font-black text-xl text-accent flex items-center gap-1"><Trophy className="w-5 h-5"/> 450</span>
+            <span className="font-black text-xl text-accent flex items-center gap-1">
+              <Trophy className="w-5 h-5"/>
+              {leaderboard?.find((e) => e.isCurrentUser)?.score ?? 0}
+            </span>
           </div>
         </div>
 
@@ -95,31 +98,29 @@ export default function Quiz() {
               </Card>
             )}
 
-            {/* Prizes Card */}
-            <Card className="bg-white/60 backdrop-blur-xl border-white/80 shadow-md">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                  <Gift className="w-5 h-5 text-pink-500" /> جوائز هذا الأسبوع
-                </h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="bg-gradient-to-b from-yellow-100 to-yellow-50 p-4 rounded-xl text-center border border-yellow-200">
-                    <div className="w-12 h-12 bg-yellow-200 text-yellow-700 rounded-full flex items-center justify-center mx-auto mb-2"><Medal className="w-6 h-6" /></div>
-                    <div className="font-bold text-sm">المركز الأول</div>
-                    <div className="text-xs text-yellow-700 font-bold mt-1">بطاقة فئة 20 + تيشيرت أبو العربي</div>
+            {/* Prizes Card — shown only when a quiz is active and has prizes defined */}
+            {currentQuiz?.prizes && currentQuiz.prizes.length > 0 && (
+              <Card className="bg-white/60 backdrop-blur-xl border-white/80 shadow-md">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <Gift className="w-5 h-5 text-pink-500" /> جوائز هذا الأسبوع
+                  </h3>
+                  <div className="grid gap-3">
+                    {currentQuiz.prizes.map((prize: { rank: number; description: string }, i: number) => (
+                      <div key={i} className={`p-4 rounded-xl text-center border ${
+                        prize.rank === 1 ? "bg-gradient-to-b from-yellow-100 to-yellow-50 border-yellow-200" :
+                        prize.rank === 2 ? "bg-gradient-to-b from-gray-200 to-gray-100 border-gray-300" :
+                        "bg-gradient-to-b from-orange-200 to-orange-100 border-orange-300"
+                      }`}>
+                        <Medal className={`w-5 h-5 mx-auto mb-1 ${prize.rank === 1 ? "text-yellow-600" : prize.rank === 2 ? "text-gray-600" : "text-orange-700"}`} />
+                        <div className="font-bold text-sm">المركز {prize.rank === 1 ? "الأول" : prize.rank === 2 ? "الثاني" : "الثالث"}</div>
+                        <div className="text-xs font-bold mt-1 text-muted-foreground">{prize.description}</div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="bg-gradient-to-b from-gray-200 to-gray-100 p-4 rounded-xl text-center border border-gray-300">
-                    <div className="w-12 h-12 bg-gray-300 text-gray-700 rounded-full flex items-center justify-center mx-auto mb-2"><Medal className="w-6 h-6" /></div>
-                    <div className="font-bold text-sm">المركز الثاني</div>
-                    <div className="text-xs text-gray-600 font-bold mt-1">بطاقة فئة 10</div>
-                  </div>
-                  <div className="bg-gradient-to-b from-orange-200 to-orange-100 p-4 rounded-xl text-center border border-orange-300">
-                    <div className="w-12 h-12 bg-orange-300 text-orange-800 rounded-full flex items-center justify-center mx-auto mb-2"><Medal className="w-6 h-6" /></div>
-                    <div className="font-bold text-sm">المركز الثالث</div>
-                    <div className="text-xs text-orange-700 font-bold mt-1">رصيد 5 دنانير</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Leaderboard */}
