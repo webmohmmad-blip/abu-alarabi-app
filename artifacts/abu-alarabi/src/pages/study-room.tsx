@@ -27,7 +27,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLi
 // Types
 // ──────────────────────────────────────────────────────────────────────────────
 type Tool = "hand" | "pen" | "highlighter" | "eraser" | "rect" | "circle" | "line" | "text";
-type Tab  = "notes" | "tasks" | "bookmarks" | "files";
+type Tab  = "notes" | "bookmarks";
 
 interface Point { x: number; y: number; }
 interface Stroke {
@@ -669,7 +669,7 @@ export default function StudyRoom() {
           <aside className={`${sidebarBg} border-l flex flex-col w-72 shrink-0`} style={{ direction: "rtl" }}>
             {/* Tabs */}
             <div className="flex border-b border-gray-100 shrink-0">
-              {([ ["notes", StickyNote, "ملاحظات"], ["tasks", ListTodo, "مهام"], ["bookmarks", Bookmark, "إشارات"], ["files", FolderOpen, "ملفات"] ] as [Tab, React.ElementType, string][]).map(([tab, Icon, label]) => (
+              {([ ["notes", StickyNote, "ملاحظات"], ["bookmarks", Bookmark, "إشارات"] ] as [Tab, React.ElementType, string][]).map(([tab, Icon, label]) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -732,23 +732,6 @@ export default function StudyRoom() {
                 </div>
               )}
 
-              {/* TASKS */}
-              {activeTab === "tasks" && (
-                <div className="space-y-2">
-                  {!tasks?.length && (
-                    <p className="text-center text-gray-300 text-xs py-4">لا توجد مهام مجدولة</p>
-                  )}
-                  {tasks?.slice(0, 20).map((t) => (
-                    <div key={t.id} className={`rounded-2xl border p-3 ${t.status === "completed" ? "bg-green-50 border-green-100" : "bg-white border-gray-100"}`}>
-                      <div className={`text-sm font-semibold ${t.status === "completed" ? "line-through text-gray-400" : "text-gray-800"}`}>{t.title}</div>
-                      <div className="text-[10px] text-gray-400 mt-1">
-                        {new Date(t.scheduledAt).toLocaleDateString("ar-SA")}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
               {/* BOOKMARKS */}
               {activeTab === "bookmarks" && (
                 <div className="space-y-2">
@@ -772,25 +755,6 @@ export default function StudyRoom() {
                 </div>
               )}
 
-              {/* QUICK FILES */}
-              {activeTab === "files" && (
-                <div className="space-y-2">
-                  {dossiers?.map((d) => (
-                    <button
-                      key={d.id}
-                      onClick={() => openDossier(d)}
-                      className={`w-full text-right px-3 py-2.5 rounded-2xl border transition-all flex items-center gap-2.5 ${
-                        d.id === dossierId
-                          ? "border-primary/30 bg-primary/5 text-primary"
-                          : "border-gray-100 hover:border-gray-200 text-gray-700"
-                      }`}
-                    >
-                      <FileText className="w-4 h-4 shrink-0" />
-                      <span className="text-sm font-medium truncate">{d.title}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </aside>
         )}
