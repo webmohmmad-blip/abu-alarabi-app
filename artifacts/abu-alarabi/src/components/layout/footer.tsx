@@ -118,54 +118,10 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Contact — email only */}
           <div>
             <h3 className="text-lg font-bold mb-4 text-white">تواصل مع الأستاذ</h3>
             <ul className="space-y-4 text-sm text-sidebar-foreground/70">
-              <li>
-                <a
-                  href="https://wa.me/962798638622"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 hover:text-green-400 transition-colors"
-                >
-                  <WhatsAppIcon className="w-5 h-5 text-green-400 shrink-0" />
-                  <span dir="ltr">+962 79 863 8622</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.instagram.com/mohammad.alsahori/?hl=ar"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 hover:text-pink-400 transition-colors"
-                >
-                  <Instagram className="w-5 h-5 text-pink-400 shrink-0" />
-                  <span>@mohammad.alsahori</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.youtube.com/channel/UCw-xJ-EZ1y2Zozbqwiwe4DA"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 hover:text-red-400 transition-colors"
-                >
-                  <Youtube className="w-5 h-5 text-red-400 shrink-0" />
-                  <span>قناة يوتيوب</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.facebook.com/p/%D8%A7%D9%84%D8%A3%D8%B3%D8%AA%D8%A7%D8%B0-%D9%85%D8%AD%D9%85%D8%AF-%D8%A7%D9%84%D8%B3%D8%A7%D8%AD%D9%88%D8%B1%D9%8A-%D9%84%D8%BA%D8%A9-%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-100075808340138/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 hover:text-blue-400 transition-colors"
-                >
-                  <Facebook className="w-5 h-5 text-blue-400 shrink-0" />
-                  <span>صفحة فيسبوك</span>
-                </a>
-              </li>
               <li>
                 <a
                   href="mailto:info@malsahori.com"
@@ -173,17 +129,6 @@ export function Footer() {
                 >
                   <Mail className="w-5 h-5 text-primary shrink-0" />
                   <span dir="ltr">info@malsahori.com</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.joacademy.com/teachers/%D9%85%D8%AD%D9%85%D8%AF-%D8%A7%D9%84%D8%B3%D8%A7%D8%AD%D9%88%D8%B1%D9%8A/shababeek"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 hover:text-amber-400 transition-colors"
-                >
-                  <MapPin className="w-5 h-5 text-amber-400 shrink-0" />
-                  <span>JO Academy — شبابيك</span>
                 </a>
               </li>
             </ul>
