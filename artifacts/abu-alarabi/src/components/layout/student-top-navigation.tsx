@@ -1,20 +1,12 @@
 import { Link, useLocation } from "wouter";
-import {
-  LayoutDashboard,
-  BookText,
-  FileText,
-  PenTool,
-  Target,
-  Focus,
-} from "lucide-react";
 
 const NAV_ITEMS = [
-  { name: "لوحتي",                  href: "/dashboard",   icon: LayoutDashboard },
-  { name: "الدوسيات",               href: "/dossiers",    icon: BookText        },
-  { name: "أوراق العمل",            href: "/worksheets",  icon: FileText        },
-  { name: "الامتحانات الإلكترونية", href: "/exams",       icon: PenTool         },
-  { name: "الكويز الأسبوعي",        href: "/weekly-quiz", icon: Target          },
-  { name: "غرفتي الدراسية",         href: "/study-room",  icon: Focus           },
+  { name: "لوحتي",                  href: "/dashboard"   },
+  { name: "الدوسيات",               href: "/dossiers"    },
+  { name: "أوراق العمل",            href: "/worksheets"  },
+  { name: "الامتحانات الإلكترونية", href: "/exams"       },
+  { name: "الكويز الأسبوعي",        href: "/weekly-quiz" },
+  { name: "غرفتي الدراسية",         href: "/study-room"  },
 ];
 
 export function StudentTopNavigation() {
@@ -23,37 +15,43 @@ export function StudentTopNavigation() {
   return (
     <div
       className="sticky top-[72px] z-40 overflow-x-auto scrollbar-hide"
-      style={{ backgroundColor: "#1a1a2e" }}
+      style={{ backgroundColor: "#282a35" }}
     >
       <nav
         dir="rtl"
         className="flex items-stretch min-w-max"
         aria-label="قائمة التنقل الرئيسية"
       >
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.map((item, idx) => {
           const isActive =
             location === item.href ||
             location.startsWith(`${item.href}/`);
-          const Icon = item.icon;
 
           return (
             <Link
               key={item.href}
               href={item.href}
               aria-current={isActive ? "page" : undefined}
-              className={`
-                flex items-center gap-1.5 px-5 py-2.5 text-[13px] font-medium
-                whitespace-nowrap outline-none select-none transition-colors duration-150
-                focus-visible:outline-2 focus-visible:outline-white/40
-                ${
-                  isActive
-                    ? "bg-[#5A2D82] text-white"
-                    : "text-white/70 hover:bg-white/8 hover:text-white"
-                }
-              `}
+              className="flex items-center outline-none"
+              style={{
+                borderRight: idx !== 0 ? "1px solid rgba(255,255,255,0.08)" : "none",
+              }}
             >
-              <Icon className="w-3.5 h-3.5 shrink-0" />
-              {item.name}
+              <span
+                className="block px-4 py-2.5 text-[13.5px] font-normal whitespace-nowrap transition-colors duration-100"
+                style={{
+                  color: isActive ? "#ffffff" : "rgba(255,255,255,0.75)",
+                  backgroundColor: isActive ? "#5A2D82" : "transparent",
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.07)";
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+                }}
+              >
+                {item.name}
+              </span>
             </Link>
           );
         })}

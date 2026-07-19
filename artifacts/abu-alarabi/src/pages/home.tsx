@@ -243,27 +243,30 @@ export default function Home() {
             </div>
 
             {/* ══ STUDENT NAV STRIP — the hero of this section ══ */}
-            <div className="overflow-x-auto scrollbar-hide" style={{ backgroundColor: "#1a1a2e" }}>
+            <div className="overflow-x-auto scrollbar-hide" style={{ backgroundColor: "#282a35" }}>
               <div className="flex items-stretch min-w-max" dir="rtl">
                 {[
-                  { name: "لوحتي",                  icon: LayoutDashboard, active: true  },
-                  { name: "الدوسيات",               icon: BookText,        active: false },
-                  { name: "أوراق العمل",            icon: FileText,        active: false },
-                  { name: "الامتحانات الإلكترونية", icon: PenTool,         active: false },
-                  { name: "الكويز الأسبوعي",        icon: Target,          active: false },
-                  { name: "غرفتي الدراسية",         icon: Focus,           active: false },
-                ].map((item) => (
+                  { name: "لوحتي",                  active: true  },
+                  { name: "الدوسيات",               active: false },
+                  { name: "أوراق العمل",            active: false },
+                  { name: "الامتحانات الإلكترونية", active: false },
+                  { name: "الكويز الأسبوعي",        active: false },
+                  { name: "غرفتي الدراسية",         active: false },
+                ].map((item, idx) => (
                   <div
                     key={item.name}
-                    className={`flex items-center gap-1.5 px-5 py-2.5 text-[13px] font-medium whitespace-nowrap select-none transition-colors ${
-                      item.active
-                        ? "text-white"
-                        : "text-white/60"
-                    }`}
-                    style={item.active ? { backgroundColor: "#5A2D82" } : {}}
+                    className="flex items-center select-none"
+                    style={{ borderRight: idx !== 0 ? "1px solid rgba(255,255,255,0.08)" : "none" }}
                   >
-                    <item.icon className="w-3.5 h-3.5 shrink-0" />
-                    {item.name}
+                    <span
+                      className="block px-4 py-2.5 text-[13.5px] whitespace-nowrap"
+                      style={{
+                        color: item.active ? "#ffffff" : "rgba(255,255,255,0.75)",
+                        backgroundColor: item.active ? "#5A2D82" : "transparent",
+                      }}
+                    >
+                      {item.name}
+                    </span>
                   </div>
                 ))}
               </div>
