@@ -172,42 +172,6 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════
-          NAV STRIP — بين الهيرو والأستاذ
-      ═══════════════════════════════════════════════ */}
-      <div className="overflow-x-auto scrollbar-hide w-full" style={{ backgroundColor: "#1c1033" }}>
-        <nav className="flex items-stretch min-w-max" dir="rtl">
-          {([
-            { name: "لوحتي",                  href: "/dashboard",   active: true  },
-            { name: "الدوسيات",               href: "/dossiers",    active: false },
-            { name: "أوراق العمل",            href: "/worksheets",  active: false },
-            { name: "الامتحانات الإلكترونية", href: "/exams",       active: false },
-            { name: "الكويز الأسبوعي",        href: "/weekly-quiz", active: false },
-            { name: "غرفتي الدراسية",         href: "/study-room",  active: false },
-          ] as const).map((item, idx) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-stretch"
-              style={{ borderRight: idx !== 0 ? "1px solid rgba(255,255,255,0.07)" : "none" }}
-            >
-              <span
-                className="flex items-center px-6 py-3 text-sm whitespace-nowrap transition-colors duration-150 cursor-pointer"
-                style={{
-                  color: item.active ? "#ffffff" : "rgba(255,255,255,0.65)",
-                  backgroundColor: item.active ? "#5A2D82" : "transparent",
-                  fontWeight: item.active ? 600 : 400,
-                }}
-                onMouseEnter={e => { if (!item.active) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.05)"; }}
-                onMouseLeave={e => { if (!item.active) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
-              >
-                {item.name}
-              </span>
-            </Link>
-          ))}
-        </nav>
-      </div>
-
-      {/* ═══════════════════════════════════════════════
           TEACHER PROFILE — محمد الساحوري
       ═══════════════════════════════════════════════ */}
       <section className="py-24 overflow-hidden">
