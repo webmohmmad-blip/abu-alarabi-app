@@ -251,28 +251,6 @@ export default function StudyRoom() {
                   </div>
                 </div>
 
-                {/* Subject */}
-                {subjectsData && subjectsData.length > 0 && (
-                  <div>
-                    <h3 className="font-bold mb-3">المادة الدراسية</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {subjectsData.map((s) => (
-                        <button
-                          key={s.id}
-                          onClick={() => { setSelectedSubject(s.id); setSelectedDossierId(null); }}
-                          className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
-                            selectedSubject === s.id
-                              ? "border-primary bg-primary/5 text-primary"
-                              : "border-black/8 bg-white text-foreground hover:border-black/15"
-                          }`}
-                        >
-                          {s.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Dossier */}
                 {dossiersData && dossiersData.items.length > 0 && (
                   <div>
