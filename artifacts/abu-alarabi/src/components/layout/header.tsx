@@ -152,58 +152,77 @@ export function Header() {
 
         {/* ── Logo ── */}
         <Link href="/" className="flex items-center gap-3 group shrink-0">
-          {/* Ornamental ض — calligraphy ring style */}
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-xl shrink-0 overflow-hidden bg-[#1a0030]">
+          {/* Ornamental ض — exact reference style: black ring dense calligraphy + white circle */}
+          <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-xl shrink-0 overflow-hidden bg-black">
             <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                {/* Ring mask: keeps calligraphy text inside the annular ring only */}
-                <mask id="ringMask">
-                  <circle cx="50" cy="50" r="48" fill="white"/>
-                  <circle cx="50" cy="50" r="30" fill="black"/>
+                <mask id="rm">
+                  <circle cx="50" cy="50" r="49" fill="white"/>
+                  <circle cx="50" cy="50" r="31" fill="black"/>
                 </mask>
-                {/* Center circle clip */}
-                <clipPath id="centerClip">
-                  <circle cx="50" cy="50" r="29"/>
+                <clipPath id="cc">
+                  <circle cx="50" cy="50" r="30"/>
                 </clipPath>
               </defs>
 
-              {/* ── Outer dark background disc ── */}
-              <circle cx="50" cy="50" r="49" fill="#1a0030"/>
+              {/* Black background */}
+              <circle cx="50" cy="50" r="50" fill="#111"/>
 
-              {/* ── Calligraphy ring: dark ring filled with tiny Arabic chars ── */}
-              <circle cx="50" cy="50" r="48" fill="#120022"/>
-              {/* Dense calligraphy texture — small Arabic words rotated around the ring */}
-              <g mask="url(#ringMask)" fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="white" fillOpacity="0.9" fontSize="13" fontWeight="700">
-                <text transform="rotate(-80 50 50) translate(50 17)">العربية</text>
-                <text transform="rotate(-50 50 50) translate(50 17)">لغة</text>
-                <text transform="rotate(-20 50 50) translate(50 17)">الضاد</text>
-                <text transform="rotate(10 50 50) translate(50 17)">بيان</text>
-                <text transform="rotate(40 50 50) translate(50 17)">كلام</text>
-                <text transform="rotate(70 50 50) translate(50 17)">أدب</text>
-                <text transform="rotate(100 50 50) translate(50 17)">نحو</text>
-                <text transform="rotate(130 50 50) translate(50 17)">صرف</text>
-                <text transform="rotate(160 50 50) translate(50 17)">بلاغة</text>
-                <text transform="rotate(190 50 50) translate(50 17)">فصحى</text>
-                <text transform="rotate(220 50 50) translate(50 17)">شعر</text>
-                <text transform="rotate(250 50 50) translate(50 17)">نثر</text>
+              {/* Dense white calligraphy filling the ring — outer row */}
+              <g mask="url(#rm)" fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="white" fontSize="9" fontWeight="700" textAnchor="middle">
+                {/* outer row – radius ≈ 42 → y = 50-42 = 8 */}
+                <text transform="rotate(0   50 50) translate(50 8)">لغة</text>
+                <text transform="rotate(20  50 50) translate(50 8)">الضاد</text>
+                <text transform="rotate(40  50 50) translate(50 8)">بيان</text>
+                <text transform="rotate(60  50 50) translate(50 8)">كلام</text>
+                <text transform="rotate(80  50 50) translate(50 8)">أدب</text>
+                <text transform="rotate(100 50 50) translate(50 8)">نحو</text>
+                <text transform="rotate(120 50 50) translate(50 8)">صرف</text>
+                <text transform="rotate(140 50 50) translate(50 8)">بلاغة</text>
+                <text transform="rotate(160 50 50) translate(50 8)">فصحى</text>
+                <text transform="rotate(180 50 50) translate(50 8)">شعر</text>
+                <text transform="rotate(200 50 50) translate(50 8)">نثر</text>
+                <text transform="rotate(220 50 50) translate(50 8)">عربي</text>
+                <text transform="rotate(240 50 50) translate(50 8)">خط</text>
+                <text transform="rotate(260 50 50) translate(50 8)">قرآن</text>
+                <text transform="rotate(280 50 50) translate(50 8)">ضاد</text>
+                <text transform="rotate(300 50 50) translate(50 8)">أدب</text>
+                <text transform="rotate(320 50 50) translate(50 8)">كتاب</text>
+                <text transform="rotate(340 50 50) translate(50 8)">لسان</text>
+                {/* inner row – radius ≈ 35 → y = 50-35 = 15 */}
+                <text transform="rotate(10  50 50) translate(50 15)">العربية</text>
+                <text transform="rotate(30  50 50) translate(50 15)">حرف</text>
+                <text transform="rotate(50  50 50) translate(50 15)">كلمة</text>
+                <text transform="rotate(70  50 50) translate(50 15)">جملة</text>
+                <text transform="rotate(90  50 50) translate(50 15)">معنى</text>
+                <text transform="rotate(110 50 50) translate(50 15)">علم</text>
+                <text transform="rotate(130 50 50) translate(50 15)">فكر</text>
+                <text transform="rotate(150 50 50) translate(50 15)">شعر</text>
+                <text transform="rotate(170 50 50) translate(50 15)">نحو</text>
+                <text transform="rotate(190 50 50) translate(50 15)">صرف</text>
+                <text transform="rotate(210 50 50) translate(50 15)">بيان</text>
+                <text transform="rotate(230 50 50) translate(50 15)">لغة</text>
+                <text transform="rotate(250 50 50) translate(50 15)">قلم</text>
+                <text transform="rotate(270 50 50) translate(50 15)">كتب</text>
+                <text transform="rotate(290 50 50) translate(50 15)">أمة</text>
+                <text transform="rotate(310 50 50) translate(50 15)">ضاد</text>
+                <text transform="rotate(330 50 50) translate(50 15)">فصيح</text>
+                <text transform="rotate(350 50 50) translate(50 15)">أقلام</text>
               </g>
 
-              {/* ── White inner circle ── */}
-              <circle cx="50" cy="50" r="30" fill="white"/>
+              {/* White inner circle */}
+              <circle cx="50" cy="50" r="31" fill="white"/>
 
-              {/* ── ض letter centred in white disc ── */}
+              {/* ض — large, bold, black */}
               <text
-                x="50"
-                y="64"
+                x="50" y="65"
                 textAnchor="middle"
-                fontSize="36"
+                fontSize="40"
                 fontWeight="900"
                 fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif"
-                fill="#2a0050"
-                clipPath="url(#centerClip)"
-              >
-                ض
-              </text>
+                fill="#111"
+                clipPath="url(#cc)"
+              >ض</text>
             </svg>
           </div>
           <span className="text-lg font-bold text-white tracking-tight">أبو العربي</span>
