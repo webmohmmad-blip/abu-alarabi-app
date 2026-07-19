@@ -168,12 +168,6 @@ router.delete(
   requireAuth,
   async (req, res): Promise<void> => {
     const aReq = req as AuthRequest;
-    const { password } = req.body as { password: string };
-
-    if (!password) {
-      res.status(400).json({ error: "يرجى إدخال كلمة المرور للتأكيد" });
-      return;
-    }
 
     const [user] = await db
       .select({ id: usersTable.id, passwordHash: usersTable.passwordHash })
@@ -185,10 +179,19 @@ router.delete(
       return;
     }
 
-    const isValid = await comparePassword(password, user.passwordHash);
-    if (!isValid) {
-      res.status(400).json({ error: "كلمة المرور غير صحيحة" });
-      return;
+    // Phone-only accounts (students) have no passwordHash — skip password check.
+    // Password-based accounts (admins) still require confirmation.
+    if (user.passwordHash) {
+      const { password } = req.body as { password?: string };
+      if (!password) {
+        res.status(400).json({ error: "يرجى إدخال كلمة المرور للتأكيد" });
+        return;
+      }
+      const isValid = await comparePassword(password, user.passwordHash);
+      if (!isValid) {
+        res.status(400).json({ error: "كلمة المرور غير صحيحة" });
+        return;
+      }
     }
 
     // Soft delete

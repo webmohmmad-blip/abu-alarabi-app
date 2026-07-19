@@ -3,15 +3,12 @@ import { useLocation } from "wouter";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { customFetch } from "@workspace/api-client-react";
 import {
-  Bell, Shield, Lock, Trash2, Smartphone,
-  Eye, EyeOff, CheckCircle2, AlertTriangle,
-  ChevronLeft,
+  Bell, Shield, Trash2, Smartphone,
+  CheckCircle2, AlertTriangle,
 } from "lucide-react";
 
 type SettingsTab = "general" | "notifications" | "security";
@@ -22,61 +19,16 @@ export default function Settings() {
   const { toast } = useToast();
   const [tab, setTab] = useState<SettingsTab>("general");
 
-  // Password change
-  const [currentPw, setCurrentPw] = useState("");
-  const [newPw, setNewPw] = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [pwLoading, setPwLoading] = useState(false);
-
   // Delete account
-  const [deletePassword, setDeletePassword] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!currentPw || !newPw || !confirmPw) {
-      toast({ title: "يرجى ملء جميع الحقول", variant: "destructive" });
-      return;
-    }
-    if (newPw.length < 6) {
-      toast({ title: "كلمة المرور يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });
-      return;
-    }
-    if (newPw !== confirmPw) {
-      toast({ title: "كلمة المرور الجديدة وتأكيدها غير متطابقين", variant: "destructive" });
-      return;
-    }
-
-    setPwLoading(true);
-    try {
-      await customFetch("/api/users/change-password", {
-        method: "POST",
-        body: JSON.stringify({ currentPassword: currentPw, newPassword: newPw }),
-      });
-      toast({ title: "✓ تم تحديث كلمة المرور بنجاح" });
-      setCurrentPw(""); setNewPw(""); setConfirmPw("");
-    } catch (err: any) {
-      const msg = err?.message || "حدث خطأ، يرجى المحاولة مجدداً";
-      toast({ title: msg, variant: "destructive" });
-    } finally {
-      setPwLoading(false);
-    }
-  };
-
   const handleDeleteAccount = async () => {
-    if (!deletePassword) {
-      toast({ title: "يرجى إدخال كلمة المرور للتأكيد", variant: "destructive" });
-      return;
-    }
     setDeleteLoading(true);
     try {
       await customFetch("/api/users/account", {
         method: "DELETE",
-        body: JSON.stringify({ password: deletePassword }),
+        body: JSON.stringify({}),
       });
       toast({ title: "تم حذف الحساب" });
       logout();
@@ -89,7 +41,7 @@ export default function Settings() {
     }
   };
 
-  const tabs: { key: SettingsTab; label: string; icon: typeof Lock }[] = [
+  const tabs: { key: SettingsTab; label: string; icon: typeof Smartphone }[] = [
     { key: "general", label: "عام", icon: Smartphone },
     { key: "notifications", label: "الإشعارات", icon: Bell },
     { key: "security", label: "الأمان", icon: Shield },
@@ -199,67 +151,21 @@ export default function Settings() {
             {/* ── Security tab ── */}
             {tab === "security" && (
               <>
-                {/* Change password */}
+                {/* Login method info */}
                 <Card className="border-white/60 shadow-md">
                   <CardContent className="p-6">
                     <h3 className="text-xl font-bold flex items-center gap-2 mb-6 border-b border-black/5 pb-4">
-                      <Lock className="w-5 h-5 text-primary" /> تغيير كلمة المرور
+                      <Smartphone className="w-5 h-5 text-primary" /> طريقة تسجيل الدخول
                     </h3>
-                    <form onSubmit={handleChangePassword} className="space-y-4 max-w-sm">
-                      <div className="space-y-2">
-                        <Label>كلمة المرور الحالية</Label>
-                        <div className="relative">
-                          <Input
-                            type={showCurrent ? "text" : "password"}
-                            dir="ltr"
-                            className="pr-10"
-                            value={currentPw}
-                            onChange={e => setCurrentPw(e.target.value)}
-                            placeholder="••••••••"
-                          />
-                          <button type="button" onClick={() => setShowCurrent(p => !p)}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                            {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
+                    <div className="flex items-center justify-between py-3">
+                      <div>
+                        <h4 className="font-bold">رقم الهاتف</h4>
+                        <p className="text-sm text-muted-foreground mt-0.5">تسجيل الدخول عبر رمز التحقق المرسل إلى هاتفك</p>
                       </div>
-                      <div className="space-y-2">
-                        <Label>كلمة المرور الجديدة</Label>
-                        <div className="relative">
-                          <Input
-                            type={showNew ? "text" : "password"}
-                            dir="ltr"
-                            className="pr-10"
-                            value={newPw}
-                            onChange={e => setNewPw(e.target.value)}
-                            placeholder="6 أحرف على الأقل"
-                          />
-                          <button type="button" onClick={() => setShowNew(p => !p)}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                            {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                        {newPw && newPw.length < 6 && (
-                          <p className="text-xs text-destructive">كلمة المرور قصيرة جداً</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label>تأكيد كلمة المرور الجديدة</Label>
-                        <Input
-                          type="password"
-                          dir="ltr"
-                          value={confirmPw}
-                          onChange={e => setConfirmPw(e.target.value)}
-                          placeholder="••••••••"
-                        />
-                        {confirmPw && newPw !== confirmPw && (
-                          <p className="text-xs text-destructive">كلمتا المرور غير متطابقتين</p>
-                        )}
-                      </div>
-                      <Button type="submit" className="mt-2 gap-2" disabled={pwLoading}>
-                        {pwLoading ? "جاري التحديث..." : <><Lock className="w-4 h-4" /> تحديث كلمة المرور</>}
-                      </Button>
-                    </form>
+                      <span className="px-4 py-2 bg-green-50 text-green-700 rounded-xl font-bold text-sm flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4" /> مفعّل
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -283,15 +189,7 @@ export default function Settings() {
                       </Button>
                     ) : (
                       <div className="space-y-4 max-w-sm p-4 bg-destructive/10 rounded-xl border border-destructive/20">
-                        <p className="text-sm font-bold text-destructive">أدخل كلمة مرورك لتأكيد الحذف:</p>
-                        <Input
-                          type="password"
-                          dir="ltr"
-                          value={deletePassword}
-                          onChange={e => setDeletePassword(e.target.value)}
-                          placeholder="••••••••"
-                          className="border-destructive/30"
-                        />
+                        <p className="text-sm font-bold text-destructive">هل أنت متأكد من حذف حسابك نهائياً؟ لا يمكن التراجع عن هذا الإجراء.</p>
                         <div className="flex gap-2">
                           <Button
                             variant="destructive"
@@ -303,7 +201,7 @@ export default function Settings() {
                           </Button>
                           <Button
                             variant="outline"
-                            onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); }}
+                            onClick={() => setShowDeleteConfirm(false)}
                           >
                             إلغاء
                           </Button>
