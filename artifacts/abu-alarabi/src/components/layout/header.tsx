@@ -153,10 +153,19 @@ export function Header() {
         {/* ── Logo ── */}
         <Link href="/" className="flex items-center gap-3 group shrink-0">
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-sm"
+            className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm shrink-0"
             style={{ background: "linear-gradient(135deg, #5A2D82 0%, #3a1a59 100%)" }}
           >
-            ع
+            {/* Arabic calligraphy pen logo */}
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Pen nib / calligraphy motif */}
+              <path d="M17 3L21 7L8 20H4V16L17 3Z" fill="white" fillOpacity="0.95" />
+              <path d="M14.5 5.5L18.5 9.5" stroke="rgba(90,45,130,0.7)" strokeWidth="1.2" strokeLinecap="round"/>
+              {/* Arabic diacritic dot — represents Arabic script */}
+              <circle cx="5.5" cy="21.5" r="1.5" fill="white" fillOpacity="0.7"/>
+              {/* Ink drop at base */}
+              <path d="M4 16L4 20L8 20" stroke="rgba(255,255,255,0.4)" strokeWidth="1" strokeLinecap="round"/>
+            </svg>
           </div>
           <span className="text-lg font-bold text-white tracking-tight">أبو العربي</span>
         </Link>
@@ -386,8 +395,8 @@ export function Header() {
                   aria-label="قائمة الحساب"
                   aria-expanded={showAccount}
                 >
-                  <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-xs font-black text-white shrink-0">
-                    {user?.fullName?.charAt(0) || <UserCircle className="w-4 h-4" />}
+                  <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white shrink-0">
+                    <UserCircle className="w-[18px] h-[18px]" />
                   </div>
                   <span className="hidden sm:block text-sm font-medium text-white/80 truncate max-w-[100px]">
                     {user?.fullName}
