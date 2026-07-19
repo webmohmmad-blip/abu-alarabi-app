@@ -249,6 +249,51 @@ export const dossierBookmarksTable = pgTable("dossier_bookmarks", {
 });
 export type DossierBookmark = typeof dossierBookmarksTable.$inferSelect;
 
+// ─── WEEKLY SCHEDULE SLOTS ──────────────────────────────
+// Recurring weekly time slots per subject per day
+export const weeklyScheduleSlotsTable = pgTable("weekly_schedule_slots", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  subjectId: integer("subject_id")
+    .notNull()
+    .references(() => subjectsTable.id, { onDelete: "cascade" }),
+  dayOfWeek: integer("day_of_week").notNull(), // 0=Sunday…6=Saturday
+  startTime: text("start_time").notNull(),     // "09:00"
+  endTime: text("end_time").notNull(),         // "10:30"
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+export type WeeklyScheduleSlot = typeof weeklyScheduleSlotsTable.$inferSelect;
+
+// ─── USER REST DAYS ─────────────────────────────────────
+// Which days of the week the student rests (0-6)
+export const userRestDaysTable = pgTable("user_rest_days", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" })
+    .unique(),
+  restDays: text("rest_days").array().notNull().default([]), // e.g. ["5","6"]
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+export type UserRestDays = typeof userRestDaysTable.$inferSelect;
+
+// ─── DAILY CUSTOM TASKS ─────────────────────────────────
+// Ad-hoc tasks added by the student for a specific date
+export const dailyCustomTasksTable = pgTable("daily_custom_tasks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  date: date("date").notNull(), // "2024-01-15"
+  isCompleted: boolean("is_completed").notNull().default(false),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+export type DailyCustomTask = typeof dailyCustomTasksTable.$inferSelect;
+
 // ─── DOSSIER READING PROGRESS ───────────────────────────
 export const dossierReadingProgressTable = pgTable("dossier_reading_progress", {
   id: serial("id").primaryKey(),

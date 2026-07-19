@@ -10,35 +10,42 @@ import {
   Settings,
   X,
   ShieldCheck,
+  Plus,
+  Coffee,
+  Circle,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLogout } from "@workspace/api-client-react";
 import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";
 
-interface StudyTask {
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface ScheduleSlot {
   id: number;
-  title: string;
+  startTime: string;
+  endTime: string;
+  subjectId: number;
   subjectName: string;
   subjectColor: string;
-  type: string;
-  status: string;
-  durationMinutes: number | null;
-  scheduledAt: string;
+}
+interface CustomTask {
+  id: number;
+  title: string;
+  isCompleted: boolean;
+}
+interface TodayData {
+  date: string;
+  dayOfWeek: number;
+  isRestDay: boolean;
+  slots: ScheduleSlot[];
+  customTasks: CustomTask[];
 }
 
-interface StudyPlan {
-  goal: string;
-  todayTasks: StudyTask[];
-  streakDays: number;
-  recommendation: string;
-}
-
-function useStudyPlan(enabled: boolean) {
-  return useQuery<StudyPlan>({
-    queryKey: ["/api/studyplan"],
-    queryFn: () => customFetch<StudyPlan>("/api/studyplan", { method: "GET" }),
+function useTodaySchedule(enabled: boolean) {
+  return useQuery<TodayData>({
+    queryKey: ["/api/schedule/today"],
+    queryFn: () => customFetch<TodayData>("/api/schedule/today", { method: "GET" }),
     enabled,
     retry: false,
     staleTime: 60_000,
@@ -52,20 +59,25 @@ const STUDENT_NAV = [
   { href: "/exams",       label: "الامتحانات"             },
   { href: "/weekly-quiz", label: "الكويز الأسبوعي"        },
   { href: "/study-room",  label: "غرفتي الدراسية"         },
-  { href: "/study-plan",  label: "جدولك الدراسي"          },
+  { href: "/schedule",    label: "جدولي الدراسي"          },
 ] as const;
 
 export function Header() {
   const { user, isAuthenticated } = useAuth();
   const [location, setLocation] = useLocation();
   const logout = useLogout();
+  const qc = useQueryClient();
   const [scrolled, setScrolled] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const scheduleRef = useRef<HTMLDivElement>(null);
   const accountRef = useRef<HTMLDivElement>(null);
 
-  const { data: plan } = useStudyPlan(isAuthenticated);
+  // New custom task input
+  const [newTaskText, setNewTaskText] = useState("");
+  const [addingTask, setAddingTask] = useState(false);
+
+  const { data: today } = useTodaySchedule(isAuthenticated);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -85,6 +97,32 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handler);
   }, [showSchedule, showAccount]);
 
+  // ── Mutations ─────────────────────────────────────────────────────────────
+  const addTask = useMutation({
+    mutationFn: (title: string) =>
+      customFetch("/api/schedule/daily-tasks", {
+        method: "POST",
+        body: JSON.stringify({ title }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/schedule/today"] });
+      setNewTaskText("");
+      setAddingTask(false);
+    },
+  });
+
+  const toggleTask = useMutation({
+    mutationFn: (id: number) =>
+      customFetch(`/api/schedule/daily-tasks/${id}/toggle`, { method: "PATCH" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/schedule/today"] }),
+  });
+
+  const deleteTask = useMutation({
+    mutationFn: (id: number) =>
+      customFetch(`/api/schedule/daily-tasks/${id}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/schedule/today"] }),
+  });
+
   const handleLogout = () => {
     logout.mutate(undefined, {
       onSuccess: () => { setLocation("/login"); window.location.reload(); },
@@ -92,15 +130,15 @@ export function Header() {
   };
 
   const isHome = location === "/";
-  const todayTasks  = plan?.todayTasks ?? [];
-  const doneTasks   = todayTasks.filter((t) => t.status === "completed");
-  const pendingTasks = todayTasks.filter((t) => t.status !== "completed");
   const isPrivileged = user?.role === "admin" || user?.role === "super_admin";
 
-  const TYPE_LABEL: Record<string, string> = {
-    dossier: "دوسيه", worksheet: "ورقة عمل",
-    revision: "مراجعة", exam: "امتحان", lesson: "درس",
-  };
+  // Counts for badge
+  const pendingSlots = today?.isRestDay ? 0 : (today?.slots.length ?? 0);
+  const pendingCustom = today?.customTasks.filter((t) => !t.isCompleted).length ?? 0;
+  const totalPending = pendingSlots + pendingCustom;
+
+  const completedCustom = today?.customTasks.filter((t) => t.isCompleted) ?? [];
+  const pendingCustomTasks = today?.customTasks.filter((t) => !t.isCompleted) ?? [];
 
   return (
     <header
@@ -123,26 +161,20 @@ export function Header() {
           <span className="text-lg font-bold text-white tracking-tight">أبو العربي</span>
         </Link>
 
-        {/* ── Centre: student nav (authenticated) OR public nav ── */}
+        {/* ── Centre nav ── */}
         {isAuthenticated ? (
-          <nav
-            dir="rtl"
-            className="hidden md:flex items-stretch flex-1 overflow-x-auto scrollbar-hide h-full"
-          >
+          <nav dir="rtl" className="hidden md:flex items-stretch flex-1 overflow-x-auto scrollbar-hide h-full">
             {STUDENT_NAV.map((item) => {
-              const active =
-                location === item.href || location.startsWith(`${item.href}/`);
+              const active = location === item.href || location.startsWith(`${item.href}/`);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`
-                    flex items-center px-4 text-[13.5px] whitespace-nowrap
-                    border-b-2 transition-colors duration-150
-                    ${active
+                  className={`flex items-center px-4 text-[13.5px] whitespace-nowrap border-b-2 transition-colors duration-150 ${
+                    active
                       ? "border-primary text-white font-semibold"
-                      : "border-transparent text-white/60 hover:text-white hover:border-white/20 font-normal"}
-                  `}
+                      : "border-transparent text-white/60 hover:text-white hover:border-white/20 font-normal"
+                  }`}
                 >
                   {item.label}
                 </Link>
@@ -152,10 +184,10 @@ export function Header() {
         ) : (
           <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
             {[
-              { href: "/",          label: "الرئيسية"  },
-              { href: "/dossiers",  label: "الدوسيات"  },
-              { href: "/worksheets",label: "أوراق العمل"},
-              { href: "/exams",     label: "الامتحانات"},
+              { href: "/",           label: "الرئيسية"   },
+              { href: "/dossiers",   label: "الدوسيات"   },
+              { href: "/worksheets", label: "أوراق العمل" },
+              { href: "/exams",      label: "الامتحانات" },
             ].map((item) => (
               <Link
                 key={item.href}
@@ -176,90 +208,163 @@ export function Header() {
         <div className="flex items-center gap-2 shrink-0">
           {isAuthenticated ? (
             <>
-              {/* Study schedule dropdown */}
+              {/* ── Today's schedule dropdown ── */}
               <div className="relative" ref={scheduleRef}>
                 <button
                   onClick={() => setShowSchedule((s) => !s)}
                   className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl transition-colors text-sm font-medium ${
-                    showSchedule
-                      ? "bg-white/15 text-white"
-                      : "text-white/70 hover:text-white hover:bg-white/10"
+                    showSchedule ? "bg-white/15 text-white" : "text-white/70 hover:text-white hover:bg-white/10"
                   }`}
                 >
                   <CalendarDays className="w-4 h-4" />
-                  <span className="hidden lg:inline">جدولك</span>
-                  {pendingTasks.length > 0 && (
+                  <span className="hidden lg:inline">مهام اليوم</span>
+                  {totalPending > 0 && (
                     <span className="w-5 h-5 bg-accent text-white rounded-full text-[10px] font-black flex items-center justify-center leading-none">
-                      {pendingTasks.length}
+                      {totalPending}
                     </span>
                   )}
                 </button>
 
                 {showSchedule && (
                   <div className="absolute left-0 top-full mt-2 w-80 bg-[#1a1030]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50">
+
+                    {/* Header */}
                     <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
                       <div>
-                        <h3 className="text-sm font-bold text-white">جدولك الدراسي اليوم</h3>
-                        {todayTasks.length > 0 && (
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {doneTasks.length} من {todayTasks.length} مهام مكتملة
-                          </p>
-                        )}
+                        <h3 className="text-sm font-bold text-white">مهام اليوم</h3>
+                        <p className="text-[11px] text-white/40 mt-0.5">
+                          {today?.isRestDay
+                            ? "يوم راحة 🌙"
+                            : today
+                            ? `${(today.slots.length ?? 0) + (today.customTasks?.length ?? 0)} مهمة اليوم`
+                            : "لا يوجد جدول بعد"}
+                        </p>
                       </div>
-                      <button onClick={() => setShowSchedule(false)} className="text-muted-foreground hover:text-white transition-colors">
+                      <button onClick={() => setShowSchedule(false)} className="text-white/40 hover:text-white transition-colors">
                         <X className="w-4 h-4" />
                       </button>
                     </div>
 
-                    {todayTasks.length > 0 && (
-                      <div className="px-4 pt-3">
-                        <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500"
-                            style={{ width: `${(doneTasks.length / todayTasks.length) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
+                    {/* Content */}
+                    <div className="max-h-80 overflow-y-auto">
 
-                    <div className="max-h-72 overflow-y-auto px-2 py-2">
-                      {todayTasks.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-8 text-center px-4">
-                          <CalendarDays className="w-10 h-10 text-muted-foreground/30 mb-3" />
-                          <p className="text-sm font-medium text-white/60">لا توجد مهام مجدولة اليوم</p>
-                          {plan?.recommendation && (
-                            <p className="text-xs text-muted-foreground mt-1">{plan.recommendation}</p>
-                          )}
+                      {/* Rest day */}
+                      {today?.isRestDay ? (
+                        <div className="flex flex-col items-center justify-center py-8 gap-2">
+                          <Coffee className="w-8 h-8 text-amber-400/60" />
+                          <p className="text-sm text-white/50">يوم راحة — استرح وعُد غداً 💪</p>
+                        </div>
+                      ) : !today || (today.slots.length === 0 && today.customTasks.length === 0) ? (
+                        <div className="flex flex-col items-center justify-center py-8 gap-2 px-4 text-center">
+                          <CalendarDays className="w-8 h-8 text-white/20" />
+                          <p className="text-sm text-white/50">لا توجد مهام اليوم</p>
+                          <Link href="/schedule" onClick={() => setShowSchedule(false)} className="text-xs text-primary hover:underline">
+                            أنشئ جدولك الدراسي
+                          </Link>
                         </div>
                       ) : (
-                        <>
-                          {pendingTasks.length > 0 && (
-                            <div className="mb-1">
-                              {pendingTasks.map((task) => (
-                                <TaskRow key={task.id} task={task} typeLabel={TYPE_LABEL} />
+                        <div className="px-2 py-2 space-y-1">
+
+                          {/* Schedule slots (from weekly timetable) */}
+                          {(today.slots ?? []).length > 0 && (
+                            <div className="px-2 pb-1 pt-1">
+                              <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-1.5">من جدولك الأسبوعي</p>
+                              {today.slots.map((s) => (
+                                <div key={s.id} className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-white/5 transition-colors">
+                                  <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.subjectColor }} />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-white truncate">{s.subjectName}</p>
+                                    <p className="text-[10px] text-white/40 flex items-center gap-1 mt-0.5">
+                                      <Clock className="w-2.5 h-2.5" />
+                                      {s.startTime} – {s.endTime}
+                                    </p>
+                                  </div>
+                                </div>
                               ))}
                             </div>
                           )}
-                          {doneTasks.length > 0 && (
-                            <>
-                              <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">مكتملة</div>
-                              {doneTasks.map((task) => (
-                                <TaskRow key={task.id} task={task} typeLabel={TYPE_LABEL} done />
+
+                          {/* Custom tasks */}
+                          {(pendingCustomTasks.length > 0 || completedCustom.length > 0) && (
+                            <div className="px-2 pb-1 pt-1">
+                              {(today.slots ?? []).length > 0 && (
+                                <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-1.5">مهامي الإضافية</p>
+                              )}
+                              {pendingCustomTasks.map((t) => (
+                                <div key={t.id} className="group flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-white/5 transition-colors">
+                                  <button
+                                    onClick={() => toggleTask.mutate(t.id)}
+                                    className="w-4 h-4 rounded-full border border-white/30 hover:border-primary flex items-center justify-center shrink-0 transition-colors"
+                                  >
+                                    <Circle className="w-2.5 h-2.5 text-white/20" />
+                                  </button>
+                                  <p className="flex-1 text-sm text-white truncate">{t.title}</p>
+                                  <button
+                                    onClick={() => deleteTask.mutate(t.id)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity text-white/30 hover:text-destructive"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               ))}
-                            </>
+                              {completedCustom.map((t) => (
+                                <div key={t.id} className="group flex items-center gap-2 px-2 py-2 rounded-xl opacity-40">
+                                  <button
+                                    onClick={() => toggleTask.mutate(t.id)}
+                                    className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center shrink-0"
+                                  >
+                                    <CheckCircle2 className="w-3 h-3 text-white" />
+                                  </button>
+                                  <p className="flex-1 text-sm text-white line-through truncate">{t.title}</p>
+                                </div>
+                              ))}
+                            </div>
                           )}
-                        </>
+                        </div>
                       )}
                     </div>
 
-                    <div className="px-4 py-3 border-t border-white/10 flex items-center justify-between">
-                      {plan?.streakDays ? (
-                        <div className="flex items-center gap-1.5 text-xs text-accent font-bold">
-                          🔥 {plan.streakDays} يوم متواصل
+                    {/* Add custom task input */}
+                    <div className="border-t border-white/10 px-3 py-2">
+                      {addingTask ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            autoFocus
+                            value={newTaskText}
+                            onChange={(e) => setNewTaskText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && newTaskText.trim()) addTask.mutate(newTaskText.trim());
+                              if (e.key === "Escape") { setAddingTask(false); setNewTaskText(""); }
+                            }}
+                            placeholder="اكتب مهمتك..."
+                            className="flex-1 bg-white/10 text-white placeholder:text-white/30 text-sm px-3 py-1.5 rounded-xl border border-white/10 focus:outline-none focus:border-primary/50"
+                          />
+                          <button
+                            onClick={() => { if (newTaskText.trim()) addTask.mutate(newTaskText.trim()); }}
+                            disabled={!newTaskText.trim() || addTask.isPending}
+                            className="w-7 h-7 bg-primary hover:bg-primary/80 disabled:opacity-40 rounded-lg flex items-center justify-center transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5 text-white" />
+                          </button>
+                          <button onClick={() => { setAddingTask(false); setNewTaskText(""); }} className="text-white/30 hover:text-white transition-colors">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                      ) : <div />}
-                      <Link href="/dashboard" onClick={() => setShowSchedule(false)} className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">
-                        لوحة التحكم ←
+                      ) : (
+                        <button
+                          onClick={() => setAddingTask(true)}
+                          className="w-full flex items-center gap-2 text-white/40 hover:text-white text-xs py-1 transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          أضف مهمة إضافية ليومك
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-4 py-2.5 border-t border-white/10 flex items-center justify-between">
+                      <Link href="/schedule" onClick={() => setShowSchedule(false)} className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">
+                        عدّل جدولك ←
                       </Link>
                     </div>
                   </div>
@@ -328,25 +433,5 @@ export function Header() {
         </div>
       </div>
     </header>
-  );
-}
-
-function TaskRow({ task, typeLabel, done = false }: { task: StudyTask; typeLabel: Record<string, string>; done?: boolean }) {
-  return (
-    <div className={`flex items-center gap-3 px-2 py-2.5 rounded-xl transition-colors ${done ? "opacity-50" : "hover:bg-white/5"}`}>
-      <div className={`w-2 h-2 rounded-full shrink-0 ${done ? "bg-green-400" : "bg-white/20"}`} style={!done ? { backgroundColor: task.subjectColor } : {}} />
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium truncate ${done ? "line-through text-muted-foreground" : "text-white"}`}>{task.title}</p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] text-muted-foreground">{typeLabel[task.type] ?? task.type}</span>
-          {task.durationMinutes && (
-            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-              <Clock className="w-2.5 h-2.5" /> {task.durationMinutes} د
-            </span>
-          )}
-        </div>
-      </div>
-      {done && <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />}
-    </div>
   );
 }

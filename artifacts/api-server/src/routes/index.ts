@@ -21,6 +21,7 @@ import adminQuestionsRouter from "./admin-questions";
 import adminSummariesRouter from "./admin-summaries";
 import storageRouter from "./storage";
 import workspaceRouter from "./workspace";
+import scheduleRouter from "./schedule";
 
 const router: IRouter = Router();
 
@@ -47,5 +48,6 @@ router.use("/admin", adminSummariesRouter);
 router.use(flashcardsRouter);
 router.use(storageRouter);
 router.use(workspaceRouter);
+router.use(scheduleRouter);
 
 export default router;

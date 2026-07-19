@@ -26,6 +26,7 @@ import Settings from '@/pages/settings';
 import Videos from '@/pages/videos';
 import Summaries from '@/pages/summaries';
 import SessionsHistory from '@/pages/sessions-history';
+import Schedule from '@/pages/schedule';
 
 // Admin pages
 import AdminDashboard from '@/pages/admin/index';
@@ -76,6 +77,7 @@ function Router() {
       <Route path="/summaries" component={Summaries} />
       <Route path="/statistics" component={Statistics} />
       <Route path="/history" component={SessionsHistory} />
+      <Route path="/schedule" component={Schedule} />
       <Route path="/profile" component={Profile} />
       <Route path="/settings" component={Settings} />
 
