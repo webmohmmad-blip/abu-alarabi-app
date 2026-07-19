@@ -243,8 +243,8 @@ export default function Home() {
             </div>
 
             {/* ══ STUDENT NAV STRIP — the hero of this section ══ */}
-            <div className="bg-background border-b border-border">
-              <div className="flex items-stretch overflow-x-auto scrollbar-hide" dir="rtl">
+            <div className="overflow-x-auto scrollbar-hide" style={{ backgroundColor: "#1a1a2e" }}>
+              <div className="flex items-stretch min-w-max" dir="rtl">
                 {[
                   { name: "لوحتي",                  icon: LayoutDashboard, active: true  },
                   { name: "الدوسيات",               icon: BookText,        active: false },
@@ -255,14 +255,15 @@ export default function Home() {
                 ].map((item) => (
                   <div
                     key={item.name}
-                    className={`flex items-center gap-2 px-4 py-4 text-sm whitespace-nowrap border-b-2 transition-colors select-none ${
+                    className={`flex items-center gap-1.5 px-5 py-2.5 text-[13px] font-medium whitespace-nowrap select-none transition-colors ${
                       item.active
-                        ? "border-primary text-primary font-bold"
-                        : "border-transparent text-muted-foreground font-medium"
+                        ? "text-white"
+                        : "text-white/60"
                     }`}
+                    style={item.active ? { backgroundColor: "#5A2D82" } : {}}
                   >
-                    <item.icon className={`w-4 h-4 shrink-0 ${item.active ? "text-primary" : ""}`} />
-                    <span>{item.name}</span>
+                    <item.icon className="w-3.5 h-3.5 shrink-0" />
+                    {item.name}
                   </div>
                 ))}
               </div>
