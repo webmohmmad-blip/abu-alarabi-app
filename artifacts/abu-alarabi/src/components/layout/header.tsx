@@ -151,44 +151,34 @@ export function Header() {
       <div className="flex h-[72px] items-center justify-between px-6 gap-4">
 
         {/* ── Logo ── */}
-        <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-          {/* Brand logo mark — two interlocked ع shapes (purple + green) with gold diamond pip */}
-          <svg width="30" height="36" viewBox="0 0 80 96" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Gold diamond pip at very top */}
-            <path d="M40 0 L49 11 L40 20 L31 11 Z" fill="#C79A2D"/>
-
-            {/* ── Green shape (right half / back layer) ── */}
-            {/* Outer right arc then inner return */}
-            <path
-              d="M43 18
-                 C 50 18, 62 22, 68 34
-                 C 74 46, 72 60, 40 80
-                 C 40 80, 48 68, 46 56
-                 C 44 46, 36 40, 43 18 Z"
-              fill="#2FA84F"
-            />
-
-            {/* ── Purple shape (left half / front layer) ── */}
-            {/* Outer left arc then inner return — drawn on top for foreground */}
-            <path
-              d="M37 18
-                 C 30 18, 18 22, 12 34
-                 C 6 46, 8 60, 40 80
-                 C 40 80, 32 68, 34 56
-                 C 36 46, 44 40, 37 18 Z"
-              fill="#5A2D82"
-            />
-
-            {/* Interlock highlight — green passes in front at lower cross point */}
-            <path
-              d="M40 52
-                 C 42 48, 48 50, 47 56
-                 C 46 62, 40 68, 40 80
-                 C 40 80, 40 68, 38 62
-                 C 36 56, 38 48, 40 52 Z"
-              fill="#2FA84F"
-            />
-          </svg>
+        <Link href="/" className="flex items-center gap-3 group shrink-0">
+          {/* Ornamental ض — Arabic letter dad as logo mark */}
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shrink-0 overflow-hidden"
+            style={{ background: "linear-gradient(145deg, #5A2D82 0%, #3a1a59 100%)" }}
+          >
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Glow ring */}
+              <circle cx="18" cy="18" r="13" fill="white" fillOpacity="0.05"/>
+              {/* Gold dot accent — top right */}
+              <circle cx="26" cy="8" r="2.8" fill="#C79A2D"/>
+              {/* The ض letter — real unicode, styled */}
+              <text
+                x="18"
+                y="25"
+                textAnchor="middle"
+                fontSize="20"
+                fontWeight="700"
+                fontFamily="'Amiri', 'Scheherazade New', 'Traditional Arabic', serif"
+                fill="white"
+                letterSpacing="0"
+              >
+                ض
+              </text>
+              {/* Decorative underline stroke */}
+              <line x1="9" y1="29" x2="27" y2="29" stroke="white" strokeOpacity="0.25" strokeWidth="1" strokeLinecap="round"/>
+            </svg>
+          </div>
           <span className="text-lg font-bold text-white tracking-tight">أبو العربي</span>
         </Link>
 
