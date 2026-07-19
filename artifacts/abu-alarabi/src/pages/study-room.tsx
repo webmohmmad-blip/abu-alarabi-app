@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useCreateStudySession, useUpdateStudySession, useListStudyTasks } from "@workspace/api-client-react";
+import { useCreateStudySession, useUpdateStudySession, useListStudyTasks, useListSubjects } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,9 +29,12 @@ export default function StudyRoom() {
   
   // Setup selections
   const [selectedTask, setSelectedTask] = useState<number | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
   const [timerMode, setTimerMode] = useState('pomodoro');
-  
+  const [startError, setStartError] = useState<string | null>(null);
+
   const { data: tasksData } = useListStudyTasks({ status: 'pending' });
+  const { data: subjectsData } = useListSubjects();
   const createSession = useCreateStudySession();
   const updateSession = useUpdateStudySession();
 
@@ -59,23 +62,27 @@ export default function StudyRoom() {
   };
 
   const handleStart = () => {
-    // If no task selected, just use a dummy subjectId 1 for now (in real app, user selects subject if no task)
+    setStartError(null);
     const task = tasksData?.find(t => t.id === selectedTask);
-    
+    const subjectId = task?.subjectId ?? selectedSubject ?? subjectsData?.[0]?.id ?? 1;
+
     createSession.mutate(
-      { 
+      {
         data: {
-          subjectId: task?.subjectId ?? 1,
+          subjectId,
           type: timerMode,
           plannedMinutes: totalTime / 60,
-          taskId: selectedTask || undefined
-        }
+          taskId: selectedTask || undefined,
+        },
       },
       {
         onSuccess: (data) => {
           setSessionId(data.id);
           setSessionState('active');
-        }
+        },
+        onError: () => {
+          setStartError("حدث خطأ أثناء بدء الجلسة، حاول مرة أخرى.");
+        },
       }
     );
   };
@@ -174,9 +181,31 @@ export default function StudyRoom() {
                 </div>
               </div>
 
+              {/* Subject selector */}
+              {subjectsData && subjectsData.length > 0 && (
+                <div>
+                  <h3 className="font-bold mb-3">المادة الدراسية</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {subjectsData.map(subject => (
+                      <button
+                        key={subject.id}
+                        onClick={() => setSelectedSubject(subject.id)}
+                        className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                          selectedSubject === subject.id
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-black/8 bg-white text-foreground hover:border-black/15'
+                        }`}
+                      >
+                        {subject.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {tasksData && tasksData.length > 0 && (
                 <div>
-                  <h3 className="font-bold mb-4">اربط بجلسة مع مهمة (اختياري)</h3>
+                  <h3 className="font-bold mb-4">اربط بمهمة (اختياري)</h3>
                   <div className="max-h-40 overflow-y-auto space-y-2 pr-2">
                     {tasksData.map(task => (
                       <button
@@ -197,6 +226,11 @@ export default function StudyRoom() {
                 </div>
               )}
 
+              {startError && (
+                <p className="text-sm text-destructive text-center bg-destructive/5 border border-destructive/20 rounded-lg py-2 px-4">
+                  {startError}
+                </p>
+              )}
               <Button size="lg" className="w-full text-lg h-14 shadow-xl shadow-primary/20" onClick={handleStart} disabled={createSession.isPending}>
                 {createSession.isPending ? "جاري التحضير..." : "ابدأ الجلسة الآن"}
               </Button>
