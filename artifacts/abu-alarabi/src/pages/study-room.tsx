@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useCreateStudySession, useUpdateStudySession, useListStudyTasks, useListSubjects } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Header } from "@/components/layout/header";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Play, 
@@ -133,14 +134,12 @@ export default function StudyRoom() {
 
   if (sessionState === 'setup') {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center relative overflow-hidden">
+      <>
+        <Header />
+        <div className="min-h-screen bg-background pt-[72px] p-4 flex items-center justify-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-full h-1/2 bg-primary/5 rounded-full blur-3xl -z-10"></div>
         
         <div className="w-full max-w-2xl">
-          <Button variant="ghost" asChild className="mb-6">
-            <Link href="/dashboard" className="gap-2"><ChevronRight className="w-4 h-4"/> عودة للوحة التحكم</Link>
-          </Button>
-
           <Card className="border-white/60 shadow-2xl p-8 bg-white/80 backdrop-blur-xl">
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
@@ -238,6 +237,7 @@ export default function StudyRoom() {
           </Card>
         </div>
       </div>
+      </>
     );
   }
 
@@ -245,7 +245,9 @@ export default function StudyRoom() {
     const actualMinutes = Math.round((totalTime - timeRemaining) / 60);
     
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <>
+        <Header />
+        <div className="min-h-screen bg-background pt-[72px] p-4 flex items-center justify-center">
         <Card className="w-full max-w-md p-8 border-white/60 shadow-2xl text-center">
           <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-10 h-10" />
@@ -274,20 +276,20 @@ export default function StudyRoom() {
             </div>
           </div>
           
-          <div className="mt-8 pt-6 border-t border-black/5 space-y-3">
+          <div className="mt-8 pt-6 border-t border-black/5">
             <Button className="w-full" onClick={() => setSessionState('setup')}>جلسة جديدة</Button>
-            <Button variant="outline" className="w-full" asChild>
-              <Link href="/dashboard">العودة للوحة التحكم</Link>
-            </Button>
           </div>
         </Card>
       </div>
+      </>
     );
   }
 
   // Active / Paused State - Fullscreen distraction free
   return (
-    <div className={`min-h-screen transition-colors duration-500 flex flex-col items-center justify-center relative p-4
+    <>
+      <Header />
+    <div className={`min-h-screen pt-[72px] transition-colors duration-500 flex flex-col items-center justify-center relative p-4
       ${sessionState === 'paused' ? 'bg-orange-50' : 'bg-[#1E0D33] text-white'}
     `}>
       {/* Distraction free background elements */}
@@ -378,5 +380,6 @@ export default function StudyRoom() {
         </div>
       </div>
     </div>
+    </>
   );
 }
