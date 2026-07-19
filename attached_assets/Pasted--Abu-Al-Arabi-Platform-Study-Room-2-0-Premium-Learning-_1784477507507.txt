@@ -1,0 +1,476 @@
+# Abu Al-Arabi Platform
+
+# Study Room 2.0 - Premium Learning Workspace
+
+You are a Senior Product Designer, Senior Full Stack Engineer, UX Architect, and Frontend Specialist.
+
+Your task is NOT to slightly improve the current Study Room.
+
+Your task is to completely redesign and rebuild it into a premium digital study workspace inspired by:
+
+- GoodNotes
+
+- Notability
+
+- Apple Notes
+
+- PDF Expert
+
+while keeping the visual identity of Abu Al-Arabi Platform.
+
+This must become the main place where students spend most of their study time.
+
+------------------------------------------------------------
+
+GENERAL GOAL
+
+------------------------------------------------------------
+
+The student should never need to download a PDF and open GoodNotes.
+
+Everything should happen inside the website.
+
+The Study Room should feel like a native iPad application.
+
+------------------------------------------------------------
+
+REMOVE CURRENT DESIGN
+
+------------------------------------------------------------
+
+The current page looks like a simple Pomodoro timer.
+
+This is NOT acceptable.
+
+Completely redesign the page.
+
+------------------------------------------------------------
+
+NEW LAYOUT
+
+------------------------------------------------------------
+
+The layout should contain:
+
+TOP TOOLBAR
+
+LEFT SIDEBAR
+
+CENTER PDF READER
+
+BOTTOM DRAWING TOOLBAR
+
+Everything should be responsive.
+
+------------------------------------------------------------
+
+TOP TOOLBAR
+
+------------------------------------------------------------
+
+Display:
+
+Current dossier title
+
+Current lesson
+
+Current page number
+
+Save
+
+Undo
+
+Redo
+
+Fullscreen
+
+Dark mode
+
+Search inside PDF
+
+Bookmarks
+
+Recent pages
+
+Auto-save indicator
+
+Everything must look modern and minimal.
+
+------------------------------------------------------------
+
+LEFT SIDEBAR
+
+------------------------------------------------------------
+
+The left side should contain tabs.
+
+Tab 1
+
+Notes
+
+Students can:
+
+Create notes
+
+Edit notes
+
+Delete notes
+
+Search notes
+
+Pin notes
+
+Sort notes
+
+Every note can be attached to a specific PDF page.
+
+------------------------------------------------------------
+
+Tab 2
+
+Study Plan
+
+Display:
+
+Today's tasks
+
+Upcoming tasks
+
+Completed tasks
+
+Weekly progress
+
+Add task
+
+Mark complete
+
+------------------------------------------------------------
+
+Tab 3
+
+Bookmarks
+
+Students can bookmark PDF pages.
+
+One click returns to that page.
+
+------------------------------------------------------------
+
+Tab 4
+
+Quick Files
+
+Recently opened dossiers
+
+Recent PDFs
+
+Favorite dossiers
+
+------------------------------------------------------------
+
+CENTER AREA
+
+------------------------------------------------------------
+
+This is the most important part.
+
+Build a professional PDF Reader.
+
+It should support:
+
+Fast rendering
+
+Lazy loading
+
+Zoom
+
+Pan
+
+Search
+
+Bookmarks
+
+Page thumbnails
+
+Jump to page
+
+Remember last page
+
+Auto restore
+
+Fit width
+
+Fit page
+
+Rotate
+
+Print
+
+Download (optional)
+
+Smooth scrolling
+
+------------------------------------------------------------
+
+DRAWING EXPERIENCE
+
+------------------------------------------------------------
+
+The PDF must support direct annotations.
+
+Students should be able to write directly on the PDF.
+
+Support:
+
+Pen
+
+Highlighter
+
+Pencil
+
+Eraser
+
+Shapes
+
+Text boxes
+
+Sticky notes
+
+Arrow
+
+Rectangle
+
+Circle
+
+Line
+
+Color picker
+
+Stroke width
+
+Undo
+
+Redo
+
+------------------------------------------------------------
+
+APPLE PENCIL EXPERIENCE
+
+------------------------------------------------------------
+
+When using an iPad:
+
+Apple Pencil should work naturally.
+
+Support:
+
+Pressure sensitivity (if browser allows)
+
+Palm rejection where possible
+
+Low latency
+
+Natural handwriting
+
+No visible lag
+
+------------------------------------------------------------
+
+AUTO SAVE
+
+------------------------------------------------------------
+
+Every stroke
+
+Every highlight
+
+Every note
+
+Every bookmark
+
+Every page position
+
+must automatically save.
+
+When the student comes back later,
+
+everything must be exactly where they left it.
+
+------------------------------------------------------------
+
+DATABASE
+
+------------------------------------------------------------
+
+Create persistent storage for:
+
+Annotations
+
+Notes
+
+Bookmarks
+
+Last page
+
+Drawing data
+
+Highlight data
+
+User preferences
+
+Everything linked to:
+
+User
+
+Dossier
+
+PDF
+
+------------------------------------------------------------
+
+PERFORMANCE
+
+------------------------------------------------------------
+
+Optimize for:
+
+Large PDFs
+
+Fast loading
+
+Memory usage
+
+Virtual rendering
+
+Incremental page rendering
+
+Background auto-save
+
+No unnecessary re-rendering
+
+------------------------------------------------------------
+
+USER EXPERIENCE
+
+------------------------------------------------------------
+
+The experience should feel like:
+
+GoodNotes inside the browser.
+
+Not like a traditional website.
+
+No clutter.
+
+No unnecessary cards.
+
+Minimal interface.
+
+Maximum workspace.
+
+------------------------------------------------------------
+
+VISUAL DESIGN
+
+------------------------------------------------------------
+
+Use Abu Al-Arabi colors.
+
+Primary:
+
+#5A2D82
+
+Secondary:
+
+#0D9BB5
+
+Accent:
+
+#C79A2D
+
+Success:
+
+#2FA84F
+
+Background:
+
+#FAFAF8
+
+Rounded corners
+
+Soft shadows
+
+Apple-like spacing
+
+Modern typography
+
+Premium animations
+
+------------------------------------------------------------
+
+RESPONSIVE
+
+------------------------------------------------------------
+
+Desktop
+
+Tablet
+
+iPad
+
+Mobile
+
+The iPad experience is the highest priority.
+
+------------------------------------------------------------
+
+INTEGRATION
+
+------------------------------------------------------------
+
+Every dossier should contain:
+
+Study Now
+
+When clicked,
+
+it opens directly inside the Study Room
+
+with the selected PDF already loaded.
+
+The student should never need to manually choose the file.
+
+------------------------------------------------------------
+
+QUALITY REQUIREMENTS
+
+------------------------------------------------------------
+
+Do NOT use placeholder data.
+
+Do NOT leave unfinished UI.
+
+Do NOT create fake buttons.
+
+Implement everything using:
+
+Frontend
+
+Backend
+
+Database
+
+API
+
+State Management
+
+------------------------------------------------------------
+
+FINAL GOAL
+
+------------------------------------------------------------
+
+The final Study Room should be so polished that a student no longer needs GoodNotes for studying Abu Al-Arabi dossiers.
+
+It should feel like a professional native educational application rather than a web page.
+ 

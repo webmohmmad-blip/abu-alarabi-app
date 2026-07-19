@@ -212,3 +212,55 @@ export const notificationsTable = pgTable("notifications", {
 });
 
 export type Notification = typeof notificationsTable.$inferSelect;
+
+// ─── DOSSIER ANNOTATIONS ────────────────────────────────
+// Stores per-page drawing strokes for each user+dossier
+export const dossierAnnotationsTable = pgTable("dossier_annotations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  dossierId: integer("dossier_id")
+    .notNull()
+    .references(() => dossiersTable.id, { onDelete: "cascade" }),
+  pageNumber: integer("page_number").notNull().default(1),
+  strokesJson: text("strokes_json").notNull().default("[]"),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+export type DossierAnnotation = typeof dossierAnnotationsTable.$inferSelect;
+
+// ─── DOSSIER BOOKMARKS ──────────────────────────────────
+export const dossierBookmarksTable = pgTable("dossier_bookmarks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  dossierId: integer("dossier_id")
+    .notNull()
+    .references(() => dossiersTable.id, { onDelete: "cascade" }),
+  pageNumber: integer("page_number").notNull(),
+  title: text("title").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+export type DossierBookmark = typeof dossierBookmarksTable.$inferSelect;
+
+// ─── DOSSIER READING PROGRESS ───────────────────────────
+export const dossierReadingProgressTable = pgTable("dossier_reading_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  dossierId: integer("dossier_id")
+    .notNull()
+    .references(() => dossiersTable.id, { onDelete: "cascade" }),
+  lastPage: integer("last_page").notNull().default(1),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});

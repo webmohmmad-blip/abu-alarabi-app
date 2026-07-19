@@ -1,623 +1,840 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+/**
+ * Study Room 2.0 — Premium GoodNotes-inspired workspace
+ * PDF reader + annotations + notes + bookmarks, all in one place
+ */
+import {
+  useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent,
+} from "react";
 import { useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import * as pdfjsLib from "pdfjs-dist";
+import { customFetch } from "@workspace/api-client-react";
 import {
-  useCreateStudySession,
-  useUpdateStudySession,
-  useListStudyTasks,
-  useListSubjects,
-  useListDossiers,
-  useListNotes,
-  useCreateNote,
-  useUpdateNote,
-} from "@workspace/api-client-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Header } from "@/components/layout/header";
-import { motion } from "framer-motion";
-import {
-  Play, Pause, Square, Focus, CheckCircle2,
-  FileText, BookOpen, Save, ChevronDown, Upload,
-  Pen, MousePointer2, Trash2, Minus, Plus, Eraser,
+  Pencil, Highlighter, Eraser, Hand, Square, Circle as CircleIcon,
+  Minus, Undo2, Redo2, Maximize2, Minimize2, BookmarkPlus, Bookmark,
+  FileText, ListTodo, ChevronLeft, ChevronRight, ZoomIn, ZoomOut,
+  Search, Save, Loader2, StickyNote, Trash2, Pin, Plus, X,
+  ArrowLeft, FolderOpen, Clock, AlignLeft,
 } from "lucide-react";
 
-type SessionState = "setup" | "active" | "paused" | "summary";
-type ActiveTool = "none" | "pen" | "select";
+// ──────────────────────────────────────────────────────────────────────────────
+// PDF.js worker
+// ──────────────────────────────────────────────────────────────────────────────
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
-export default function StudyRoom() {
-  const [, ] = useLocation();
-  const [sessionState, setSessionState] = useState<SessionState>("setup");
-  const [timeRemaining, setTimeRemaining] = useState(25 * 60);
-  const [totalTime, setTotalTime] = useState(25 * 60);
-  const [pauseCount, setPauseCount] = useState(0);
-  const [sessionId, setSessionId] = useState<number | null>(null);
+// ──────────────────────────────────────────────────────────────────────────────
+// Types
+// ──────────────────────────────────────────────────────────────────────────────
+type Tool = "hand" | "pen" | "highlighter" | "eraser" | "rect" | "circle" | "line" | "text";
+type Tab  = "notes" | "tasks" | "bookmarks" | "files";
 
-  // Setup
-  const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
-  const [selectedDossierId, setSelectedDossierId] = useState<number | null>(null);
-  const [timerMode, setTimerMode] = useState("pomodoro");
-  const [startError, setStartError] = useState<string | null>(null);
+interface Point { x: number; y: number; }
+interface Stroke {
+  id: string;
+  tool: Tool;
+  color: string;
+  width: number;
+  opacity: number;
+  points: Point[];
+  text?: string;
+  rect?: { x: number; y: number; w: number; h: number };
+}
+interface NoteItem { id: number; title: string; content: string; isPinned: boolean; createdAt: string; dossierId?: number; }
+interface Bookmark { id: number; pageNumber: number; title: string; }
+interface Task { id: number; title: string; status: string; type: string; scheduledAt: string; }
 
-  // Notes (text only)
-  const [noteTitle, setNoteTitle] = useState("");
-  const [noteContent, setNoteContent] = useState("");
-  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
-  const [noteSaved, setNoteSaved] = useState(false);
-  const noteSaveTimer = useRef<NodeJS.Timeout | null>(null);
+// ──────────────────────────────────────────────────────────────────────────────
+// Constants
+// ──────────────────────────────────────────────────────────────────────────────
+const COLORS = ["#1a1a1a", "#5A2D82", "#0D9BB5", "#C79A2D", "#2FA84F", "#E53E3E", "#FFFFFF"];
+const HIGHLIGHT_COLORS = ["#FFF176", "#A5D6A7", "#90CAF9", "#FFCC80", "#F48FB1"];
+const WIDTHS = [2, 4, 6, 10, 16];
+const SAVE_DEBOUNCE_MS = 1500;
 
-  // Dossier annotation overlay
-  const [activeTool, setActiveTool] = useState<ActiveTool>("none");
-  const [penColor, setPenColor] = useState("#f97316");
-  const [penSize, setPenSize] = useState(3);
-  const [isEraser, setIsEraser] = useState(false);
-  const annotationCanvasRef = useRef<HTMLCanvasElement>(null);
-  const isDrawing = useRef(false);
-  const lastPos = useRef<{ x: number; y: number } | null>(null);
-  const selectionStart = useRef<{ x: number; y: number } | null>(null);
-  const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+// ──────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────────────────────
+function uid() { return Math.random().toString(36).slice(2); }
 
-  // Resizable panels
-  const [leftWidth, setLeftWidth] = useState(58);
-  const isDraggingDivider = useRef(false);
-  const dragStartX = useRef(0);
-  const dragStartWidth = useRef(58);
-  const containerRef = useRef<HTMLDivElement>(null);
+function drawStrokesOnCanvas(ctx: CanvasRenderingContext2D, strokes: Stroke[]) {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  for (const stroke of strokes) {
+    ctx.globalAlpha = stroke.opacity;
+    ctx.strokeStyle = stroke.color;
+    ctx.fillStyle = stroke.color;
+    ctx.lineWidth = stroke.width;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
-  // Local dossier import
-  const [localDossierUrl, setLocalDossierUrl] = useState<string | null>(null);
-  const [localDossierName, setLocalDossierName] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const { data: tasksData } = useListStudyTasks({ status: "pending" });
-  const { data: subjectsData } = useListSubjects();
-  const { data: dossiersData } = useListDossiers({ limit: "50" });
-  const { data: notesData, refetch: refetchNotes } = useListNotes(
-    selectedDossierId ? { dossierId: String(selectedDossierId) }
-      : selectedSubject ? { subjectId: String(selectedSubject) } : undefined,
-    { query: { enabled: sessionState === "active" || sessionState === "paused" } }
-  );
-
-  const createSession = useCreateStudySession();
-  const updateSession = useUpdateStudySession();
-  const createNote = useCreateNote();
-  const updateNote = useUpdateNote();
-
-  // ── Timer ──
-  useEffect(() => {
-    let id: NodeJS.Timeout;
-    if (sessionState === "active" && timeRemaining > 0) {
-      id = setInterval(() => {
-        setTimeRemaining((p) => { if (p <= 1) { handleComplete(); return 0; } return p - 1; });
-      }, 1000);
+    if (stroke.tool === "rect" && stroke.rect) {
+      const { x, y, w, h } = stroke.rect;
+      ctx.strokeRect(x, y, w, h);
+    } else if (stroke.tool === "circle" && stroke.rect) {
+      const { x, y, w, h } = stroke.rect;
+      ctx.beginPath();
+      ctx.ellipse(x + w / 2, y + h / 2, Math.abs(w / 2), Math.abs(h / 2), 0, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (stroke.tool === "line" && stroke.points.length >= 2) {
+      const [p0, pn] = [stroke.points[0], stroke.points[stroke.points.length - 1]];
+      ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(pn.x, pn.y); ctx.stroke();
+    } else if (stroke.tool === "text" && stroke.text && stroke.points.length > 0) {
+      ctx.font = `${stroke.width * 4}px Cairo, sans-serif`;
+      ctx.fillText(stroke.text, stroke.points[0].x, stroke.points[0].y);
+    } else if (stroke.points.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+      for (let i = 1; i < stroke.points.length; i++) {
+        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+      }
+      ctx.stroke();
     }
-    return () => clearInterval(id);
-  }, [sessionState, timeRemaining]);
+  }
+  ctx.globalAlpha = 1;
+}
 
-  // ── Resizable divider ──
-  const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
-    isDraggingDivider.current = true;
-    dragStartX.current = e.clientX;
-    dragStartWidth.current = leftWidth;
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-  }, [leftWidth]);
+// ──────────────────────────────────────────────────────────────────────────────
+// Main component
+// ──────────────────────────────────────────────────────────────────────────────
+export default function StudyRoom() {
+  const [location] = useLocation();
+  const params = new URLSearchParams(location.includes("?") ? location.split("?")[1] : "");
+  const initialDossierId = params.get("dossierId") ? parseInt(params.get("dossierId")!, 10) : null;
+  const qc = useQueryClient();
 
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!isDraggingDivider.current || !containerRef.current) return;
-      const cw = containerRef.current.offsetWidth;
-      // RTL: dossier is on the right side of the container
-      const delta = dragStartX.current - e.clientX;
-      setLeftWidth(Math.max(25, Math.min(75, dragStartWidth.current + (delta / cw) * 100)));
-    };
-    const onUp = () => { isDraggingDivider.current = false; document.body.style.cursor = ""; document.body.style.userSelect = ""; };
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
-    return () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
+  // ── Workspace state ─────────────────────────────────────────────────────────
+  const [dossierId, setDossierId] = useState<number | null>(initialDossierId);
+  const [dossierTitle, setDossierTitle] = useState("");
+  const [dossierFileUrl, setDossierFileUrl] = useState<string | null>(null);
+  const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [scale, setScale] = useState(1.3);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState<Tab>("notes");
+
+  // ── Annotation state ─────────────────────────────────────────────────────────
+  const [tool, setTool] = useState<Tool>("hand");
+  const [penColor, setPenColor] = useState(COLORS[0]);
+  const [penWidth, setPenWidth] = useState(WIDTHS[1]);
+  const [strokes, setStrokes] = useState<Map<number, Stroke[]>>(new Map());
+  const [history, setHistory] = useState<Map<number, Stroke[][]>>(new Map());
+  const [redoStack, setRedoStack] = useState<Map<number, Stroke[][]>>(new Map());
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null);
+  const [shapeStart, setShapeStart] = useState<Point | null>(null);
+
+  // ── Refs ──────────────────────────────────────────────────────────────────────
+  const pdfCanvasRef  = useRef<HTMLCanvasElement>(null);
+  const annotCanvasRef = useRef<HTMLCanvasElement>(null);
+  const pageInputRef   = useRef<HTMLInputElement>(null);
+  const workspaceRef   = useRef<HTMLDivElement>(null);
+  const saveTimerRef   = useRef<NodeJS.Timeout | null>(null);
+
+  // ── Notes state ──────────────────────────────────────────────────────────────
+  const [noteText, setNoteText] = useState("");
+  const [noteTitle, setNoteTitle] = useState("");
+  const [editingNote, setEditingNote] = useState<number | null>(null);
+
+  // ── API queries ───────────────────────────────────────────────────────────────
+  const { data: dossiers } = useQuery<{ id: number; title: string; fileUrl?: string; subjectName?: string }[]>({
+    queryKey: ["/api/dossiers"],
+    queryFn: () => customFetch<{ items: { id: number; title: string; fileUrl?: string; subjectName?: string }[] }>("/api/dossiers").then((r) => r.items ?? []),
+  });
+  const { data: notes } = useQuery<NoteItem[]>({
+    queryKey: ["/api/notes", dossierId],
+    queryFn: () => customFetch(`/api/notes?dossierId=${dossierId}`),
+    enabled: !!dossierId,
+  });
+  const { data: bookmarks } = useQuery<Bookmark[]>({
+    queryKey: ["/api/workspace/bookmarks", dossierId],
+    queryFn: () => customFetch(`/api/workspace/bookmarks/${dossierId}`),
+    enabled: !!dossierId,
+  });
+  const { data: tasks } = useQuery<Task[]>({
+    queryKey: ["/api/studyplan/tasks"],
+    queryFn: () => customFetch("/api/studyplan/tasks"),
+  });
+
+  // ── Open dossier ───────────────────────────────────────────────────────────────
+  const openDossier = useCallback((d: { id: number; title: string; fileUrl?: string }) => {
+    setDossierId(d.id);
+    setDossierTitle(d.title);
+    setDossierFileUrl(d.fileUrl ?? null);
+    setCurrentPage(1);
+    setStrokes(new Map());
+    setPdfDoc(null);
+    setPdfError(null);
   }, []);
 
-  // ── Canvas annotation helpers ──
-  const getPos = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const r = annotationCanvasRef.current!.getBoundingClientRect();
-    const scaleX = annotationCanvasRef.current!.width / r.width;
-    const scaleY = annotationCanvasRef.current!.height / r.height;
-    return { x: (e.clientX - r.left) * scaleX, y: (e.clientY - r.top) * scaleY };
-  };
-
-  const onCanvasDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (activeTool === "none") return;
-    const pos = getPos(e);
-    if (activeTool === "pen") {
-      isDrawing.current = true;
-      lastPos.current = pos;
-      const ctx = annotationCanvasRef.current?.getContext("2d");
-      if (!ctx) return;
-      ctx.strokeStyle = isEraser ? "rgba(0,0,0,0)" : penColor;
-      ctx.lineWidth = isEraser ? penSize * 5 : penSize;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      if (isEraser) {
-        ctx.globalCompositeOperation = "destination-out";
-      } else {
-        ctx.globalCompositeOperation = "source-over";
-      }
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, (isEraser ? penSize * 5 : penSize) / 2, 0, Math.PI * 2);
-      ctx.fillStyle = penColor;
-      if (!isEraser) ctx.fill();
-    } else if (activeTool === "select") {
-      selectionStart.current = pos;
-      setSelectionRect(null);
+  // Auto-open dossier from URL param
+  useEffect(() => {
+    if (initialDossierId && dossiers) {
+      const d = dossiers.find((x) => x.id === initialDossierId);
+      if (d) openDossier(d);
     }
+  }, [initialDossierId, dossiers, openDossier]);
+
+  // ── Load PDF ───────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!dossierFileUrl) return;
+    let cancelled = false;
+    setPdfLoading(true);
+    setPdfError(null);
+    setPdfDoc(null);
+
+    const loadingTask = pdfjsLib.getDocument({
+      url: dossierFileUrl,
+      cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/cmaps/`,
+      cMapPacked: true,
+    });
+    loadingTask.promise.then((doc) => {
+      if (cancelled) return;
+      setPdfDoc(doc);
+      setTotalPages(doc.numPages);
+      setPdfLoading(false);
+    }).catch((err) => {
+      if (cancelled) return;
+      console.error("PDF load error", err);
+      setPdfError("تعذّر تحميل الملف. تحقق من الرابط أو حاول مجدداً.");
+      setPdfLoading(false);
+    });
+    return () => { cancelled = true; loadingTask.destroy(); };
+  }, [dossierFileUrl]);
+
+  // ── Load annotations from DB on page change ────────────────────────────────────
+  useEffect(() => {
+    if (!dossierId || !pdfDoc) return;
+    customFetch<{ strokes: Stroke[] }>(`/api/workspace/annotations/${dossierId}/${currentPage}`)
+      .then(({ strokes: saved }) => {
+        setStrokes((prev) => {
+          const next = new Map(prev);
+          if (!next.has(currentPage)) next.set(currentPage, saved);
+          return next;
+        });
+      })
+      .catch(() => {});
+  }, [dossierId, currentPage, pdfDoc]);
+
+  // ── Render PDF page ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!pdfDoc || !pdfCanvasRef.current) return;
+    let cancelled = false;
+    pdfDoc.getPage(currentPage).then((page) => {
+      if (cancelled || !pdfCanvasRef.current) return;
+      const viewport = page.getViewport({ scale });
+      const canvas = pdfCanvasRef.current;
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      page.render({ canvasContext: ctx as any, viewport } as any).promise.then(() => {
+        if (!annotCanvasRef.current) return;
+        annotCanvasRef.current.width = viewport.width;
+        annotCanvasRef.current.height = viewport.height;
+        const annotCtx = annotCanvasRef.current.getContext("2d")!;
+        drawStrokesOnCanvas(annotCtx, strokes.get(currentPage) ?? []);
+      });
+    });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pdfDoc, currentPage, scale]);
+
+  // ── Redraw annotation canvas when strokes change ──────────────────────────────
+  useEffect(() => {
+    if (!annotCanvasRef.current) return;
+    const ctx = annotCanvasRef.current.getContext("2d")!;
+    drawStrokesOnCanvas(ctx, strokes.get(currentPage) ?? []);
+  }, [strokes, currentPage]);
+
+  // ── Auto-save annotations ──────────────────────────────────────────────────────
+  const scheduleSave = useCallback(() => {
+    if (!dossierId) return;
+    setSaveStatus("unsaved");
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      if (!dossierId) return;
+      setSaveStatus("saving");
+      const pageStrokes = strokes.get(currentPage) ?? [];
+      try {
+        await customFetch(`/api/workspace/annotations/${dossierId}/${currentPage}`, {
+          method: "PUT",
+          body: JSON.stringify({ strokes: pageStrokes }),
+          headers: { "Content-Type": "application/json" },
+        });
+        setSaveStatus("saved");
+      } catch { setSaveStatus("unsaved"); }
+    }, SAVE_DEBOUNCE_MS);
+  }, [dossierId, strokes, currentPage]);
+
+  // ── Save progress when page changes ───────────────────────────────────────────
+  useEffect(() => {
+    if (!dossierId || currentPage < 1) return;
+    customFetch(`/api/workspace/progress/${dossierId}`, {
+      method: "PUT", body: JSON.stringify({ lastPage: currentPage }),
+      headers: { "Content-Type": "application/json" },
+    }).catch(() => {});
+  }, [dossierId, currentPage]);
+
+  // ── Canvas drawing helpers ─────────────────────────────────────────────────────
+  const getCanvasPoint = (e: React.PointerEvent<HTMLCanvasElement>): Point => {
+    const rect = annotCanvasRef.current!.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
-  const onCanvasMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (activeTool === "none") return;
-    const pos = getPos(e);
-    if (activeTool === "pen" && isDrawing.current && lastPos.current) {
-      const ctx = annotationCanvasRef.current?.getContext("2d");
-      if (!ctx) return;
-      ctx.beginPath();
-      ctx.moveTo(lastPos.current.x, lastPos.current.y);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-      lastPos.current = pos;
-    } else if (activeTool === "select" && selectionStart.current) {
-      const s = selectionStart.current;
-      setSelectionRect({ x: Math.min(s.x, pos.x), y: Math.min(s.y, pos.y), w: Math.abs(pos.x - s.x), h: Math.abs(pos.y - s.y) });
-    }
+  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (tool === "hand") return;
+    e.preventDefault();
+    const pt = getCanvasPoint(e);
+    const newStroke: Stroke = {
+      id: uid(),
+      tool,
+      color: tool === "eraser" ? "#ffffff" : penColor,
+      width: tool === "highlighter" ? penWidth * 5 : penWidth,
+      opacity: tool === "highlighter" ? 0.3 : 1,
+      points: [pt],
+    };
+    if (["rect", "circle", "line"].includes(tool)) setShapeStart(pt);
+    setCurrentStroke(newStroke);
+    setIsDrawing(true);
+    (e.target as Element).setPointerCapture(e.pointerId);
   };
 
-  const onCanvasUp = () => {
-    isDrawing.current = false;
-    lastPos.current = null;
-    if (activeTool === "pen") {
-      const ctx = annotationCanvasRef.current?.getContext("2d");
-      if (ctx) ctx.globalCompositeOperation = "source-over";
-    }
-  };
+  const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !currentStroke || !annotCanvasRef.current) return;
+    const pt = getCanvasPoint(e);
+    const ctx = annotCanvasRef.current.getContext("2d")!;
 
-  const clearAnnotations = () => {
-    const c = annotationCanvasRef.current;
-    if (!c) return;
-    c.getContext("2d")?.clearRect(0, 0, c.width, c.height);
-    setSelectionRect(null);
-  };
-
-  const clearSelection = () => { setSelectionRect(null); selectionStart.current = null; };
-
-  // Selection → send excerpt to notes
-  const selectionToNote = () => {
-    const ref = selectedDossier?.title ?? localDossierName ?? "الدوسية";
-    const area = selectionRect
-      ? ` (منطقة محددة من الصفحة)`
-      : "";
-    setNoteContent((c) => c + (c ? "\n\n" : "") + `📌 مقتطف من ${ref}${area}:\n`);
-    clearSelection();
-  };
-
-  // ── Session handlers ──
-  const setMode = (mode: string, minutes: number) => { setTimerMode(mode); setTimeRemaining(minutes * 60); setTotalTime(minutes * 60); };
-
-  const handleStart = () => {
-    setStartError(null);
-    const subjectId = selectedSubject ?? subjectsData?.[0]?.id ?? 1;
-    createSession.mutate(
-      { data: { subjectId, type: timerMode, plannedMinutes: totalTime / 60 } },
-      {
-        onSuccess: (data) => { setSessionId(data.id); setSessionState("active"); refetchNotes(); },
-        onError: () => setStartError("حدث خطأ أثناء بدء الجلسة، حاول مرة أخرى."),
-      }
-    );
-  };
-
-  const handlePause = () => { setSessionState("paused"); setPauseCount((p) => p + 1); if (sessionId) updateSession.mutate({ id: sessionId, data: { status: "paused" } }); };
-  const handleResume = () => setSessionState("active");
-  const handleComplete = () => {
-    setSessionState("summary");
-    const actualMinutes = Math.round((totalTime - timeRemaining) / 60);
-    if (sessionId) updateSession.mutate({ id: sessionId, data: { status: "completed", actualMinutes } });
-  };
-  const handleAbort = () => { setSessionState("setup"); if (sessionId) updateSession.mutate({ id: sessionId, data: { status: "abandoned" } }); };
-
-  const handleSaveNote = () => {
-    if (!noteContent.trim()) return;
-    const subjectId = selectedSubject ?? subjectsData?.[0]?.id ?? 1;
-    const title = noteTitle.trim() || `ملاحظة ${new Date().toLocaleDateString("ar")}`;
-    if (editingNoteId) {
-      updateNote.mutate({ id: editingNoteId, data: { title, content: noteContent } }, { onSuccess: () => { showSaved(); refetchNotes(); } });
+    if (["rect", "circle", "line"].includes(tool) && shapeStart) {
+      // Preview shape
+      drawStrokesOnCanvas(ctx, strokes.get(currentPage) ?? []);
+      const previewStroke: Stroke = {
+        ...currentStroke,
+        rect: { x: shapeStart.x, y: shapeStart.y, w: pt.x - shapeStart.x, h: pt.y - shapeStart.y },
+        points: [shapeStart, pt],
+      };
+      drawStrokesOnCanvas(ctx, [...(strokes.get(currentPage) ?? []), previewStroke]);
+      setCurrentStroke((prev) => prev ? { ...prev, points: [shapeStart, pt], rect: { x: shapeStart.x, y: shapeStart.y, w: pt.x - shapeStart.x, h: pt.y - shapeStart.y } } : prev);
     } else {
-      createNote.mutate(
-        { data: { title, content: noteContent, subjectId, dossierId: selectedDossierId ?? undefined, sessionId: sessionId ?? undefined } },
-        { onSuccess: (note) => { setEditingNoteId(note.id); showSaved(); refetchNotes(); } }
-      );
+      // Freehand: draw incrementally
+      const pts = [...currentStroke.points, pt];
+      ctx.globalAlpha = currentStroke.opacity;
+      ctx.strokeStyle = currentStroke.color;
+      ctx.lineWidth = currentStroke.width;
+      ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.beginPath();
+      const last = currentStroke.points[currentStroke.points.length - 1];
+      ctx.moveTo(last.x, last.y); ctx.lineTo(pt.x, pt.y); ctx.stroke();
+      ctx.globalAlpha = 1;
+      setCurrentStroke((prev) => prev ? { ...prev, points: pts } : prev);
     }
   };
 
-  const showSaved = () => { setNoteSaved(true); if (noteSaveTimer.current) clearTimeout(noteSaveTimer.current); noteSaveTimer.current = setTimeout(() => setNoteSaved(false), 2000); };
-  const loadNote = (note: { id: number; title: string; content: string }) => { setEditingNoteId(note.id); setNoteTitle(note.title); setNoteContent(note.content); };
-
-  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (localDossierUrl) URL.revokeObjectURL(localDossierUrl);
-    setLocalDossierUrl(URL.createObjectURL(file));
-    setLocalDossierName(file.name.replace(/\.pdf$/i, ""));
-    setSelectedDossierId(null);
+  const onPointerUp = () => {
+    if (!isDrawing || !currentStroke) return;
+    setIsDrawing(false);
+    // Commit stroke
+    const finishedStroke = currentStroke;
+    setStrokes((prev) => {
+      const next = new Map(prev);
+      const page = next.get(currentPage) ?? [];
+      next.set(currentPage, [...page, finishedStroke]);
+      return next;
+    });
+    setHistory((prev) => {
+      const next = new Map(prev);
+      const pageHist = next.get(currentPage) ?? [];
+      next.set(currentPage, [...pageHist, strokes.get(currentPage) ?? []]);
+      return next;
+    });
+    setRedoStack((prev) => { const n = new Map(prev); n.delete(currentPage); return n; });
+    setCurrentStroke(null);
+    setShapeStart(null);
+    scheduleSave();
   };
 
-  const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
-  const progressPct = ((totalTime - timeRemaining) / totalTime) * 100;
-  const R = 44; const C = 2 * Math.PI * R;
+  // ── Undo / Redo ────────────────────────────────────────────────────────────────
+  const undo = useCallback(() => {
+    setHistory((prevH) => {
+      const pageHist = prevH.get(currentPage) ?? [];
+      if (!pageHist.length) return prevH;
+      const prev = pageHist[pageHist.length - 1];
+      setRedoStack((r) => { const n = new Map(r); n.set(currentPage, [...(r.get(currentPage) ?? []), strokes.get(currentPage) ?? []]); return n; });
+      setStrokes((s) => { const n = new Map(s); n.set(currentPage, prev); return n; });
+      const nextH = new Map(prevH);
+      nextH.set(currentPage, pageHist.slice(0, -1));
+      return nextH;
+    });
+    scheduleSave();
+  }, [currentPage, strokes, scheduleSave]);
 
-  const isPaused = sessionState === "paused";
-  const selectedDossier = dossiersData?.items?.find((d) => d.id === selectedDossierId);
-  const activeDossierUrl = localDossierUrl ?? selectedDossier?.fileUrl ?? null;
-  const activeDossierName = localDossierName ?? selectedDossier?.title ?? null;
+  const redo = useCallback(() => {
+    setRedoStack((prevR) => {
+      const stack = prevR.get(currentPage) ?? [];
+      if (!stack.length) return prevR;
+      const next = stack[stack.length - 1];
+      setHistory((h) => { const n = new Map(h); n.set(currentPage, [...(h.get(currentPage) ?? []), strokes.get(currentPage) ?? []]); return n; });
+      setStrokes((s) => { const n = new Map(s); n.set(currentPage, next); return n; });
+      const nextR = new Map(prevR);
+      nextR.set(currentPage, stack.slice(0, -1));
+      return nextR;
+    });
+    scheduleSave();
+  }, [currentPage, strokes, scheduleSave]);
 
-  // Theme
-  const T = {
-    border: isPaused ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)",
-    subText: isPaused ? "#9ca3af" : "rgba(255,255,255,0.4)",
-    text: isPaused ? "#374151" : "rgba(255,255,255,0.85)",
-    textBright: isPaused ? "#111827" : "#ffffff",
-    panelBg: isPaused ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)",
-    inputBorder: isPaused ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)",
-    inputBg: isPaused ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)",
-    activeTabBg: isPaused ? "rgba(90,45,130,0.12)" : "rgba(90,45,130,0.4)",
-    bg: isPaused ? "#fdf6ee" : "#1E0D33",
+  // ── Bookmark current page ──────────────────────────────────────────────────────
+  const addBookmark = async () => {
+    if (!dossierId) return;
+    await customFetch(`/api/workspace/bookmarks/${dossierId}`, {
+      method: "POST",
+      body: JSON.stringify({ pageNumber: currentPage, title: `صفحة ${currentPage}` }),
+      headers: { "Content-Type": "application/json" },
+    });
+    qc.invalidateQueries({ queryKey: ["/api/workspace/bookmarks", dossierId] });
   };
 
-  const toolBtn = (tool: ActiveTool, icon: React.ReactNode, label: string) => (
-    <button
-      onClick={() => { setActiveTool(activeTool === tool ? "none" : tool); if (tool !== "pen") setIsEraser(false); }}
-      title={label}
-      className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors"
-      style={{ background: activeTool === tool ? "#5A2D82" : T.inputBg, color: activeTool === tool ? "#fff" : T.text, border: `1px solid ${activeTool === tool ? "#5A2D82" : T.inputBorder}` }}
-    >
-      {icon}{label}
-    </button>
+  const deleteBookmark = async (id: number) => {
+    await customFetch(`/api/workspace/bookmarks/${id}`, { method: "DELETE" });
+    qc.invalidateQueries({ queryKey: ["/api/workspace/bookmarks", dossierId] });
+  };
+
+  // ── Add note ───────────────────────────────────────────────────────────────────
+  const saveNote = async () => {
+    if (!noteTitle.trim() || !dossierId) return;
+    await customFetch("/api/notes", {
+      method: "POST",
+      body: JSON.stringify({
+        title: noteTitle,
+        content: noteText,
+        dossierId,
+        subjectId: 1,
+        tags: [],
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+    setNoteTitle(""); setNoteText("");
+    qc.invalidateQueries({ queryKey: ["/api/notes", dossierId] });
+  };
+
+  const deleteNote = async (id: number) => {
+    await customFetch(`/api/notes/${id}`, { method: "DELETE" });
+    qc.invalidateQueries({ queryKey: ["/api/notes", dossierId] });
+  };
+
+  const isBookmarked = useMemo(
+    () => bookmarks?.some((b) => b.pageNumber === currentPage),
+    [bookmarks, currentPage]
   );
 
-  // ══════════ SETUP ══════════
-  if (sessionState === "setup") {
+  const navigatePage = (n: number) => setCurrentPage(Math.min(totalPages, Math.max(1, n)));
+
+  // ──────────────────────────────────────────────────────────────────────────────
+  // Render
+  // ──────────────────────────────────────────────────────────────────────────────
+  const bg = isDark ? "bg-[#1a1a2e]" : "bg-[#f0ede8]";
+  const toolbarBg = isDark ? "bg-[#16213e]/95 border-white/10" : "bg-white/95 border-gray-200/80";
+  const sidebarBg = isDark ? "bg-[#16213e] border-white/10" : "bg-white border-gray-200/60";
+
+  // Dossier picker (no dossier selected)
+  if (!dossierId) {
     return (
-      <>
-        <Header />
-        <div className="min-h-screen bg-background pt-[72px] p-4 flex items-center justify-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-full h-1/2 bg-primary/5 rounded-full blur-3xl -z-10" />
-          <div className="w-full max-w-2xl">
-            <Card className="border-white/60 shadow-2xl p-8 bg-white/80 backdrop-blur-xl">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4"><Focus className="w-8 h-8" /></div>
-                <h1 className="text-3xl font-black mb-2">غرفة التركيز والدراسة</h1>
-                <p className="text-muted-foreground">بيئة خالية من المشتتات لرفع إنتاجيتك لأقصى حد.</p>
-              </div>
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-bold mb-3">اختر نظام المؤقت</h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { mode: "pomodoro", min: 25, label: "بومودورو", sub: "تركيز عالي", color: "text-primary", border: "border-primary", bg: "bg-primary/5" },
-                      { mode: "balanced", min: 45, label: "متوازن", sub: "حصة دراسية", color: "text-secondary", border: "border-secondary", bg: "bg-secondary/5" },
-                      { mode: "deep_focus", min: 60, label: "عميق", sub: "لحل الامتحانات", color: "text-accent", border: "border-accent", bg: "bg-accent/5" },
-                    ].map(({ mode, min, label, sub, color, border, bg }) => (
-                      <button key={mode} onClick={() => setMode(mode, min)}
-                        className={`p-4 rounded-xl border-2 text-center transition-all ${timerMode === mode ? `${border} ${bg} shadow-sm` : "border-black/5 hover:border-black/10 bg-white"}`}>
-                        <div className={`text-2xl font-black ${color} mb-1`}>{min}</div>
-                        <div className="text-sm font-bold">{label}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{sub}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-bold mb-3">الدوسية (اختياري)</h3>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <select value={selectedDossierId ?? ""}
-                        onChange={(e) => { setSelectedDossierId(e.target.value ? Number(e.target.value) : null); setLocalDossierUrl(null); setLocalDossierName(null); }}
-                        className="w-full px-4 py-2.5 rounded-lg border border-black/10 bg-white text-sm appearance-none focus:outline-none focus:border-primary/50" dir="rtl">
-                        <option value="">{localDossierName ? `📄 ${localDossierName}` : "بدون دوسية محددة"}</option>
-                        {dossiersData?.items?.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
-                      </select>
-                      <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    </div>
-                    <button onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-black/10 bg-white text-sm font-medium hover:bg-primary/5 hover:border-primary/30 transition-colors">
-                      <Upload className="w-4 h-4" />استيراد
-                    </button>
-                    <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={handleFileImport} />
-                  </div>
-                  {localDossierName && <p className="text-xs text-primary mt-1.5">📄 {localDossierName} — سيُعرض في الجلسة</p>}
-                </div>
-                {startError && <p className="text-sm text-destructive text-center bg-destructive/5 border border-destructive/20 rounded-lg py-2 px-4">{startError}</p>}
-                <Button size="lg" className="w-full text-lg h-14 shadow-xl shadow-primary/20" onClick={handleStart} disabled={createSession.isPending}>
-                  {createSession.isPending ? "جاري التحضير..." : "ابدأ الجلسة الآن"}
-                </Button>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  // ══════════ SUMMARY ══════════
-  if (sessionState === "summary") {
-    const actualMinutes = Math.round((totalTime - timeRemaining) / 60);
-    return (
-      <>
-        <Header />
-        <div className="min-h-screen bg-background pt-[72px] p-4 flex items-center justify-center">
-          <Card className="w-full max-w-md p-8 border-white/60 shadow-2xl text-center">
-            <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 className="w-10 h-10" /></div>
-            <h2 className="text-3xl font-black mb-2">أحسنت صنعاً!</h2>
-            <p className="text-muted-foreground mb-8">لقد أكملت جلسة دراسية بنجاح.</p>
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="bg-muted p-4 rounded-2xl"><div className="text-sm text-muted-foreground mb-1">وقت الدراسة</div><div className="text-2xl font-black text-primary">{actualMinutes} دقيقة</div></div>
-              <div className="bg-muted p-4 rounded-2xl"><div className="text-sm text-muted-foreground mb-1">مرات التوقف</div><div className="text-2xl font-black text-secondary">{pauseCount}</div></div>
+      <div className="h-screen flex items-center justify-center bg-[#f0ede8]">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <FileText className="w-6 h-6 text-primary" />
             </div>
-            <div className="space-y-4 mb-8">
-              <h4 className="font-bold">كيف تقيم مستوى تركيزك؟</h4>
-              <div className="flex justify-center gap-2 text-primary">
-                {["bad","ok","good","great"].map((level, i) => (
-                  <button key={level} className="p-3 rounded-xl border border-primary/20 hover:bg-primary/5 transition-colors font-bold text-sm"
-                    onClick={() => updateSession.mutate({ id: sessionId!, data: { focusLevel: level } })}>
-                    {["ضعيف","متوسط","جيد","ممتاز"][i]}
-                  </button>
-                ))}
-              </div>
+            <div>
+              <h1 className="font-black text-xl text-gray-900">غرفة الدراسة</h1>
+              <p className="text-sm text-gray-500">اختر دوسية لتبدأ</p>
             </div>
-            <Button className="w-full" onClick={() => setSessionState("setup")}>جلسة جديدة</Button>
-          </Card>
-        </div>
-      </>
-    );
-  }
-
-  // ══════════ ACTIVE / PAUSED ══════════
-  return (
-    <>
-      <Header />
-      <div className="flex flex-col pt-[72px]" style={{ height: "100vh", background: T.bg }}>
-
-        {/* ── TIMER STRIP ── */}
-        <div className="flex items-center justify-between px-6 py-3 shrink-0"
-          style={{ borderBottom: `1px solid ${T.border}`, background: isPaused ? "rgba(251,146,60,0.06)" : "rgba(255,255,255,0.03)" }}>
-          <div className={`px-3 py-1 rounded-full text-xs font-bold ${isPaused ? "bg-orange-200 text-orange-800" : "bg-white/10 text-white border border-white/20"}`}>
-            {isPaused ? "الجلسة متوقفة مؤقتاً" : "جلسة تركيز نشطة"}
           </div>
-          <div className="flex items-center gap-3">
-            <svg width="52" height="52" className="-rotate-90">
-              <circle cx="26" cy="26" r={R} stroke={isPaused ? "#fed7aa" : "rgba(255,255,255,0.12)"} strokeWidth="5" fill="none" />
-              <motion.circle cx="26" cy="26" r={R} stroke={isPaused ? "#f97316" : "#5A2D82"} strokeWidth="5" fill="none"
-                strokeLinecap="round" strokeDasharray={C} animate={{ strokeDashoffset: C - (progressPct / 100) * C }} transition={{ duration: 1, ease: "linear" }} />
-            </svg>
-            <span className="text-4xl font-black tabular-nums tracking-widest" style={{ color: isPaused ? "#7c2d12" : "#ffffff" }} dir="ltr">{formatTime(timeRemaining)}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={handleAbort} className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors ${isPaused ? "border-orange-300 text-orange-700 hover:bg-orange-100" : "border-white/20 text-white/70 hover:bg-white/10"}`}><Square className="w-4 h-4 fill-current" /></button>
-            {isPaused
-              ? <button onClick={handleResume} className="w-11 h-11 rounded-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center shadow-lg"><Play className="w-5 h-5 fill-current ml-0.5" /></button>
-              : <button onClick={handlePause} className="w-11 h-11 rounded-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center shadow-lg"><Pause className="w-5 h-5 fill-current" /></button>}
-            <button onClick={handleComplete} className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors ${isPaused ? "border-orange-300 text-orange-700 hover:bg-orange-100" : "border-white/20 text-white/70 hover:bg-white/10"}`}><CheckCircle2 className="w-4 h-4" /></button>
-          </div>
-        </div>
-
-        {/* ── SPLIT PANEL ── */}
-        <div ref={containerRef} className="flex flex-1 overflow-hidden" dir="rtl">
-
-          {/* LEFT — Dossier + Annotation overlay */}
-          <div className="flex flex-col overflow-hidden" style={{ width: `${leftWidth}%` }}>
-
-            {/* Dossier header row */}
-            <div className="flex items-center gap-2 px-3 py-2 shrink-0"
-              style={{ borderBottom: `1px solid ${T.border}`, background: T.panelBg }}>
-              <BookOpen className="w-4 h-4 shrink-0" style={{ color: T.subText }} />
-              <div className="relative flex-1">
-                <select value={selectedDossierId ?? ""}
-                  onChange={(e) => { setSelectedDossierId(e.target.value ? Number(e.target.value) : null); setLocalDossierUrl(null); setLocalDossierName(null); }}
-                  className="w-full text-sm font-medium pr-2 pl-5 py-1 rounded-lg border appearance-none focus:outline-none bg-transparent"
-                  style={{ borderColor: T.inputBorder, color: T.text, background: T.inputBg }} dir="rtl">
-                  <option value="">{localDossierName ? `📄 ${localDossierName}` : "— اختر دوسية —"}</option>
-                  {dossiersData?.items?.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
-                </select>
-                <ChevronDown className="absolute left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none" style={{ color: T.subText }} />
-              </div>
-              <button onClick={() => fileInputRef.current?.click()} title="استيراد PDF"
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium shrink-0 transition-colors"
-                style={{ border: `1px solid ${T.inputBorder}`, color: T.text, background: T.inputBg }}>
-                <Upload className="w-3 h-3" />استيراد
-              </button>
-              <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={handleFileImport} />
-            </div>
-
-            {/* Annotation toolbar */}
-            <div className="flex items-center gap-2 px-3 py-1.5 shrink-0 flex-wrap"
-              style={{ borderBottom: `1px solid ${T.border}`, background: isPaused ? "rgba(0,0,0,0.015)" : "rgba(255,255,255,0.015)" }}>
-              {/* Tool buttons */}
-              {toolBtn("pen", <Pen className="w-3 h-3" />, "قلم")}
-              {toolBtn("select", <MousePointer2 className="w-3 h-3" />, "تحديد")}
-
-              {/* Pen options — only when pen active */}
-              {activeTool === "pen" && (
-                <>
-                  <div className="w-px h-4" style={{ background: T.border }} />
-                  {/* Colors */}
-                  <div className="flex gap-1.5">
-                    {["#f97316","#ef4444","#3b82f6","#22c55e","#a855f7","#ffffff","#000000"].map((c) => (
-                      <button key={c} onClick={() => { setPenColor(c); setIsEraser(false); }}
-                        className="w-4 h-4 rounded-full border-2 transition-transform hover:scale-110 shrink-0"
-                        style={{ background: c, borderColor: penColor === c && !isEraser ? (isPaused ? "#374151" : "#ffffff") : "transparent" }} />
-                    ))}
+          {dossiers?.length === 0 ? (
+            <p className="text-center text-gray-400 py-8 text-sm">لا توجد دوسيات متاحة بعد.</p>
+          ) : (
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {dossiers?.map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() => openDossier(d)}
+                  className="w-full text-right px-4 py-3 rounded-2xl border border-gray-100 hover:border-primary/30 hover:bg-primary/5 transition-all flex items-center gap-3 group"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4 text-primary" />
                   </div>
-                  <div className="w-px h-4" style={{ background: T.border }} />
-                  {/* Size */}
-                  <button onClick={() => setPenSize((p) => Math.max(1, p - 1))} className="w-5 h-5 flex items-center justify-center rounded" style={{ color: T.subText }}><Minus className="w-3 h-3" /></button>
-                  <span className="text-xs w-4 text-center tabular-nums" style={{ color: T.text }}>{penSize}</span>
-                  <button onClick={() => setPenSize((p) => Math.min(24, p + 1))} className="w-5 h-5 flex items-center justify-center rounded" style={{ color: T.subText }}><Plus className="w-3 h-3" /></button>
-                  <div className="w-px h-4" style={{ background: T.border }} />
-                  {/* Eraser */}
-                  <button onClick={() => setIsEraser((e) => !e)}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium transition-colors"
-                    style={{ background: isEraser ? T.activeTabBg : T.inputBg, color: isEraser ? T.textBright : T.subText, border: `1px solid ${T.inputBorder}` }}>
-                    <Eraser className="w-3 h-3" />ممحاة
-                  </button>
-                </>
-              )}
-
-              {/* Selection action */}
-              {activeTool === "select" && selectionRect && (
-                <>
-                  <div className="w-px h-4" style={{ background: T.border }} />
-                  <button onClick={selectionToNote}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium transition-colors"
-                    style={{ background: "#5A2D82", color: "#fff" }}>
-                    <FileText className="w-3 h-3" />أضف للملاحظات
-                  </button>
-                  <button onClick={clearSelection} className="text-xs px-1.5 py-0.5 rounded-lg" style={{ color: T.subText, background: T.inputBg }}>إلغاء</button>
-                </>
-              )}
-
-              {/* Clear all annotations */}
-              {activeTool !== "none" && (
-                <button onClick={clearAnnotations} className="mr-auto" title="مسح التعليقات" style={{ color: T.subText }}>
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm text-gray-900 truncate">{d.title}</div>
+                    {d.subjectName && <div className="text-xs text-gray-400">{d.subjectName}</div>}
+                  </div>
+                  <ChevronLeft className="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors" />
                 </button>
-              )}
-
-              {/* Tool off hint */}
-              {activeTool !== "none" && (
-                <span className="text-xs mr-1" style={{ color: T.subText }}>
-                  {activeTool === "pen" ? "اضغط خارج القلم للتفاعل مع الـ PDF" : "اسحب لتحديد منطقة"}
-                </span>
-              )}
+              ))}
             </div>
-
-            {/* Dossier content + annotation canvas overlay */}
-            <div className="flex-1 relative overflow-hidden">
-              {activeDossierUrl ? (
-                <iframe src={activeDossierUrl} className="absolute inset-0 w-full h-full border-0" title={activeDossierName ?? "دوسية"} style={{ pointerEvents: activeTool !== "none" ? "none" : "auto" }} />
-              ) : selectedDossier ? (
-                <div className="absolute inset-0 overflow-auto p-6">
-                  <h2 className="text-xl font-black mb-3" style={{ color: T.textBright }}>{selectedDossier.title}</h2>
-                  {selectedDossier.description && <p className="text-sm leading-relaxed" style={{ color: T.text }}>{selectedDossier.description}</p>}
-                </div>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center">
-                  <BookOpen className="w-12 h-12 opacity-20" style={{ color: isPaused ? "#374151" : "#ffffff" }} />
-                  <p className="text-sm" style={{ color: T.subText }}>اختر دوسية أو استورد ملف PDF</p>
-                </div>
-              )}
-
-              {/* Annotation canvas overlay */}
-              <canvas
-                ref={annotationCanvasRef}
-                width={1200} height={900}
-                style={{
-                  position: "absolute", inset: 0, width: "100%", height: "100%",
-                  pointerEvents: activeTool !== "none" ? "all" : "none",
-                  cursor: activeTool === "pen" ? (isEraser ? "cell" : "crosshair") : activeTool === "select" ? "crosshair" : "default",
-                  touchAction: "none",
-                }}
-                onMouseDown={onCanvasDown}
-                onMouseMove={onCanvasMove}
-                onMouseUp={onCanvasUp}
-                onMouseLeave={onCanvasUp}
-              />
-
-              {/* Selection rectangle visual */}
-              {activeTool === "select" && selectionRect && (() => {
-                const c = annotationCanvasRef.current;
-                if (!c) return null;
-                const r = c.getBoundingClientRect();
-                const scaleX = r.width / c.width;
-                const scaleY = r.height / c.height;
-                return (
-                  <div style={{
-                    position: "absolute",
-                    left: selectionRect.x * scaleX,
-                    top: selectionRect.y * scaleY,
-                    width: selectionRect.w * scaleX,
-                    height: selectionRect.h * scaleY,
-                    border: "2px dashed #5A2D82",
-                    background: "rgba(90,45,130,0.12)",
-                    pointerEvents: "none",
-                  }} />
-                );
-              })()}
-            </div>
-          </div>
-
-          {/* ── DIVIDER ── */}
-          <div onMouseDown={handleDividerMouseDown}
-            className="w-1 shrink-0 cursor-col-resize flex items-center justify-center group"
-            style={{ background: T.border }}>
-            <div className="w-3 h-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ background: isPaused ? "rgba(90,45,130,0.25)" : "rgba(90,45,130,0.5)" }} />
-          </div>
-
-          {/* RIGHT — Notes (text only) */}
-          <div className="flex flex-col overflow-hidden flex-1" style={{ background: T.panelBg }}>
-
-            {/* Notes header */}
-            <div className="flex items-center justify-between px-3 py-2.5 shrink-0"
-              style={{ borderBottom: `1px solid ${T.border}` }}>
-              <div className="flex items-center gap-2">
-                <FileText className="w-3.5 h-3.5" style={{ color: T.subText }} />
-                <span className="text-xs font-bold" style={{ color: T.text }}>دفتر الملاحظات</span>
-                {(selectedDossier || localDossierName) && (
-                  <span className="text-xs px-1.5 py-0.5 rounded-full truncate max-w-[90px]"
-                    style={{ background: isPaused ? "#f3f4f6" : "rgba(255,255,255,0.1)", color: isPaused ? "#6b7280" : "rgba(255,255,255,0.4)" }}>
-                    {localDossierName ?? selectedDossier?.title}
-                  </span>
-                )}
-              </div>
-              {editingNoteId && (
-                <button onClick={() => { setEditingNoteId(null); setNoteTitle(""); setNoteContent(""); }}
-                  className="text-xs px-2 py-0.5 rounded-lg" style={{ color: T.subText, background: T.inputBg }}>
-                  + جديد
-                </button>
-              )}
-            </div>
-
-            {/* Saved notes */}
-            {notesData && notesData.length > 0 && (
-              <div className="shrink-0 overflow-y-auto" style={{ maxHeight: "130px", borderBottom: `1px solid ${T.border}` }}>
-                {notesData.map((note) => (
-                  <button key={note.id} onClick={() => loadNote(note)}
-                    className="w-full text-right px-3 py-2 flex items-start gap-2 transition-colors"
-                    style={{ background: editingNoteId === note.id ? T.activeTabBg : "transparent", borderBottom: `1px solid ${T.border}` }}>
-                    <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: isPaused ? "#5A2D82" : "rgba(90,45,130,0.8)" }} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold truncate" style={{ color: T.text }}>{note.title}</p>
-                      <p className="text-xs truncate mt-0.5" style={{ color: T.subText }}>{note.content.slice(0, 55)}…</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Note editor */}
-            <div className="flex flex-col flex-1 px-3 pt-3 pb-3 gap-2 overflow-hidden">
-              <input type="text" value={noteTitle} onChange={(e) => setNoteTitle(e.target.value)}
-                placeholder="عنوان الملاحظة..."
-                className="w-full text-sm font-semibold px-3 py-1.5 rounded-lg border bg-transparent focus:outline-none focus:ring-1 focus:ring-primary/50"
-                style={{ borderColor: T.inputBorder, color: T.textBright }} dir="rtl" />
-              <textarea value={noteContent} onChange={(e) => setNoteContent(e.target.value)}
-                placeholder="اكتب ملاحظتك هنا… أو حدّد منطقة في الدوسية وأضفها مباشرةً."
-                className="flex-1 w-full text-sm px-3 py-2 rounded-lg border bg-transparent resize-none focus:outline-none focus:ring-1 focus:ring-primary/50 leading-relaxed"
-                style={{ borderColor: T.inputBorder, color: isPaused ? "#111827" : "rgba(255,255,255,0.9)", minHeight: 0 }}
-                dir="rtl" />
-              <button onClick={handleSaveNote} disabled={!noteContent.trim() || createNote.isPending || updateNote.isPending}
-                className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-40"
-                style={{ background: noteSaved ? "#2FA84F" : "#5A2D82", color: "#ffffff" }}>
-                {noteSaved ? <><CheckCircle2 className="w-4 h-4" />تم الحفظ</> : <><Save className="w-4 h-4" />{editingNoteId ? "تحديث" : "حفظ"}</>}
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div
+      ref={workspaceRef}
+      className={`${isFullscreen ? "fixed inset-0 z-50" : "h-screen"} flex flex-col ${bg} overflow-hidden`}
+      style={{ fontFamily: "Cairo, sans-serif" }}
+    >
+      {/* ── TOP TOOLBAR ── */}
+      <header className={`${toolbarBg} border-b backdrop-blur-xl shrink-0 h-12 flex items-center px-3 gap-2 z-10`}>
+        {/* Back / Dossier selector */}
+        <button
+          onClick={() => setDossierId(null)}
+          className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors text-gray-500"
+          title="اختر دوسية أخرى"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+
+        <button
+          onClick={() => setSidebarOpen((v) => !v)}
+          className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors"
+          title={sidebarOpen ? "أخفِ الشريط" : "أظهر الشريط"}
+        >
+          <AlignLeft className="w-4 h-4 text-gray-600" />
+        </button>
+
+        <div className="h-4 w-px bg-gray-200 mx-1" />
+
+        {/* Title + page */}
+        <div className="flex-1 min-w-0">
+          <span className="font-bold text-sm text-gray-900 truncate block">{dossierTitle}</span>
+        </div>
+
+        {/* Page navigation */}
+        {pdfDoc && (
+          <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-0.5">
+            <button onClick={() => navigatePage(currentPage - 1)} className="p-0.5 hover:text-primary" disabled={currentPage <= 1}>
+              <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+            </button>
+            <input
+              ref={pageInputRef}
+              type="number"
+              value={currentPage}
+              min={1} max={totalPages}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                const v = parseInt(e.target.value, 10);
+                if (!isNaN(v)) navigatePage(v);
+              }}
+              className="w-10 text-center text-xs font-bold bg-transparent outline-none"
+            />
+            <span className="text-xs text-gray-400">/ {totalPages}</span>
+            <button onClick={() => navigatePage(currentPage + 1)} className="p-0.5 hover:text-primary" disabled={currentPage >= totalPages}>
+              <ChevronLeft className="w-3.5 h-3.5 text-gray-500" />
+            </button>
+          </div>
+        )}
+
+        {/* Zoom */}
+        {pdfDoc && (
+          <div className="flex items-center gap-1">
+            <button onClick={() => setScale((s) => Math.max(0.5, s - 0.2))} className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+              <ZoomOut className="w-3.5 h-3.5 text-gray-500" />
+            </button>
+            <span className="text-xs font-semibold text-gray-600 w-10 text-center">{Math.round(scale * 100)}%</span>
+            <button onClick={() => setScale((s) => Math.min(3, s + 0.2))} className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+              <ZoomIn className="w-3.5 h-3.5 text-gray-500" />
+            </button>
+          </div>
+        )}
+
+        <div className="h-4 w-px bg-gray-200 mx-1" />
+
+        {/* Undo / Redo */}
+        <button onClick={undo} disabled={!(history.get(currentPage)?.length)} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-gray-100 disabled:opacity-30">
+          <Undo2 className="w-4 h-4 text-gray-600" />
+        </button>
+        <button onClick={redo} disabled={!(redoStack.get(currentPage)?.length)} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-gray-100 disabled:opacity-30">
+          <Redo2 className="w-4 h-4 text-gray-600" />
+        </button>
+
+        {/* Bookmark */}
+        <button
+          onClick={addBookmark}
+          className={`w-8 h-8 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors ${isBookmarked ? "text-accent" : "text-gray-400"}`}
+          title="إضافة إشارة مرجعية"
+        >
+          {isBookmarked ? <Bookmark className="w-4 h-4 fill-current" /> : <BookmarkPlus className="w-4 h-4" />}
+        </button>
+
+        {/* Save status */}
+        <div className="flex items-center gap-1 text-xs text-gray-400">
+          {saveStatus === "saving" && <Loader2 className="w-3 h-3 animate-spin" />}
+          {saveStatus === "saved" && <Save className="w-3 h-3 text-green-500" />}
+          {saveStatus === "unsaved" && <div className="w-2 h-2 rounded-full bg-amber-400" />}
+        </div>
+
+        {/* Fullscreen */}
+        <button onClick={() => setIsFullscreen((v) => !v)} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-gray-100">
+          {isFullscreen ? <Minimize2 className="w-4 h-4 text-gray-500" /> : <Maximize2 className="w-4 h-4 text-gray-500" />}
+        </button>
+      </header>
+
+      {/* ── BODY ── */}
+      <div className="flex flex-1 min-h-0">
+        {/* ── LEFT SIDEBAR ── */}
+        {sidebarOpen && (
+          <aside className={`${sidebarBg} border-l flex flex-col w-72 shrink-0`} style={{ direction: "rtl" }}>
+            {/* Tabs */}
+            <div className="flex border-b border-gray-100 shrink-0">
+              {([ ["notes", StickyNote, "ملاحظات"], ["tasks", ListTodo, "مهام"], ["bookmarks", Bookmark, "إشارات"], ["files", FolderOpen, "ملفات"] ] as [Tab, React.ElementType, string][]).map(([tab, Icon, label]) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 py-2.5 flex flex-col items-center gap-0.5 text-xs font-semibold transition-colors border-b-2 ${
+                    activeTab === tab
+                      ? "border-primary text-primary bg-primary/5"
+                      : "border-transparent text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="text-[10px]">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Tab content */}
+            <div className="flex-1 overflow-y-auto p-3">
+              {/* NOTES */}
+              {activeTab === "notes" && (
+                <div className="space-y-3">
+                  <div className="bg-gray-50 rounded-2xl p-3 space-y-2 border border-gray-100">
+                    <input
+                      value={noteTitle}
+                      onChange={(e) => setNoteTitle(e.target.value)}
+                      placeholder="عنوان الملاحظة"
+                      className="w-full text-sm font-semibold bg-transparent outline-none placeholder:text-gray-300"
+                    />
+                    <textarea
+                      value={noteText}
+                      onChange={(e) => setNoteText(e.target.value)}
+                      placeholder="اكتب ملاحظتك هنا..."
+                      rows={3}
+                      className="w-full text-sm bg-transparent outline-none resize-none placeholder:text-gray-300"
+                    />
+                    <button
+                      onClick={saveNote}
+                      disabled={!noteTitle.trim()}
+                      className="w-full py-1.5 rounded-xl bg-primary text-white text-xs font-bold disabled:opacity-40 hover:bg-primary/90 transition-colors"
+                    >
+                      حفظ الملاحظة
+                    </button>
+                  </div>
+                  {notes?.length === 0 && (
+                    <p className="text-center text-gray-300 text-xs py-4">لا توجد ملاحظات للدوسية</p>
+                  )}
+                  {notes?.map((n) => (
+                    <div key={n.id} className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-semibold text-sm text-gray-900 truncate">{n.title}</div>
+                        <button onClick={() => deleteNote(n.id)} className="text-gray-300 hover:text-red-400 shrink-0">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {n.content && <p className="text-xs text-gray-500 mt-1 line-clamp-3">{n.content}</p>}
+                      <div className="text-[10px] text-gray-300 mt-2">
+                        {new Date(n.createdAt).toLocaleDateString("ar-SA")}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* TASKS */}
+              {activeTab === "tasks" && (
+                <div className="space-y-2">
+                  {!tasks?.length && (
+                    <p className="text-center text-gray-300 text-xs py-4">لا توجد مهام مجدولة</p>
+                  )}
+                  {tasks?.slice(0, 20).map((t) => (
+                    <div key={t.id} className={`rounded-2xl border p-3 ${t.status === "completed" ? "bg-green-50 border-green-100" : "bg-white border-gray-100"}`}>
+                      <div className={`text-sm font-semibold ${t.status === "completed" ? "line-through text-gray-400" : "text-gray-800"}`}>{t.title}</div>
+                      <div className="text-[10px] text-gray-400 mt-1">
+                        {new Date(t.scheduledAt).toLocaleDateString("ar-SA")}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* BOOKMARKS */}
+              {activeTab === "bookmarks" && (
+                <div className="space-y-2">
+                  {!bookmarks?.length && (
+                    <p className="text-center text-gray-300 text-xs py-4">لا توجد إشارات مرجعية</p>
+                  )}
+                  {bookmarks?.map((b) => (
+                    <div key={b.id} className="bg-white rounded-2xl border border-gray-100 p-3 flex items-center gap-2">
+                      <button
+                        onClick={() => navigatePage(b.pageNumber)}
+                        className="flex-1 text-right"
+                      >
+                        <div className="font-semibold text-sm text-gray-900">{b.title}</div>
+                        <div className="text-xs text-primary">صفحة {b.pageNumber}</div>
+                      </button>
+                      <button onClick={() => deleteBookmark(b.id)} className="text-gray-200 hover:text-red-400">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* QUICK FILES */}
+              {activeTab === "files" && (
+                <div className="space-y-2">
+                  {dossiers?.map((d) => (
+                    <button
+                      key={d.id}
+                      onClick={() => openDossier(d)}
+                      className={`w-full text-right px-3 py-2.5 rounded-2xl border transition-all flex items-center gap-2.5 ${
+                        d.id === dossierId
+                          ? "border-primary/30 bg-primary/5 text-primary"
+                          : "border-gray-100 hover:border-gray-200 text-gray-700"
+                      }`}
+                    >
+                      <FileText className="w-4 h-4 shrink-0" />
+                      <span className="text-sm font-medium truncate">{d.title}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </aside>
+        )}
+
+        {/* ── CENTER: PDF + ANNOTATIONS ── */}
+        <main className="flex-1 min-w-0 relative overflow-auto flex items-start justify-center py-6">
+          {/* States */}
+          {!dossierFileUrl && (
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-8">
+              <div className="w-20 h-20 rounded-3xl bg-gray-100 flex items-center justify-center">
+                <FileText className="w-10 h-10 text-gray-300" />
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-700 mb-1">لا يوجد ملف PDF</h2>
+                <p className="text-sm text-gray-400">هذه الدوسية لا تحتوي على ملف PDF. يمكن للمشرف رفع الملف من لوحة التحكم.</p>
+              </div>
+            </div>
+          )}
+
+          {pdfLoading && (
+            <div className="flex flex-col items-center justify-center h-full gap-3">
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+              <p className="text-gray-500 text-sm">جاري تحميل الملف...</p>
+            </div>
+          )}
+
+          {pdfError && (
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-8">
+              <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center">
+                <X className="w-8 h-8 text-red-400" />
+              </div>
+              <p className="text-red-500 text-sm">{pdfError}</p>
+            </div>
+          )}
+
+          {/* PDF Canvas + Annotation overlay */}
+          {pdfDoc && !pdfLoading && !pdfError && (
+            <div
+              className="relative shadow-2xl rounded-lg overflow-hidden"
+              style={{ background: isDark ? "#2d2d2d" : "#fff" }}
+            >
+              {/* PDF page canvas */}
+              <canvas ref={pdfCanvasRef} style={{ display: "block" }} />
+
+              {/* Annotation canvas on top */}
+              <canvas
+                ref={annotCanvasRef}
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onPointerLeave={onPointerUp}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  cursor: tool === "hand"
+                    ? "default"
+                    : tool === "eraser"
+                    ? "cell"
+                    : "crosshair",
+                  touchAction: tool === "hand" ? "auto" : "none",
+                  pointerEvents: tool === "hand" ? "none" : "auto",
+                }}
+              />
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* ── BOTTOM ANNOTATION TOOLBAR ── */}
+      {pdfDoc && (
+        <footer className={`${toolbarBg} border-t backdrop-blur-xl shrink-0 h-14 flex items-center justify-center gap-2 px-4`}>
+          {/* Tools */}
+          {([
+            ["hand",        Hand,        "تصفح"],
+            ["pen",         Pencil,       "قلم"],
+            ["highlighter", Highlighter,  "تظليل"],
+            ["eraser",      Eraser,       "ممحاة"],
+            ["rect",        Square,       "مستطيل"],
+            ["circle",      CircleIcon,   "دائرة"],
+            ["line",        Minus,        "خط"],
+          ] as [Tool, React.ElementType, string][]).map(([t, Icon, label]) => (
+            <button
+              key={t}
+              title={label}
+              onClick={() => setTool(t)}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                tool === t
+                  ? "bg-primary text-white shadow-lg scale-110"
+                  : "text-gray-500 hover:bg-gray-100"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+            </button>
+          ))}
+
+          <div className="h-6 w-px bg-gray-200 mx-1" />
+
+          {/* Colors */}
+          {(tool === "highlighter" ? HIGHLIGHT_COLORS : COLORS).map((c) => (
+            <button
+              key={c}
+              onClick={() => setPenColor(c)}
+              className={`w-6 h-6 rounded-full border-2 transition-transform ${penColor === c ? "border-primary scale-125" : "border-gray-200"}`}
+              style={{ background: c }}
+            />
+          ))}
+
+          <div className="h-6 w-px bg-gray-200 mx-1" />
+
+          {/* Stroke width */}
+          {WIDTHS.map((w) => (
+            <button
+              key={w}
+              onClick={() => setPenWidth(w)}
+              className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${penWidth === w ? "bg-gray-100 ring-2 ring-primary" : "hover:bg-gray-50"}`}
+            >
+              <div
+                className="rounded-full bg-gray-700"
+                style={{ width: Math.min(w * 1.5, 16), height: Math.min(w * 1.5, 16) }}
+              />
+            </button>
+          ))}
+        </footer>
+      )}
+    </div>
   );
 }

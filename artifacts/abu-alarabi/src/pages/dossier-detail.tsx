@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { useLocation } from "wouter";
 import { 
   ChevronRight, 
   Heart, 
@@ -21,13 +22,15 @@ import {
   FileText, 
   Share2, 
   CheckCircle2,
-  ChevronLeft
+  ChevronLeft,
+  Pencil
 } from "lucide-react";
 
 export default function DossierDetail() {
   const { id } = useParams();
   const dossierId = parseInt(id || "0", 10);
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   
   const [isReading, setIsReading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -178,23 +181,34 @@ export default function DossierDetail() {
                 )}
               </div>
               
-              <div className="flex gap-2">
-                <Button 
-                  size="lg" 
-                  className="flex-1 gap-2 text-lg shadow-primary/30"
-                  onClick={handleStartReading}
+              <div className="space-y-2">
+                {/* Study Room button — primary CTA */}
+                <Button
+                  size="lg"
+                  className="w-full gap-2 text-base font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
+                  onClick={() => setLocation(`/study-room?dossierId=${dossierId}`)}
                 >
-                  <BookOpen className="w-5 h-5" /> ابدأ القراءة
+                  <Pencil className="w-5 h-5" /> ادرس الآن في غرفة الدراسة
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className={`w-14 shrink-0 transition-colors ${dossier.isFavorite ? 'border-destructive text-destructive bg-destructive/10' : ''}`}
-                  onClick={handleToggleFavorite}
-                  disabled={toggleFavorite.isPending}
-                >
-                  <Heart className={`w-6 h-6 ${dossier.isFavorite ? 'fill-destructive' : ''}`} />
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    size="lg"
+                    variant="outline"
+                    className="flex-1 gap-2"
+                    onClick={handleStartReading}
+                  >
+                    <BookOpen className="w-5 h-5" /> قراءة سريعة
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className={`w-14 shrink-0 transition-colors ${dossier.isFavorite ? 'border-destructive text-destructive bg-destructive/10' : ''}`}
+                    onClick={handleToggleFavorite}
+                    disabled={toggleFavorite.isPending}
+                  >
+                    <Heart className={`w-6 h-6 ${dossier.isFavorite ? 'fill-destructive' : ''}`} />
+                  </Button>
+                </div>
               </div>
             </div>
 

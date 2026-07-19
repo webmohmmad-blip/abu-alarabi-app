@@ -2,3 +2,4 @@
 - [Product Vision & Design Rules](abu-alarabi-vision.md) — core philosophy: Arabic-only, premium design, fixed palette, RTL-first, no payments ever. Read before any UI work.
 - [Full-stack Audit 2026-07-17](audit-2026-07-17.md) — sessions goal bug, security headers, settings wiring, exam real data, PDF viewer, auth logout all fixed.
 - [ACMS Implementation](acms-2026-07-17.md) — summaries table+API+pages, exam question builder (7 types), content status workflow, admin nav updated.
+- [Study Room 2.0](study-room-2.md) — GoodNotes-like workspace: pdfjs-dist v6, per-page annotation canvas, DB tables for annotations/bookmarks/progress, object storage for PDF upload.

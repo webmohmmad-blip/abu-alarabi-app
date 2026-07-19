@@ -19,6 +19,8 @@ import summariesRouter from "./summaries";
 import adminRouter from "./admin";
 import adminQuestionsRouter from "./admin-questions";
 import adminSummariesRouter from "./admin-summaries";
+import storageRouter from "./storage";
+import workspaceRouter from "./workspace";
 
 const router: IRouter = Router();
 
@@ -43,5 +45,7 @@ router.use("/admin", adminQuestionsRouter);
 router.use("/admin", adminSummariesRouter);
 // Flashcards routes — handled directly inside the file at /flashcard-decks and /flashcards
 router.use(flashcardsRouter);
+router.use(storageRouter);
+router.use(workspaceRouter);
 
 export default router;

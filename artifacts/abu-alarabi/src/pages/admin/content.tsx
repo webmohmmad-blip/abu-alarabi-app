@@ -6,11 +6,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import {
   BookOpen, FileText, PenTool, Plus, Trash2, Pencil,
   ChevronDown, ChevronRight, Search, GripVertical, Layers,
   X, Check, AlertCircle, Video, Eye, ExternalLink,
+  Upload, Loader2,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -534,6 +535,43 @@ function AddSubjectModal({ onClose, onSuccess }: { onClose: () => void; onSucces
 function AddDossierModal({ subjectId, onClose, onSuccess }: { subjectId: number; onClose: () => void; onSuccess: () => void }) {
   const [form, setForm] = useState({ title: "", description: "", grade: "12", pageCount: 0, fileUrl: "", coverUrl: "" });
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadedName, setUploadedName] = useState("");
+
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".pdf")) { setError("الرجاء اختيار ملف PDF فقط"); return; }
+    setError(""); setUploading(true);
+
+    try {
+      // 1. Request presigned upload URL
+      const { uploadURL, objectPath } = await customFetch<{ uploadURL: string; objectPath: string }>(
+        "/api/storage/uploads/request-url",
+        {
+          method: "POST",
+          body: JSON.stringify({ name: file.name, size: file.size, contentType: "application/pdf" }),
+        }
+      );
+
+      // 2. Upload file directly to GCS
+      const uploadRes = await fetch(uploadURL, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": "application/pdf" },
+      });
+      if (!uploadRes.ok) throw new Error("فشل رفع الملف");
+
+      // 3. Set fileUrl to serving path
+      const servingUrl = `/api/storage${objectPath}`;
+      setForm((prev) => ({ ...prev, fileUrl: servingUrl }));
+      setUploadedName(file.name);
+    } catch (err: any) {
+      setError(err.message ?? "خطأ في رفع الملف");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const save = useMutation({
     mutationFn: () => customFetch("/api/admin/dossiers", {
@@ -567,10 +605,43 @@ function AddDossierModal({ subjectId, onClose, onSuccess }: { subjectId: number;
               className="bg-white/5 border-white/10 text-white" placeholder="0" />
           </Field>
         </div>
-        <Field label="رابط الملف (PDF)">
-          <Input value={form.fileUrl} onChange={e => setForm({ ...form, fileUrl: e.target.value })}
-            className="bg-white/5 border-white/10 text-white" placeholder="https://..." dir="ltr" />
+
+        {/* File Upload */}
+        <Field label="ملف PDF">
+          <div className="space-y-2">
+            <label className={`flex items-center justify-center gap-2 border-2 border-dashed rounded-xl px-4 py-3 cursor-pointer transition-colors ${
+              uploadedName ? "border-green-500/40 bg-green-500/10" : "border-white/10 hover:border-white/30"
+            }`}>
+              <input
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={handleFileUpload}
+                disabled={uploading}
+              />
+              {uploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                  <span className="text-sm text-white/70">جاري الرفع...</span>
+                </>
+              ) : uploadedName ? (
+                <>
+                  <Check className="w-4 h-4 text-green-400" />
+                  <span className="text-sm text-green-400 truncate max-w-[200px]">{uploadedName}</span>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 text-white/50" />
+                  <span className="text-sm text-white/50">اضغط لرفع ملف PDF</span>
+                </>
+              )}
+            </label>
+            {/* Or paste URL manually */}
+            <Input value={form.fileUrl} onChange={e => setForm({ ...form, fileUrl: e.target.value })}
+              className="bg-white/5 border-white/10 text-white text-xs" placeholder="أو أدخل رابطاً مباشراً للملف" dir="ltr" />
+          </div>
         </Field>
+
         <Field label="رابط الغلاف (اختياري)">
           <Input value={form.coverUrl} onChange={e => setForm({ ...form, coverUrl: e.target.value })}
             className="bg-white/5 border-white/10 text-white" placeholder="https://..." dir="ltr" />
@@ -578,7 +649,7 @@ function AddDossierModal({ subjectId, onClose, onSuccess }: { subjectId: number;
         {error && <ErrorMsg>{error}</ErrorMsg>}
       </div>
       <ModalActions>
-        <Button onClick={() => save.mutate()} disabled={!form.title.trim() || save.isPending} className="flex-1 bg-primary hover:bg-primary/90">
+        <Button onClick={() => save.mutate()} disabled={!form.title.trim() || save.isPending || uploading} className="flex-1 bg-primary hover:bg-primary/90">
           {save.isPending ? "جاري الحفظ..." : "حفظ الدوسيه"}
         </Button>
         <Button variant="outline" onClick={onClose} className="border-white/10 bg-white/5 text-white hover:bg-white/10">إلغاء</Button>
