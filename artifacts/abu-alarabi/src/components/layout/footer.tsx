@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { BookOpen, Phone, MapPin, Instagram, Facebook, Youtube } from "lucide-react";
+import { BookOpen, Phone, MapPin, Instagram, Facebook, Youtube, Mail } from "lucide-react";
 
 /* WhatsApp icon — not in lucide, using inline SVG */
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -164,6 +164,15 @@ export function Footer() {
                 >
                   <Facebook className="w-5 h-5 text-blue-400 shrink-0" />
                   <span>صفحة فيسبوك</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:info@malsahori.com"
+                  className="flex items-center gap-3 hover:text-primary transition-colors"
+                >
+                  <Mail className="w-5 h-5 text-primary shrink-0" />
+                  <span dir="ltr">info@malsahori.com</span>
                 </a>
               </li>
               <li>
