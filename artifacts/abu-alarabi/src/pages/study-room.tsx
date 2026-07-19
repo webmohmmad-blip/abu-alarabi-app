@@ -236,7 +236,8 @@ export default function StudyRoom() {
   });
 
   // ── Open dossier ───────────────────────────────────────────────────────────────
-  const openDossier = useCallback((d: { id: number; title: string; fileUrl?: string }) => {
+  const openDossier = useCallback((d: { id: number; title: string; fileUrl?: string; subjectName?: string }) => {
+    pushRecent({ id: d.id, title: d.title, subjectName: d.subjectName, fileUrl: d.fileUrl });
     setDossierId(d.id);
     setDossierTitle(d.title);
     setDossierFileUrl(d.fileUrl ?? null);
@@ -244,6 +245,7 @@ export default function StudyRoom() {
     setStrokes(new Map());
     setPdfDoc(null);
     setPdfError(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-open dossier from URL param
@@ -552,12 +554,31 @@ export default function StudyRoom() {
   const toolbarBg = isDark ? "bg-[#16213e]/95 border-white/10" : "bg-white/95 border-gray-200/80";
   const sidebarBg = isDark ? "bg-[#16213e] border-white/10" : "bg-white border-gray-200/60";
 
+  // ── Recent sessions (localStorage) ───────────────────────────────────────────
+  const RECENT_KEY = "study-room-recent";
+  interface RecentEntry { id: number; title: string; subjectName?: string; fileUrl?: string; isLocal?: boolean; openedAt: string; }
+
+  const [recentSessions, setRecentSessions] = useState<RecentEntry[]>(() => {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]"); } catch { return []; }
+  });
+
+  const pushRecent = (entry: Omit<RecentEntry, "openedAt">) => {
+    setRecentSessions((prev) => {
+      const filtered = prev.filter((r) => !(r.id === entry.id && r.isLocal === entry.isLocal));
+      const next = [{ ...entry, openedAt: new Date().toISOString() }, ...filtered].slice(0, 10);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
   // Open a local PDF file directly for testing (no upload needed)
   const handleLocalFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
-    setDossierTitle(file.name.replace(/\.pdf$/i, ""));
+    const title = file.name.replace(/\.pdf$/i, "");
+    pushRecent({ id: -1, title, isLocal: true, fileUrl: url });
+    setDossierTitle(title);
     setDossierFileUrl(url);
     setDossierId(-1); // sentinel: local file
     setCurrentPage(1);
@@ -620,6 +641,74 @@ export default function StudyRoom() {
               </div>
             )}
           </div>
+
+          {/* Recent sessions */}
+          {recentSessions.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-bold text-base">آخر الجلسات</h2>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem(RECENT_KEY);
+                    setRecentSessions([]);
+                  }}
+                  className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  مسح الكل
+                </button>
+              </div>
+              <div className="space-y-2">
+                {recentSessions.map((r, i) => {
+                  const relativeTime = (() => {
+                    const diff = Date.now() - new Date(r.openedAt).getTime();
+                    const mins = Math.floor(diff / 60000);
+                    const hours = Math.floor(diff / 3600000);
+                    const days = Math.floor(diff / 86400000);
+                    if (mins < 1) return "الآن";
+                    if (mins < 60) return `منذ ${mins} د`;
+                    if (hours < 24) return `منذ ${hours} س`;
+                    return `منذ ${days} يوم`;
+                  })();
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        if (r.isLocal && r.fileUrl) {
+                          // Re-open local file URL (still valid in same session)
+                          setDossierTitle(r.title);
+                          setDossierFileUrl(r.fileUrl);
+                          setDossierId(-1);
+                          setCurrentPage(1);
+                          setStrokes(new Map());
+                          setPdfDoc(null);
+                          setPdfError(null);
+                        } else if (!r.isLocal) {
+                          openDossier({ id: r.id, title: r.title, subjectName: r.subjectName, fileUrl: r.fileUrl });
+                        }
+                      }}
+                      className="w-full text-right px-4 py-3 rounded-2xl border border-border/40 hover:border-primary/30 hover:bg-primary/4 transition-all flex items-center gap-3 group bg-white/60"
+                    >
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${r.isLocal ? "bg-amber-50" : "bg-primary/8"}`}>
+                        {r.isLocal
+                          ? <FolderOpen className="w-4 h-4 text-amber-500" />
+                          : <Clock className="w-4 h-4 text-primary/60" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate text-gray-800">{r.title}</div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {r.isLocal && <span className="text-[10px] text-amber-500 font-medium">ملف محلي</span>}
+                          {r.subjectName && <span className="text-[10px] text-muted-foreground">{r.subjectName}</span>}
+                          <span className="text-[10px] text-muted-foreground/60">{relativeTime}</span>
+                        </div>
+                      </div>
+                      <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </DashboardLayout>
     );
