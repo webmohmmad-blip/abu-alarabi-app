@@ -5,16 +5,17 @@
 import {
   useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent,
 } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as pdfjsLib from "pdfjs-dist";
 import { customFetch } from "@workspace/api-client-react";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import {
   Pencil, Highlighter, Eraser, Hand, Square, Circle as CircleIcon,
   Minus, Undo2, Redo2, Maximize2, Minimize2, BookmarkPlus, Bookmark,
   FileText, ListTodo, ChevronLeft, ChevronRight, ZoomIn, ZoomOut,
   Search, Save, Loader2, StickyNote, Trash2, Pin, Plus, X,
-  ArrowLeft, FolderOpen, Clock, AlignLeft,
+  ArrowLeft, FolderOpen, Clock, AlignLeft, Upload, Settings,
 } from "lucide-react";
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -440,44 +441,85 @@ export default function StudyRoom() {
   const toolbarBg = isDark ? "bg-[#16213e]/95 border-white/10" : "bg-white/95 border-gray-200/80";
   const sidebarBg = isDark ? "bg-[#16213e] border-white/10" : "bg-white border-gray-200/60";
 
+  // Open a local PDF file directly for testing (no upload needed)
+  const handleLocalFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setDossierTitle(file.name.replace(/\.pdf$/i, ""));
+    setDossierFileUrl(url);
+    setDossierId(-1); // sentinel: local file
+    setCurrentPage(1);
+    setStrokes(new Map());
+    setPdfDoc(null);
+    setPdfError(null);
+  };
+
   // Dossier picker (no dossier selected)
   if (!dossierId) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#f0ede8]">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <FileText className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-black text-xl text-gray-900">غرفة الدراسة</h1>
-              <p className="text-sm text-gray-500">اختر دوسية لتبدأ</p>
-            </div>
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Page header */}
+          <div>
+            <h1 className="text-2xl font-black">غرفة الدراسة</h1>
+            <p className="text-muted-foreground text-sm mt-1">اختر دوسية أو افتح ملف PDF من جهازك</p>
           </div>
-          {dossiers?.length === 0 ? (
-            <p className="text-center text-gray-400 py-8 text-sm">لا توجد دوسيات متاحة بعد.</p>
-          ) : (
-            <div className="space-y-2 max-h-80 overflow-y-auto">
-              {dossiers?.map((d) => (
-                <button
-                  key={d.id}
-                  onClick={() => openDossier(d)}
-                  className="w-full text-right px-4 py-3 rounded-2xl border border-gray-100 hover:border-primary/30 hover:bg-primary/5 transition-all flex items-center gap-3 group"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <FileText className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm text-gray-900 truncate">{d.title}</div>
-                    {d.subjectName && <div className="text-xs text-gray-400">{d.subjectName}</div>}
-                  </div>
-                  <ChevronLeft className="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors" />
-                </button>
-              ))}
+
+          {/* Open local PDF card */}
+          <label className="block cursor-pointer">
+            <input type="file" accept="application/pdf" className="hidden" onChange={handleLocalFile} />
+            <div className="border-2 border-dashed border-primary/30 rounded-3xl p-8 hover:border-primary/60 hover:bg-primary/3 transition-all text-center group">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                <Upload className="w-7 h-7 text-primary" />
+              </div>
+              <h2 className="font-bold text-lg mb-1">افتح ملف PDF من جهازك</h2>
+              <p className="text-sm text-muted-foreground">اضغط لاختيار أي ملف PDF — سيُفتح مباشرة بدون رفع</p>
             </div>
-          )}
+          </label>
+
+          {/* Dossiers from platform */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-base">دوسيات المنصة</h2>
+              <Link href="/admin/content" className="text-xs text-primary hover:underline flex items-center gap-1">
+                <Settings className="w-3.5 h-3.5" /> إضافة دوسية (أدمن)
+              </Link>
+            </div>
+
+            {dossiers?.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border p-10 text-center">
+                <FileText className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
+                <p className="font-semibold text-muted-foreground mb-1">لا توجد دوسيات بعد</p>
+                <p className="text-xs text-muted-foreground/70">يمكن للمشرف إضافة الدوسيات من لوحة التحكم</p>
+                <Link href="/admin/content"
+                  className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">
+                  <Plus className="w-4 h-4" /> إضافة دوسية الآن
+                </Link>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {dossiers?.map((d) => (
+                  <button
+                    key={d.id}
+                    onClick={() => openDossier(d)}
+                    className="text-right px-4 py-4 rounded-2xl border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center gap-3 group bg-white shadow-sm"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <FileText className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm truncate">{d.title}</div>
+                      {d.subjectName && <div className="text-xs text-muted-foreground mt-0.5">{d.subjectName}</div>}
+                    </div>
+                    <ChevronLeft className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
