@@ -25,12 +25,10 @@ import { useLogout } from "@workspace/api-client-react";
 const adminNavItems = [
   { name: "لوحة التحكم", href: "/admin", icon: LayoutDashboard },
   { name: "المستخدمون", href: "/admin/users", icon: Users },
-  { name: "المجموعات", href: "/admin/groups", icon: Users2 },
-  { name: "المحتوى", href: "/admin/content", icon: BookOpen },
+  { name: "الدوسيات", href: "/admin/content", icon: BookOpen },
   { name: "الامتحانات", href: "/admin/exams", icon: PenTool },
   { name: "أوراق العمل", href: "/admin/worksheets", icon: BookText },
   { name: "الكويز الأسبوعي", href: "/admin/quiz", icon: MessageSquareWarning },
-  { name: "الملخصات", href: "/admin/summaries", icon: AlignLeft },
   { name: "الصلاحيات", href: "/admin/roles", icon: ShieldCheck },
   { name: "الإعلانات", href: "/admin/announcements", icon: Megaphone },
   { name: "التقارير", href: "/admin/reports", icon: BarChart3 },
