@@ -173,20 +173,19 @@ export function Header() {
               {/* ── Calligraphy ring: dark ring filled with tiny Arabic chars ── */}
               <circle cx="50" cy="50" r="48" fill="#120022"/>
               {/* Dense calligraphy texture — small Arabic words rotated around the ring */}
-              <g mask="url(#ringMask)" fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="white" fillOpacity="0.85" fontSize="10" fontWeight="600">
-                {/* Top arc */}
-                <text transform="rotate(-80 50 50) translate(50 8)">العربية</text>
-                <text transform="rotate(-50 50 50) translate(50 6)">لغة</text>
-                <text transform="rotate(-20 50 50) translate(50 7)">الضاد</text>
-                <text transform="rotate(10 50 50) translate(50 6)">بيان</text>
-                <text transform="rotate(40 50 50) translate(50 7)">كلام</text>
-                <text transform="rotate(70 50 50) translate(50 6)">أدب</text>
-                <text transform="rotate(100 50 50) translate(50 7)">نحو</text>
-                <text transform="rotate(130 50 50) translate(50 6)">صرف</text>
-                <text transform="rotate(160 50 50) translate(50 7)">بلاغة</text>
-                <text transform="rotate(190 50 50) translate(50 6)">فصحى</text>
-                <text transform="rotate(220 50 50) translate(50 7)">شعر</text>
-                <text transform="rotate(250 50 50) translate(50 6)">نثر</text>
+              <g mask="url(#ringMask)" fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="white" fillOpacity="0.9" fontSize="13" fontWeight="700">
+                <text transform="rotate(-80 50 50) translate(50 17)">العربية</text>
+                <text transform="rotate(-50 50 50) translate(50 17)">لغة</text>
+                <text transform="rotate(-20 50 50) translate(50 17)">الضاد</text>
+                <text transform="rotate(10 50 50) translate(50 17)">بيان</text>
+                <text transform="rotate(40 50 50) translate(50 17)">كلام</text>
+                <text transform="rotate(70 50 50) translate(50 17)">أدب</text>
+                <text transform="rotate(100 50 50) translate(50 17)">نحو</text>
+                <text transform="rotate(130 50 50) translate(50 17)">صرف</text>
+                <text transform="rotate(160 50 50) translate(50 17)">بلاغة</text>
+                <text transform="rotate(190 50 50) translate(50 17)">فصحى</text>
+                <text transform="rotate(220 50 50) translate(50 17)">شعر</text>
+                <text transform="rotate(250 50 50) translate(50 17)">نثر</text>
               </g>
 
               {/* ── White inner circle ── */}
