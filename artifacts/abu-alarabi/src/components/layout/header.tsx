@@ -45,6 +45,15 @@ function useStudyPlan(enabled: boolean) {
   });
 }
 
+const STUDENT_NAV = [
+  { href: "/dashboard",   label: "لوحتي"                  },
+  { href: "/dossiers",    label: "الدوسيات"               },
+  { href: "/worksheets",  label: "أوراق العمل"            },
+  { href: "/exams",       label: "الامتحانات"             },
+  { href: "/weekly-quiz", label: "الكويز الأسبوعي"        },
+  { href: "/study-room",  label: "غرفتي الدراسية"         },
+] as const;
+
 export function Header() {
   const { user, isAuthenticated } = useAuth();
   const [location, setLocation] = useLocation();
@@ -63,16 +72,13 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close dropdowns on outside click
   useEffect(() => {
     if (!showSchedule && !showAccount) return;
     const handler = (e: MouseEvent) => {
-      if (scheduleRef.current && !scheduleRef.current.contains(e.target as Node)) {
+      if (scheduleRef.current && !scheduleRef.current.contains(e.target as Node))
         setShowSchedule(false);
-      }
-      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node))
         setShowAccount(false);
-      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -80,28 +86,20 @@ export function Header() {
 
   const handleLogout = () => {
     logout.mutate(undefined, {
-      onSuccess: () => {
-        setLocation("/login");
-        window.location.reload();
-      },
+      onSuccess: () => { setLocation("/login"); window.location.reload(); },
     });
   };
 
   const isHome = location === "/";
-  const todayTasks = plan?.todayTasks ?? [];
-  const doneTasks = todayTasks.filter((t) => t.status === "completed");
+  const todayTasks  = plan?.todayTasks ?? [];
+  const doneTasks   = todayTasks.filter((t) => t.status === "completed");
   const pendingTasks = todayTasks.filter((t) => t.status !== "completed");
+  const isPrivileged = user?.role === "admin" || user?.role === "super_admin";
 
   const TYPE_LABEL: Record<string, string> = {
-    dossier: "دوسيه",
-    worksheet: "ورقة عمل",
-    revision: "مراجعة",
-    exam: "امتحان",
-    lesson: "درس",
+    dossier: "دوسيه", worksheet: "ورقة عمل",
+    revision: "مراجعة", exam: "امتحان", lesson: "درس",
   };
-
-  const isPrivileged =
-    user?.role === "admin" || user?.role === "super_admin";
 
   return (
     <header
@@ -111,7 +109,7 @@ export function Header() {
           : "bg-foreground/95 backdrop-blur-md border-b border-white/10"
       }`}
     >
-      <div className="container mx-auto flex h-[72px] items-center justify-between px-6">
+      <div className="flex h-[72px] items-center justify-between px-6 gap-4">
 
         {/* ── Logo ── */}
         <Link href="/" className="flex items-center gap-3 group shrink-0">
@@ -124,14 +122,39 @@ export function Header() {
           <span className="text-lg font-bold text-white tracking-tight">أبو العربي</span>
         </Link>
 
-        {/* ── Public nav — only when NOT authenticated ── */}
-        {!isAuthenticated && (
-          <nav className="hidden md:flex items-center gap-1">
+        {/* ── Centre: student nav (authenticated) OR public nav ── */}
+        {isAuthenticated ? (
+          <nav
+            dir="rtl"
+            className="hidden md:flex items-stretch flex-1 overflow-x-auto scrollbar-hide h-full"
+          >
+            {STUDENT_NAV.map((item) => {
+              const active =
+                location === item.href || location.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`
+                    flex items-center px-4 text-[13.5px] whitespace-nowrap
+                    border-b-2 transition-colors duration-150
+                    ${active
+                      ? "border-primary text-white font-semibold"
+                      : "border-transparent text-white/60 hover:text-white hover:border-white/20 font-normal"}
+                  `}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        ) : (
+          <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
             {[
-              { href: "/", label: "الرئيسية" },
-              { href: "/dossiers", label: "الدوسيات" },
-              { href: "/worksheets", label: "أوراق العمل" },
-              { href: "/exams", label: "الامتحانات" },
+              { href: "/",          label: "الرئيسية"  },
+              { href: "/dossiers",  label: "الدوسيات"  },
+              { href: "/worksheets",label: "أوراق العمل"},
+              { href: "/exams",     label: "الامتحانات"},
             ].map((item) => (
               <Link
                 key={item.href}
@@ -148,8 +171,8 @@ export function Header() {
           </nav>
         )}
 
-        {/* ── Right section ── */}
-        <div className="flex items-center gap-2">
+        {/* ── Right controls ── */}
+        <div className="flex items-center gap-2 shrink-0">
           {isAuthenticated ? (
             <>
               {/* Study schedule dropdown */}
@@ -163,7 +186,7 @@ export function Header() {
                   }`}
                 >
                   <CalendarDays className="w-4 h-4" />
-                  <span>جدولك اليوم</span>
+                  <span className="hidden lg:inline">جدولك</span>
                   {pendingTasks.length > 0 && (
                     <span className="w-5 h-5 bg-accent text-white rounded-full text-[10px] font-black flex items-center justify-center leading-none">
                       {pendingTasks.length}
@@ -182,10 +205,7 @@ export function Header() {
                           </p>
                         )}
                       </div>
-                      <button
-                        onClick={() => setShowSchedule(false)}
-                        className="text-muted-foreground hover:text-white transition-colors"
-                      >
+                      <button onClick={() => setShowSchedule(false)} className="text-muted-foreground hover:text-white transition-colors">
                         <X className="w-4 h-4" />
                       </button>
                     </div>
@@ -195,9 +215,7 @@ export function Header() {
                         <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500"
-                            style={{
-                              width: `${(doneTasks.length / todayTasks.length) * 100}%`,
-                            }}
+                            style={{ width: `${(doneTasks.length / todayTasks.length) * 100}%` }}
                           />
                         </div>
                       </div>
@@ -223,9 +241,7 @@ export function Header() {
                           )}
                           {doneTasks.length > 0 && (
                             <>
-                              <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">
-                                مكتملة
-                              </div>
+                              <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">مكتملة</div>
                               {doneTasks.map((task) => (
                                 <TaskRow key={task.id} task={task} typeLabel={TYPE_LABEL} done />
                               ))}
@@ -240,14 +256,8 @@ export function Header() {
                         <div className="flex items-center gap-1.5 text-xs text-accent font-bold">
                           🔥 {plan.streakDays} يوم متواصل
                         </div>
-                      ) : (
-                        <div />
-                      )}
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setShowSchedule(false)}
-                        className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-                      >
+                      ) : <div />}
+                      <Link href="/dashboard" onClick={() => setShowSchedule(false)} className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">
                         لوحة التحكم ←
                       </Link>
                     </div>
@@ -257,12 +267,8 @@ export function Header() {
 
               {/* Admin link */}
               {isPrivileged && (
-                <Link
-                  href="/admin"
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-amber-400 hover:bg-amber-500/10 transition-colors"
-                >
+                <Link href="/admin" className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-amber-400 hover:bg-amber-500/10 transition-colors">
                   <ShieldCheck className="w-4 h-4" />
-                  <span>الإدارة</span>
                 </Link>
               )}
 
@@ -270,41 +276,29 @@ export function Header() {
               <div className="relative" ref={accountRef}>
                 <button
                   onClick={() => setShowAccount((s) => !s)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
-                    showAccount ? "bg-white/15" : "hover:bg-white/10"
-                  }`}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${showAccount ? "bg-white/15" : "hover:bg-white/10"}`}
                   aria-label="قائمة الحساب"
                   aria-expanded={showAccount}
                 >
                   <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-xs font-black text-white shrink-0">
                     {user?.fullName?.charAt(0) || <UserCircle className="w-4 h-4" />}
                   </div>
-                  <span className="hidden sm:block text-sm font-medium text-white/80 truncate max-w-[110px]">
+                  <span className="hidden sm:block text-sm font-medium text-white/80 truncate max-w-[100px]">
                     {user?.fullName}
                   </span>
-                  <ChevronDown
-                    className={`hidden sm:block w-3.5 h-3.5 text-white/50 transition-transform duration-200 ${
-                      showAccount ? "rotate-180" : ""
-                    }`}
-                  />
+                  <ChevronDown className={`hidden sm:block w-3.5 h-3.5 text-white/50 transition-transform duration-200 ${showAccount ? "rotate-180" : ""}`} />
                 </button>
 
                 {showAccount && (
                   <div className="absolute left-0 top-full mt-2 w-52 bg-[#1a1030]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50">
-                    {/* User info header */}
                     <div className="px-4 py-3 border-b border-white/10">
                       <p className="text-sm font-bold text-white truncate">{user?.fullName}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {user?.role === "student" ? "طالب" : user?.role === "admin" ? "مدير" : user?.role}
                       </p>
                     </div>
-
                     <div className="p-1.5 space-y-0.5">
-                      <Link
-                        href="/settings"
-                        onClick={() => setShowAccount(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 text-white/70 hover:text-white transition-colors"
-                      >
+                      <Link href="/settings" onClick={() => setShowAccount(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 text-white/70 hover:text-white transition-colors">
                         <Settings className="w-4 h-4" />
                         <span className="text-sm font-medium">الإعدادات</span>
                       </Link>
@@ -322,16 +316,10 @@ export function Header() {
             </>
           ) : (
             <>
-              <Link
-                href="/login"
-                className="text-sm font-medium text-white/60 hover:text-white transition-colors px-4 py-2"
-              >
+              <Link href="/login" className="text-sm font-medium text-white/60 hover:text-white transition-colors px-4 py-2">
                 تسجيل الدخول
               </Link>
-              <Link
-                href="/register"
-                className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm shadow-primary/30 transition-all hover:-translate-y-0.5"
-              >
+              <Link href="/register" className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm shadow-primary/30 transition-all hover:-translate-y-0.5">
                 ابدأ الآن <ChevronLeft className="w-3.5 h-3.5" />
               </Link>
             </>
@@ -342,41 +330,17 @@ export function Header() {
   );
 }
 
-function TaskRow({
-  task,
-  typeLabel,
-  done = false,
-}: {
-  task: StudyTask;
-  typeLabel: Record<string, string>;
-  done?: boolean;
-}) {
+function TaskRow({ task, typeLabel, done = false }: { task: StudyTask; typeLabel: Record<string, string>; done?: boolean }) {
   return (
-    <div
-      className={`flex items-center gap-3 px-2 py-2.5 rounded-xl transition-colors ${
-        done ? "opacity-50" : "hover:bg-white/5"
-      }`}
-    >
-      <div
-        className={`w-2 h-2 rounded-full shrink-0 ${done ? "bg-green-400" : "bg-white/20"}`}
-        style={!done ? { backgroundColor: task.subjectColor } : {}}
-      />
+    <div className={`flex items-center gap-3 px-2 py-2.5 rounded-xl transition-colors ${done ? "opacity-50" : "hover:bg-white/5"}`}>
+      <div className={`w-2 h-2 rounded-full shrink-0 ${done ? "bg-green-400" : "bg-white/20"}`} style={!done ? { backgroundColor: task.subjectColor } : {}} />
       <div className="flex-1 min-w-0">
-        <p
-          className={`text-sm font-medium truncate ${
-            done ? "line-through text-muted-foreground" : "text-white"
-          }`}
-        >
-          {task.title}
-        </p>
+        <p className={`text-sm font-medium truncate ${done ? "line-through text-muted-foreground" : "text-white"}`}>{task.title}</p>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] text-muted-foreground">
-            {typeLabel[task.type] ?? task.type}
-          </span>
+          <span className="text-[10px] text-muted-foreground">{typeLabel[task.type] ?? task.type}</span>
           {task.durationMinutes && (
             <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-              <Clock className="w-2.5 h-2.5" />
-              {task.durationMinutes} د
+              <Clock className="w-2.5 h-2.5" /> {task.durationMinutes} د
             </span>
           )}
         </div>

@@ -2,7 +2,6 @@ import { ReactNode, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "./header";
-import { StudentTopNavigation } from "./student-top-navigation";
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -26,50 +25,40 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-[100dvh] bg-background selection:bg-primary/20">
-      {/* ── Fixed top bar ── */}
+      {/* ── Fixed header (contains nav) ── */}
       <Header />
 
       <div className="pt-[72px]">
-        {/* ── W3Schools-style nav strip ── */}
-        <StudentTopNavigation />
-
         {/* ── Teacher / hero banner ── */}
         <div
           className="relative overflow-hidden w-full"
-          style={{ height: "160px", backgroundColor: "#110820" }}
+          style={{ height: "150px", backgroundColor: "#110820" }}
         >
-          {/* Teacher photo — fades in from the left (RTL: photo on left side) */}
+          {/* Teacher photo — left side (RTL) */}
           <img
             src="/teacher-sahouri.jpg"
             alt=""
             aria-hidden
             className="absolute left-0 top-0 h-full object-cover object-top select-none pointer-events-none"
-            style={{ width: "240px" }}
+            style={{ width: "220px" }}
           />
 
-          {/* Gradient: photo fades into dark background */}
+          {/* Gradient overlay */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to right, rgba(17,8,32,0) 0%, rgba(17,8,32,0.55) 30%, rgba(17,8,32,0.92) 55%, #110820 75%)",
+                "linear-gradient(to right, rgba(17,8,32,0) 0%, rgba(17,8,32,0.6) 28%, rgba(17,8,32,0.95) 52%, #110820 70%)",
             }}
           />
 
-          {/* Text — right side in RTL */}
-          <div
-            className="absolute inset-0 flex flex-col justify-center px-8 md:px-12"
-            dir="rtl"
-          >
-            <p className="text-white/45 text-xs font-medium tracking-widest uppercase mb-1">
-              منصة أبو العربي
-            </p>
+          {/* Greeting text — right side */}
+          <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-12" dir="rtl">
+            <p className="text-white/40 text-xs font-medium tracking-widest mb-1">منصة أبو العربي</p>
             <h2 className="text-white text-xl md:text-2xl font-black leading-snug">
               مرحباً{user?.fullName ? `، ${user.fullName.split(" ")[0]}` : ""}
             </h2>
-            <p className="text-white/50 text-sm mt-1">
-              مع الأستاذ محمد الساحوري — طريقك للتفوق
-            </p>
+            <p className="text-white/45 text-sm mt-1">مع الأستاذ محمد الساحوري — طريقك للتفوق</p>
           </div>
         </div>
 
