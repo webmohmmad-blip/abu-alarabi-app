@@ -52,6 +52,7 @@ const STUDENT_NAV = [
   { href: "/exams",       label: "الامتحانات"             },
   { href: "/weekly-quiz", label: "الكويز الأسبوعي"        },
   { href: "/study-room",  label: "غرفتي الدراسية"         },
+  { href: "/study-plan",  label: "جدولك الدراسي"          },
 ] as const;
 
 export function Header() {

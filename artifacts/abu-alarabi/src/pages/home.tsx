@@ -149,7 +149,7 @@ export default function Home() {
                   size="lg"
                   className="h-14 px-10 text-base font-bold shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-shadow"
                 >
-                  ابدأ رحلتك الآن
+                  صنّ جدولك الدراسي
                 </Button>
               </Link>
               <Link href="/dossiers">
