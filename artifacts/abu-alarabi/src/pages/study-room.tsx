@@ -140,22 +140,32 @@ export default function StudyRoom() {
   const [noteText, setNoteText] = useState("");
   const [noteTitle, setNoteTitle] = useState("");
   const [editingNote, setEditingNote] = useState<number | null>(null);
+  // Local-only bookmarks/notes for files opened directly from disk (no DB)
+  const [localBookmarks, setLocalBookmarks] = useState<Bookmark[]>([]);
+  const [localNotes, setLocalNotes] = useState<NoteItem[]>([]);
+
+  // -1 is the sentinel for a locally-opened PDF file (no database persistence)
+  const isLocalFile = dossierId === -1;
 
   // ── API queries ───────────────────────────────────────────────────────────────
   const { data: dossiers } = useQuery<{ id: number; title: string; fileUrl?: string; subjectName?: string }[]>({
     queryKey: ["/api/dossiers"],
     queryFn: () => customFetch<{ items: { id: number; title: string; fileUrl?: string; subjectName?: string }[] }>("/api/dossiers").then((r) => r.items ?? []),
   });
-  const { data: notes } = useQuery<NoteItem[]>({
+  const { data: remoteNotes } = useQuery<NoteItem[]>({
     queryKey: ["/api/notes", dossierId],
     queryFn: () => customFetch(`/api/notes?dossierId=${dossierId}`),
-    enabled: !!dossierId,
+    enabled: (dossierId ?? 0) > 0,
   });
-  const { data: bookmarks } = useQuery<Bookmark[]>({
+  const notes = isLocalFile ? localNotes : remoteNotes;
+
+  const { data: remoteBookmarks } = useQuery<Bookmark[]>({
     queryKey: ["/api/workspace/bookmarks", dossierId],
     queryFn: () => customFetch(`/api/workspace/bookmarks/${dossierId}`),
-    enabled: !!dossierId,
+    enabled: (dossierId ?? 0) > 0,
   });
+  const bookmarks = isLocalFile ? localBookmarks : remoteBookmarks;
+
   const { data: tasks } = useQuery<Task[]>({
     queryKey: ["/api/studyplan/tasks"],
     queryFn: () => customFetch("/api/studyplan/tasks"),
@@ -209,7 +219,8 @@ export default function StudyRoom() {
 
   // ── Load annotations from DB on page change ────────────────────────────────────
   useEffect(() => {
-    if (!dossierId || !pdfDoc) return;
+    // Skip for local files — annotations are stored in memory only
+    if (!dossierId || !pdfDoc || isLocalFile) return;
     customFetch<{ strokes: Stroke[] }>(`/api/workspace/annotations/${dossierId}/${currentPage}`)
       .then(({ strokes: saved }) => {
         setStrokes((prev) => {
@@ -219,6 +230,7 @@ export default function StudyRoom() {
         });
       })
       .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dossierId, currentPage, pdfDoc]);
 
   // ── Render PDF page ─────────────────────────────────────────────────────────────
@@ -255,7 +267,7 @@ export default function StudyRoom() {
 
   // ── Auto-save annotations ──────────────────────────────────────────────────────
   const scheduleSave = useCallback(() => {
-    if (!dossierId) return;
+    if (!dossierId || isLocalFile) { setSaveStatus("saved"); return; }
     setSaveStatus("unsaved");
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(async () => {
@@ -275,7 +287,7 @@ export default function StudyRoom() {
 
   // ── Save progress when page changes ───────────────────────────────────────────
   useEffect(() => {
-    if (!dossierId || currentPage < 1) return;
+    if (!dossierId || currentPage < 1 || isLocalFile) return;
     customFetch(`/api/workspace/progress/${dossierId}`, {
       method: "PUT", body: JSON.stringify({ lastPage: currentPage }),
       headers: { "Content-Type": "application/json" },
@@ -391,6 +403,17 @@ export default function StudyRoom() {
   // ── Bookmark current page ──────────────────────────────────────────────────────
   const addBookmark = async () => {
     if (!dossierId) return;
+    if (isLocalFile) {
+      // Local-only: store in component state
+      const already = localBookmarks.some((b) => b.pageNumber === currentPage);
+      if (!already) {
+        setLocalBookmarks((prev) => [
+          ...prev,
+          { id: Date.now(), pageNumber: currentPage, title: `صفحة ${currentPage}` },
+        ]);
+      }
+      return;
+    }
     await customFetch(`/api/workspace/bookmarks/${dossierId}`, {
       method: "POST",
       body: JSON.stringify({ pageNumber: currentPage, title: `صفحة ${currentPage}` }),
@@ -400,13 +423,33 @@ export default function StudyRoom() {
   };
 
   const deleteBookmark = async (id: number) => {
+    if (isLocalFile) {
+      setLocalBookmarks((prev) => prev.filter((b) => b.id !== id));
+      return;
+    }
     await customFetch(`/api/workspace/bookmarks/${id}`, { method: "DELETE" });
     qc.invalidateQueries({ queryKey: ["/api/workspace/bookmarks", dossierId] });
   };
 
   // ── Add note ───────────────────────────────────────────────────────────────────
   const saveNote = async () => {
-    if (!noteTitle.trim() || !dossierId) return;
+    if (!noteTitle.trim()) return;
+    if (isLocalFile) {
+      // Local-only note
+      setLocalNotes((prev) => [
+        {
+          id: Date.now(),
+          title: noteTitle,
+          content: noteText,
+          isPinned: false,
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
+      setNoteTitle(""); setNoteText("");
+      return;
+    }
+    if (!dossierId) return;
     await customFetch("/api/notes", {
       method: "POST",
       body: JSON.stringify({
@@ -423,6 +466,10 @@ export default function StudyRoom() {
   };
 
   const deleteNote = async (id: number) => {
+    if (isLocalFile) {
+      setLocalNotes((prev) => prev.filter((n) => n.id !== id));
+      return;
+    }
     await customFetch(`/api/notes/${id}`, { method: "DELETE" });
     qc.invalidateQueries({ queryKey: ["/api/notes", dossierId] });
   };
