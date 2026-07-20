@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, isNull } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   dossiersTable,
@@ -26,6 +26,7 @@ router.get("/dossiers", async (req, res): Promise<void> => {
     })
     .from(dossiersTable)
     .leftJoin(subjectsTable, eq(dossiersTable.subjectId, subjectsTable.id))
+    .where(isNull((dossiersTable as any).deletedAt))
     .orderBy(desc(dossiersTable.createdAt));
 
   if (subjectId) {
@@ -55,6 +56,7 @@ router.get("/dossiers", async (req, res): Promise<void> => {
       rating: parseFloat(dossier.rating ?? "0"),
       coverUrl: dossier.coverUrl,
       fileUrl: dossier.fileUrl,
+      status: (dossier as any).status ?? "published",
       isFavorite: false,
       readingProgress: 0,
       lastReadPage: 1,

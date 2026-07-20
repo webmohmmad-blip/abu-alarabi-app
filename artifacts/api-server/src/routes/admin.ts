@@ -542,19 +542,23 @@ router.post("/dossiers", async (req, res) => {
 
 router.patch("/dossiers/:id", async (req, res) => {
   const id = parseInt(req.params.id);
-  const { title, description, subjectId, grade, pageCount, fileSize, fileUrl, coverUrl } = req.body;
+  const { title, description, subjectId, grade, pageCount, fileSize, fileUrl, coverUrl, status } = req.body;
   const [d] = await db
     .update(dossiersTable)
-    .set({ title, description, subjectId, grade, pageCount, fileSize, fileUrl, coverUrl })
+    .set({ title, description, subjectId, grade, pageCount, fileSize, fileUrl, coverUrl, ...(status ? { status } : {}) } as any)
     .where(eq(dossiersTable.id, id))
     .returning();
   res.json(d);
 });
 
-router.delete("/dossiers/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
+router.delete("/dossiers/:id", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (!id || isNaN(id)) { res.status(400).json({ ok: false, message: "معرّف الدوسية غير صالح" }); return; }
+  const [existing] = await db.select({ id: dossiersTable.id }).from(dossiersTable)
+    .where(and(eq(dossiersTable.id, id), isNull(dossiersTable.deletedAt as any)));
+  if (!existing) { res.status(404).json({ ok: false, message: "الدوسية غير موجودة" }); return; }
   await db.update(dossiersTable).set({ deletedAt: new Date() } as any).where(eq(dossiersTable.id, id));
-  res.status(204).send();
+  res.json({ ok: true, message: "تم حذف الدوسية بنجاح" });
 });
 
 // ─── WORKSHEETS (admin CRUD) ─────────────────────────────────────────────────
