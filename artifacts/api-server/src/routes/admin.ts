@@ -562,30 +562,43 @@ router.delete("/dossiers/:id", async (req, res): Promise<void> => {
 });
 
 // ─── WORKSHEETS (admin CRUD) ─────────────────────────────────────────────────
+router.get("/worksheets", async (req, res) => {
+  const items = await db
+    .select()
+    .from(worksheetsTable)
+    .where(isNull(worksheetsTable.deletedAt as any))
+    .orderBy(desc(worksheetsTable.createdAt));
+  res.json({ items });
+});
+
 router.post("/worksheets", async (req, res) => {
-  const { title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl } = req.body;
+  const { title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl, status } = req.body;
   const [w] = await db
     .insert(worksheetsTable)
-    .values({ title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl })
+    .values({ title, subjectId, grade, difficulty, questionCount: Number(questionCount) || 0, estimatedMinutes: Number(estimatedMinutes) || 30, fileUrl, status: status ?? "draft" } as any)
     .returning();
   res.status(201).json(w);
 });
 
 router.patch("/worksheets/:id", async (req, res) => {
   const id = parseInt(req.params.id);
-  const { title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl } = req.body;
-  const [w] = await db
-    .update(worksheetsTable)
-    .set({ title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl })
-    .where(eq(worksheetsTable.id, id))
-    .returning();
+  const { title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl, status } = req.body;
+  const patch: Record<string, any> = { title, subjectId, grade, difficulty, fileUrl };
+  if (questionCount !== undefined) patch.questionCount = Number(questionCount);
+  if (estimatedMinutes !== undefined) patch.estimatedMinutes = Number(estimatedMinutes);
+  if (status !== undefined) { patch.status = status; if (status === "published") patch.publishedAt = new Date(); }
+  const [w] = await db.update(worksheetsTable).set(patch as any).where(eq(worksheetsTable.id, id)).returning();
   res.json(w);
 });
 
-router.delete("/worksheets/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
+router.delete("/worksheets/:id", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (!id || isNaN(id)) { res.status(400).json({ ok: false, message: "معرّف ورقة العمل غير صالح" }); return; }
+  const [existing] = await db.select({ id: worksheetsTable.id }).from(worksheetsTable)
+    .where(and(eq(worksheetsTable.id, id), isNull(worksheetsTable.deletedAt as any)));
+  if (!existing) { res.status(404).json({ ok: false, message: "ورقة العمل غير موجودة" }); return; }
   await db.update(worksheetsTable).set({ deletedAt: new Date() } as any).where(eq(worksheetsTable.id, id));
-  res.status(204).send();
+  res.json({ ok: true, message: "تم حذف ورقة العمل بنجاح" });
 });
 
 // ─── EXAMS (admin CRUD) ──────────────────────────────────────────────────────

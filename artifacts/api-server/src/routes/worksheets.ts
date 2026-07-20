@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { worksheetsTable, subjectsTable } from "@workspace/db";
 
@@ -19,7 +19,8 @@ router.get("/worksheets", async (req, res): Promise<void> => {
       subjectName: subjectsTable.name,
     })
     .from(worksheetsTable)
-    .leftJoin(subjectsTable, eq(worksheetsTable.subjectId, subjectsTable.id));
+    .leftJoin(subjectsTable, eq(worksheetsTable.subjectId, subjectsTable.id))
+    .where(isNull((worksheetsTable as any).deletedAt));
 
   if (subjectId) {
     rows = rows.filter(
@@ -46,6 +47,7 @@ router.get("/worksheets", async (req, res): Promise<void> => {
       downloads: ws.downloads,
       solvers: ws.solvers,
       fileUrl: ws.fileUrl,
+      status: ws.status,
       createdAt: ws.createdAt,
     }));
 
