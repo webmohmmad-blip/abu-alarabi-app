@@ -131,6 +131,29 @@ router.post("/auth/logout", (_req, res): void => {
   res.json({ success: true });
 });
 
+// ─── TEMP: reset super_admin password ────────────────────────────────────────
+// Protected by a one-time secret header. Remove after first use.
+router.post("/auth/reset-admin", async (req, res): Promise<void> => {
+  const secret = req.headers["x-reset-secret"];
+  if (secret !== "abu-alarabi-reset-2025") {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  const { phone, newPassword } = req.body as { phone: string; newPassword: string };
+  if (!phone || !newPassword) {
+    res.status(400).json({ error: "phone and newPassword required" });
+    return;
+  }
+  const hash = await hashPassword(newPassword);
+  const [user] = await db
+    .update(usersTable)
+    .set({ passwordHash: hash })
+    .where(eq(usersTable.phone, phone))
+    .returning();
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  res.json({ ok: true, phone: user.phone, role: user.role });
+});
+
 // ─── ME ───────────────────────────────────────────────────────────────────────
 router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
