@@ -249,16 +249,32 @@ export const dossierBookmarksTable = pgTable("dossier_bookmarks", {
 });
 export type DossierBookmark = typeof dossierBookmarksTable.$inferSelect;
 
+// ─── PERSONAL SCHEDULE SUBJECTS ─────────────────────────
+// Student-created subjects (name + color) used in their personal timetable
+export const personalScheduleSubjectsTable = pgTable("personal_schedule_subjects", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  color: text("color").notNull().default("#5A2D82"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+export type PersonalScheduleSubject = typeof personalScheduleSubjectsTable.$inferSelect;
+
 // ─── WEEKLY SCHEDULE SLOTS ──────────────────────────────
-// Recurring weekly time slots per subject per day
+// Recurring weekly time slots per subject per day.
+// Subject source: either a global subject (subjectId) or a personal subject (personalSubjectId).
 export const weeklyScheduleSlotsTable = pgTable("weekly_schedule_slots", {
   id: serial("id").primaryKey(),
   userId: integer("user_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
   subjectId: integer("subject_id")
-    .notNull()
     .references(() => subjectsTable.id, { onDelete: "cascade" }),
+  personalSubjectId: integer("personal_subject_id")
+    .references(() => personalScheduleSubjectsTable.id, { onDelete: "cascade" }),
   dayOfWeek: integer("day_of_week").notNull(), // 0=Sunday…6=Saturday
   startTime: text("start_time").notNull(),     // "09:00"
   endTime: text("end_time").notNull(),         // "10:30"

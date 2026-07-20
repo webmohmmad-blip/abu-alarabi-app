@@ -1,16 +1,15 @@
 /**
  * صفحة الجدول الدراسي الأسبوعي
- * الطالب يبني جدوله: يختار المواد + الأوقات + أيام الراحة
+ * الطالب يبني جدوله: يختار المواد الشخصية + أيام متعددة + الأوقات
  */
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import {
-  Plus, Trash2, Coffee, BookOpen, Clock, ChevronDown, Check, X,
+  Plus, Trash2, Coffee, Clock, X, Check, AlertCircle, ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Slot {
@@ -18,16 +17,31 @@ interface Slot {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
-  subjectId: number;
+  subjectId: number | null;
+  personalSubjectId: number | null;
   subjectName: string;
   subjectColor: string;
 }
-interface ScheduleData { slots: Slot[]; restDays: number[]; }
-interface Subject { id: number; name: string; color: string; grade?: string; }
+interface PersonalSubject {
+  id: number;
+  name: string;
+  color: string;
+}
+interface ScheduleData {
+  slots: Slot[];
+  personalSubjects: PersonalSubject[];
+  restDays: number[];
+}
+interface ConflictInfo { dayOfWeek: number; conflictWith: string }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+const DAYS     = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 const DAYS_SHORT = ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
+
+const COLORS = [
+  "#5A2D82", "#3B82F6", "#10B981", "#F59E0B", "#EF4444",
+  "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16", "#F97316",
+];
 
 const TIME_OPTIONS: string[] = [];
 for (let h = 6; h <= 23; h++) {
@@ -40,7 +54,9 @@ function slotDuration(start: string, end: string) {
   const [eh, em] = end.split(":").map(Number);
   const mins = (eh * 60 + em) - (sh * 60 + sm);
   if (mins <= 0) return "";
-  return mins >= 60 ? `${Math.floor(mins / 60)}س ${mins % 60 > 0 ? `${mins % 60}د` : ""}`.trim() : `${mins}د`;
+  return mins >= 60
+    ? `${Math.floor(mins / 60)}س ${mins % 60 > 0 ? `${mins % 60}د` : ""}`.trim()
+    : `${mins}د`;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -51,83 +67,173 @@ export default function Schedule() {
     queryKey: ["/api/schedule"],
     queryFn: () => customFetch("/api/schedule"),
   });
-  const { data: subjects } = useQuery<Subject[]>({
-    queryKey: ["/api/subjects"],
-    queryFn: () => customFetch("/api/subjects"),
+
+  // ── Form state ─────────────────────────────────────────────────────────────
+  const [showForm, setShowForm] = useState(false);
+  const [subjectName, setSubjectName] = useState("");
+  const [color, setColor] = useState(COLORS[0]);
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [startTime, setStartTime] = useState("08:00");
+  const [endTime, setEndTime] = useState("09:00");
+  const [formError, setFormError] = useState("");
+  // After-submit conflict state
+  const [pendingConflicts, setPendingConflicts] = useState<ConflictInfo[]>([]);
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const pendingPayloadRef = useRef<{ personalSubjectId: number; days: number[] } | null>(null);
+
+  const restDays = schedule?.restDays ?? [];
+  const personalSubjects = schedule?.personalSubjects ?? [];
+
+  // ── Mutations ──────────────────────────────────────────────────────────────
+
+  const createSubject = useMutation({
+    mutationFn: (body: { name: string; color: string }) =>
+      customFetch<PersonalSubject>("/api/schedule/personal-subjects", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
   });
 
-  // ── Add slot form state ────────────────────────────────────────────────────
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ subjectId: "", dayOfWeek: "0", startTime: "08:00", endTime: "09:00" });
-  const [formError, setFormError] = useState("");
-
-  const addSlot = useMutation({
-    mutationFn: () =>
-      customFetch("/api/schedule/slots", {
-        method: "POST",
-        body: JSON.stringify({
-          subjectId: parseInt(form.subjectId, 10),
-          dayOfWeek: parseInt(form.dayOfWeek, 10),
-          startTime: form.startTime,
-          endTime: form.endTime,
-        }),
-      }),
-    onSuccess: () => {
+  const addSlots = useMutation({
+    mutationFn: (body: {
+      personalSubjectId: number;
+      days: number[];
+      startTime: string;
+      endTime: string;
+    }) =>
+      customFetch<{ created: Slot[]; conflicts: ConflictInfo[] }>(
+        "/api/schedule/slots",
+        { method: "POST", body: JSON.stringify(body) },
+      ),
+    onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: ["/api/schedule"] });
       qc.invalidateQueries({ queryKey: ["/api/schedule/today"] });
-      setShowForm(false);
-      setForm({ subjectId: "", dayOfWeek: "0", startTime: "08:00", endTime: "09:00" });
+
+      if (result.conflicts.length > 0) {
+        // Some days had conflicts — tell the user
+        setPendingConflicts(result.conflicts);
+        setShowConflictModal(true);
+      }
+
+      if (result.created.length > 0) {
+        closeForm();
+      }
     },
-    onError: (e: any) => setFormError(e.message ?? "خطأ"),
+    onError: (e: any) => setFormError(e?.data?.error ?? e?.message ?? "خطأ"),
   });
 
   const deleteSlot = useMutation({
-    mutationFn: (id: number) => customFetch(`/api/schedule/slots/${id}`, { method: "DELETE" }),
+    mutationFn: (id: number) =>
+      customFetch(`/api/schedule/slots/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/schedule"] });
       qc.invalidateQueries({ queryKey: ["/api/schedule/today"] });
+    },
+  });
+
+  const deleteSubject = useMutation({
+    mutationFn: (id: number) =>
+      customFetch(`/api/schedule/personal-subjects/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/schedule"] });
     },
   });
 
   const setRestDays = useMutation({
-    mutationFn: (restDays: number[]) =>
-      customFetch("/api/schedule/rest-days", {
-        method: "PUT",
-        body: JSON.stringify({ restDays }),
-      }),
+    mutationFn: (days: number[]) =>
+      customFetch("/api/schedule/rest-days", { method: "PUT", body: JSON.stringify({ restDays: days }) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/schedule"] });
       qc.invalidateQueries({ queryKey: ["/api/schedule/today"] });
     },
   });
 
-  const restDays = schedule?.restDays ?? [];
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  const closeForm = () => {
+    setShowForm(false);
+    setSubjectName("");
+    setColor(COLORS[0]);
+    setSelectedDays([]);
+    setStartTime("08:00");
+    setEndTime("09:00");
+    setFormError("");
+    pendingPayloadRef.current = null;
+  };
+
+  const toggleDay = (d: number) => {
+    if (restDays.includes(d)) return;
+    setSelectedDays((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
+    );
+  };
 
   const toggleRestDay = (d: number) => {
-    const next = restDays.includes(d) ? restDays.filter((x) => x !== d) : [...restDays, d];
+    const next = restDays.includes(d)
+      ? restDays.filter((x) => x !== d)
+      : [...restDays, d];
     setRestDays.mutate(next);
   };
 
-  const validateAndSubmit = () => {
+  // ── Suggested subjects (autocomplete) ─────────────────────────────────────
+  const trimmed = subjectName.trim();
+  const suggestions = trimmed
+    ? personalSubjects.filter((s) =>
+        s.name.toLowerCase().includes(trimmed.toLowerCase()) && s.name !== trimmed
+      )
+    : [];
+  const exactMatch = personalSubjects.find(
+    (s) => s.name.toLowerCase() === trimmed.toLowerCase()
+  );
+
+  // When choosing an existing suggestion
+  const pickSuggestion = (s: PersonalSubject) => {
+    setSubjectName(s.name);
+    setColor(s.color);
+  };
+
+  const validateAndSubmit = async () => {
     setFormError("");
-    if (!form.subjectId) { setFormError("اختر مادة"); return; }
-    if (form.startTime >= form.endTime) { setFormError("وقت النهاية يجب أن يكون بعد وقت البداية"); return; }
-    addSlot.mutate();
+    if (!trimmed) { setFormError("اكتب اسم المادة"); return; }
+    if (selectedDays.length === 0) { setFormError("اختر يوماً على الأقل"); return; }
+    if (startTime >= endTime) { setFormError("وقت النهاية يجب أن يكون بعد وقت البداية"); return; }
+
+    // Upsert the personal subject first
+    const subject = await createSubject.mutateAsync({ name: trimmed, color });
+    addSlots.mutate({
+      personalSubjectId: subject.id,
+      days: selectedDays,
+      startTime,
+      endTime,
+    });
   };
 
   // Group slots by day
   const slotsByDay = Array.from({ length: 7 }, (_, d) =>
-    (schedule?.slots ?? []).filter((s) => s.dayOfWeek === d).sort((a, b) => a.startTime.localeCompare(b.startTime))
+    (schedule?.slots ?? [])
+      .filter((s) => s.dayOfWeek === d)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime))
   );
 
   const totalSlots = schedule?.slots.length ?? 0;
-  const studyDays = [...new Set(schedule?.slots.map((s) => s.dayOfWeek) ?? [])].filter((d) => !restDays.includes(d)).length;
+  const studyDays = [...new Set(schedule?.slots.map((s) => s.dayOfWeek) ?? [])]
+    .filter((d) => !restDays.includes(d)).length;
 
+  // ── Group personal subjects for the sidebar ────────────────────────────────
+  const subjectMap = new Map<number, PersonalSubject>();
+  (schedule?.slots ?? []).forEach((s) => {
+    if (s.personalSubjectId) {
+      const ps = personalSubjects.find((p) => p.id === s.personalSubjectId);
+      if (ps) subjectMap.set(ps.id, ps);
+    }
+  });
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-6">
 
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-black">جدولي الدراسي</h1>
@@ -142,7 +248,7 @@ export default function Schedule() {
           </Button>
         </div>
 
-        {/* ── Rest days ── */}
+        {/* Rest days */}
         <div className="bg-card rounded-2xl border p-4">
           <div className="flex items-center gap-2 mb-3">
             <Coffee className="w-4 h-4 text-muted-foreground" />
@@ -170,7 +276,7 @@ export default function Schedule() {
           </div>
         </div>
 
-        {/* ── Weekly grid ── */}
+        {/* Weekly grid */}
         {isLoading ? (
           <div className="grid grid-cols-7 gap-3">
             {Array.from({ length: 7 }).map((_, i) => (
@@ -211,7 +317,10 @@ export default function Schedule() {
                     <p className="text-[10px] text-amber-500 text-center py-2">راحة</p>
                   ) : daySlots.length === 0 ? (
                     <button
-                      onClick={() => { setForm((f) => ({ ...f, dayOfWeek: String(d) })); setShowForm(true); }}
+                      onClick={() => {
+                        setSelectedDays([d]);
+                        setShowForm(true);
+                      }}
                       className="flex-1 flex items-center justify-center text-[10px] text-muted-foreground/40 hover:text-primary transition-colors rounded-xl hover:bg-primary/5 border border-dashed border-transparent hover:border-primary/20"
                     >
                       <Plus className="w-3 h-3" />
@@ -238,7 +347,10 @@ export default function Schedule() {
                         </div>
                       ))}
                       <button
-                        onClick={() => { setForm((f) => ({ ...f, dayOfWeek: String(d) })); setShowForm(true); }}
+                        onClick={() => {
+                          setSelectedDays([d]);
+                          setShowForm(true);
+                        }}
                         className="w-full text-[9px] text-muted-foreground/40 hover:text-primary transition-colors flex items-center justify-center gap-0.5 py-0.5"
                       >
                         <Plus className="w-2.5 h-2.5" /> إضافة
@@ -251,107 +363,218 @@ export default function Schedule() {
           </div>
         )}
 
-        {/* ── Add slot modal ── */}
-        {showForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={(e) => e.target === e.currentTarget && setShowForm(false)}>
-            <div className="bg-card rounded-3xl shadow-2xl p-6 w-full max-w-md border border-border">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="font-black text-lg">إضافة حصة دراسية</h2>
-                <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+        {/* Personal subjects list (with delete) */}
+        {subjectMap.size > 0 && (
+          <div className="bg-card rounded-2xl border p-4">
+            <h2 className="font-bold text-sm mb-3">موادي الشخصية</h2>
+            <div className="flex flex-wrap gap-2">
+              {[...subjectMap.values()].map((ps) => (
+                <div
+                  key={ps.id}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm"
+                  style={{ borderColor: ps.color + "40", background: ps.color + "12" }}
+                >
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: ps.color }} />
+                  <span className="font-semibold">{ps.name}</span>
+                  <button
+                    onClick={() => {
+                      if (confirm(`حذف "${ps.name}" وكل حصصه من الجدول؟`)) {
+                        deleteSubject.mutate(ps.id);
+                      }
+                    }}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-              <div className="space-y-4">
-                {/* Subject */}
-                <div>
-                  <label className="text-sm font-bold mb-1.5 block">المادة</label>
-                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                    {subjects?.map((s) => (
+      </div>
+
+      {/* ── Add slot modal ─────────────────────────────────────────────────── */}
+      {showForm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={(e) => e.target === e.currentTarget && closeForm()}
+        >
+          <div className="bg-card rounded-3xl shadow-2xl p-6 w-full max-w-md border border-border max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-black text-lg">إضافة حصة دراسية</h2>
+              <button onClick={closeForm} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-5">
+
+              {/* Subject name */}
+              <div className="relative">
+                <label className="text-sm font-bold mb-1.5 block">اسم المادة</label>
+                <input
+                  className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm outline-none focus:border-primary"
+                  placeholder="مثال: رياضيات، فيزياء، نحو..."
+                  value={subjectName}
+                  onChange={(e) => setSubjectName(e.target.value)}
+                  autoComplete="off"
+                />
+                {/* Suggestions */}
+                {suggestions.length > 0 && (
+                  <div className="absolute top-full mt-1 w-full bg-card border border-border rounded-xl shadow-lg z-10 overflow-hidden">
+                    {suggestions.map((s) => (
                       <button
                         key={s.id}
-                        onClick={() => setForm((f) => ({ ...f, subjectId: String(s.id) }))}
-                        className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-semibold text-right transition-all ${
-                          form.subjectId === String(s.id)
-                            ? "border-primary bg-primary/5 text-primary"
-                            : "border-border hover:border-primary/30"
-                        }`}
+                        onClick={() => pickSuggestion(s)}
+                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted text-sm text-right"
                       >
-                        <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-                        <span className="truncate">{s.name}</span>
-                        {form.subjectId === String(s.id) && <Check className="w-3.5 h-3.5 mr-auto shrink-0" />}
+                        <span className="w-3 h-3 rounded-full shrink-0" style={{ background: s.color }} />
+                        {s.name}
                       </button>
                     ))}
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* Day */}
-                <div>
-                  <label className="text-sm font-bold mb-1.5 block">اليوم</label>
-                  <div className="grid grid-cols-7 gap-1">
-                    {DAYS_SHORT.map((label, d) => (
+              {/* Color picker — hide if using an existing subject's color */}
+              <div>
+                <label className="text-sm font-bold mb-1.5 block">اللون</label>
+                <div className="flex gap-2 flex-wrap">
+                  {COLORS.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setColor(c)}
+                      className={`w-8 h-8 rounded-full transition-transform ${color === c ? "scale-125 ring-2 ring-offset-2 ring-primary" : "hover:scale-110"}`}
+                      style={{ background: c }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Multi-day selector */}
+              <div>
+                <label className="text-sm font-bold mb-1.5 block">
+                  الأيام
+                  {selectedDays.length > 0 && (
+                    <span className="mr-1 text-xs font-normal text-primary">
+                      ({selectedDays.length} {selectedDays.length === 1 ? "يوم" : "أيام"})
+                    </span>
+                  )}
+                </label>
+                <div className="grid grid-cols-7 gap-1">
+                  {DAYS_SHORT.map((label, d) => {
+                    const isRest = restDays.includes(d);
+                    const isSelected = selectedDays.includes(d);
+                    return (
                       <button
                         key={d}
-                        onClick={() => setForm((f) => ({ ...f, dayOfWeek: String(d) }))}
-                        disabled={restDays.includes(d)}
+                        onClick={() => toggleDay(d)}
+                        disabled={isRest}
                         className={`py-2 rounded-xl text-xs font-bold transition-all ${
-                          form.dayOfWeek === String(d)
+                          isSelected
                             ? "bg-primary text-white"
-                            : restDays.includes(d)
+                            : isRest
                             ? "bg-amber-50 text-amber-300 cursor-not-allowed"
                             : "bg-muted hover:bg-primary/10 text-muted-foreground"
                         }`}
                       >
                         {label}
                       </button>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-
-                {/* Times */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-bold mb-1.5 block">من</label>
-                    <select
-                      value={form.startTime}
-                      onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm"
-                    >
-                      {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-bold mb-1.5 block">إلى</label>
-                    <select
-                      value={form.endTime}
-                      onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm"
-                    >
-                      {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </div>
-                </div>
-                {form.startTime < form.endTime && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    المدة: {slotDuration(form.startTime, form.endTime)}
+                {selectedDays.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    {selectedDays.sort().map((d) => DAYS[d]).join(" · ")}
                   </p>
                 )}
-
-                {formError && <p className="text-xs text-destructive bg-destructive/10 rounded-xl px-3 py-2">{formError}</p>}
-
-                <Button
-                  className="w-full"
-                  onClick={validateAndSubmit}
-                  disabled={addSlot.isPending}
-                >
-                  {addSlot.isPending ? "جاري الحفظ..." : "إضافة الحصة"}
-                </Button>
               </div>
+
+              {/* Times */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-bold mb-1.5 block">من</label>
+                  <select
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm"
+                  >
+                    {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-bold mb-1.5 block">إلى</label>
+                  <select
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm"
+                  >
+                    {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+              {startTime < endTime && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1 -mt-2">
+                  <Clock className="w-3 h-3" />
+                  المدة: {slotDuration(startTime, endTime)}
+                </p>
+              )}
+
+              {formError && (
+                <p className="text-xs text-destructive bg-destructive/10 rounded-xl px-3 py-2 flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  {formError}
+                </p>
+              )}
+
+              <Button
+                className="w-full"
+                onClick={validateAndSubmit}
+                disabled={addSlots.isPending || createSubject.isPending}
+              >
+                {(addSlots.isPending || createSubject.isPending)
+                  ? "جاري الحفظ..."
+                  : selectedDays.length > 1
+                  ? `إضافة ${selectedDays.length} حصص`
+                  : "إضافة الحصة"}
+              </Button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* ── Conflict modal ─────────────────────────────────────────────────── */}
+      {showConflictModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-3xl shadow-2xl p-6 w-full max-w-sm border border-border">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertCircle className="w-5 h-5 text-amber-500" />
+              <h2 className="font-black text-base">تعارض في المواعيد</h2>
+            </div>
+            <div className="space-y-2 mb-5">
+              {pendingConflicts.map((c, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm bg-amber-50 rounded-xl px-3 py-2">
+                  <span className="font-bold text-amber-700">{DAYS[c.dayOfWeek]}:</span>
+                  <span className="text-muted-foreground">
+                    يوجد تعارض مع مادة أخرى في هذا الوقت
+                    {c.conflictWith ? ` (${c.conflictWith})` : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => {
+                setShowConflictModal(false);
+                setPendingConflicts([]);
+              }}
+            >
+              حسناً
+            </Button>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

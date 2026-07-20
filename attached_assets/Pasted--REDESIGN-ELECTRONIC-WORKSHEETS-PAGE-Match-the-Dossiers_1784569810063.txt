@@ -1,0 +1,126 @@
+# REDESIGN ELECTRONIC WORKSHEETS PAGE
+# Match the Dossiers Management Experience
+# Abu Al-Arabi Platform
+The current Electronic Worksheets page must be redesigned to match the structure, quality, and interaction pattern of the Dossiers Management page.
+Do not merely copy the colors.
+Match the full management experience.
+==================================================
+1. PAGE STRUCTURE
+==================================================
+The Electronic Worksheets page should use the same visual structure as the Dossiers page:
+- Clear page title
+- Short description
+- Primary action button
+- Search bar
+- Status filters
+- Clean list or cards
+- Expand / collapse behavior where appropriate
+- Consistent spacing
+- Same typography
+- Same icon style
+- Same action layout
+- Same empty state
+- Same loading state
+- Same responsive behavior
+==================================================
+2. PAGE TITLE
+==================================================
+Use:
+أوراق العمل الإلكترونية
+Subtitle:
+إدارة أوراق العمل ورفعها وتنظيمها ونشرها للطلاب
+==================================================
+3. PRIMARY ACTION
+==================================================
+Replace the current button with a clear primary button:
++ إضافة ورقة عمل
+The button must open a working creation form.
+==================================================
+4. WORKSHEET ITEM DESIGN
+==================================================
+Each worksheet should appear in the same polished management card style used for dossiers.
+Display:
+- Worksheet title
+- Status
+- Grade
+- Track or target group if applicable
+- Difficulty level
+- Number of questions
+- Estimated completion time
+- PDF/file presence
+- Publish date
+- Last updated date
+Actions:
+- View
+- Edit
+- Duplicate
+- Publish / Unpublish
+- Archive
+- Delete
+Use icons and tooltips consistently.
+==================================================
+5. STATUS FILTERS
+==================================================
+Add filters matching the Dossiers page:
+- الكل
+- منشور
+- مسودة
+- مؤرشف
+Update counters automatically.
+Do not use fake counters.
+==================================================
+6. SEARCH
+==================================================
+Add a working search field:
+البحث في أوراق العمل...
+Search by:
+- title
+- grade
+- tag
+- target group
+==================================================
+7. CREATE / EDIT FORM
+==================================================
+The form should include:
+- عنوان ورقة العمل
+- وصف مختصر
+- الصف
+- الفئة المستهدفة
+- مستوى الصعوبة
+- عدد الأسئلة
+- الوقت المتوقع
+- ملف PDF
+- صورة الغلاف if needed
+- حالة النشر
+- تاريخ النشر المجدول if supported
+Do not include fields unrelated to worksheets.
+==================================================
+8. FILE MANAGEMENT
+==================================================
+Allow:
+- Upload PDF
+- Replace PDF
+- Preview PDF
+- Download PDF
+- Remove PDF before saving
+Validate:
+- file type
+- file size
+- missing file
+- upload failure
+Show Arabic error messages.
+==================================================
+9. DELETE BEHAVIOR
+==================================================
+Deleting a worksheet must work end-to-end.
+Before deletion:
+- Show confirmation modal
+- Display worksheet title
+- Warn that deletion may be permanent
+After deletion:
+- Remove item immediately
+- Refresh counters
+- Show success toast
+==================================================
+10. PUBLISHING
+================================================

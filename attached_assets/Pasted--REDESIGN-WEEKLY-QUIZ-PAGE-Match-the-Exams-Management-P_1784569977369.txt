@@ -1,0 +1,358 @@
+# REDESIGN WEEKLY QUIZ PAGE
+
+# Match the Exams Management Page Exactly
+
+# Abu Al-Arabi Platform
+
+The Weekly Quiz management page must become identical to the Exams Management page.
+
+Do not simply make it similar.
+
+Reuse the same components, layouts, actions, logic and user experience.
+
+The only difference should be the content type:
+
+Exam
+
+↓
+
+Weekly Quiz
+
+==================================================
+
+DESIGN
+
+==================================================
+
+Use exactly the same layout as the Exams page.
+
+Reuse:
+
+- Header
+
+- Statistics cards
+
+- Search
+
+- Filters
+
+- Exam cards
+
+- Action buttons
+
+- Status badges
+
+- Question list
+
+- Creation flow
+
+- Editing flow
+
+- Publishing flow
+
+- Delete confirmation
+
+- Loading state
+
+- Empty state
+
+- Responsive layout
+
+Do not redesign from scratch.
+
+Use the same shared components.
+
+==================================================
+
+PAGE TITLE
+
+==================================================
+
+Replace:
+
+إدارة الامتحانات
+
+with
+
+إدارة الكويز الأسبوعي
+
+Subtitle:
+
+إنشاء وإدارة ونشر الكويزات الأسبوعية للطلاب
+
+==================================================
+
+BUTTON
+
+==================================================
+
+Replace:
+
++ امتحان جديد
+
+with
+
++ كويز جديد
+
+==================================================
+
+QUIZ CARD
+
+==================================================
+
+Each quiz card should display exactly the same information as the exam cards.
+
+Include:
+
+- Quiz title
+
+- Subject
+
+- Number of questions
+
+- Total marks
+
+- Estimated duration
+
+- Status
+
+- Publish date
+
+- Last update
+
+==================================================
+
+QUESTION MANAGEMENT
+
+==================================================
+
+Reuse the exact exam question builder.
+
+Support:
+
+- Multiple Choice
+
+- True / False
+
+- Short Answer
+
+- Essay
+
+Allow:
+
+- Add question
+
+- Edit question
+
+- Delete question
+
+- Duplicate question
+
+- Reorder questions
+
+Use the exact same UI.
+
+==================================================
+
+QUIZ ACTIONS
+
+==================================================
+
+Every quiz should support:
+
+View
+
+Edit
+
+Duplicate
+
+Publish
+
+Unpublish
+
+Archive
+
+Delete
+
+Preview
+
+==================================================
+
+STATUS
+
+==================================================
+
+Support:
+
+Draft
+
+Published
+
+Archived
+
+Scheduled
+
+==================================================
+
+FILTERS
+
+==================================================
+
+Use the exact filters from Exams.
+
+- الكل
+
+- منشور
+
+- مسودة
+
+- مؤرشف
+
+Update counters dynamically.
+
+==================================================
+
+SEARCH
+
+==================================================
+
+Use the same search experience.
+
+Search by:
+
+- title
+
+- subject
+
+- status
+
+==================================================
+
+PUBLISHING
+
+==================================================
+
+Publishing logic should be identical.
+
+Students should immediately see published weekly quizzes.
+
+==================================================
+
+DATABASE
+
+==================================================
+
+Reuse the existing exam architecture whenever possible.
+
+Instead of creating a completely different system, use a shared assessment model.
+
+Differentiate by:
+
+assessmentType
+
+Values:
+
+EXAM
+
+WEEKLY_QUIZ
+
+Do not duplicate large portions of backend code.
+
+==================================================
+
+API
+
+==================================================
+
+Reuse exam endpoints where possible.
+
+Example:
+
+GET assessments?type=WEEKLY_QUIZ
+
+POST assessments
+
+PATCH assessments
+
+DELETE assessments
+
+Instead of creating an entirely separate API.
+
+==================================================
+
+DELETE
+
+==================================================
+
+Deletion behavior must be identical to Exams.
+
+Show confirmation.
+
+Handle related data safely.
+
+Refresh list immediately.
+
+==================================================
+
+PERMISSIONS
+
+==================================================
+
+Reuse the same permission system.
+
+==================================================
+
+RESPONSIVE
+
+==================================================
+
+Desktop
+
+Tablet
+
+Mobile
+
+must behave exactly like Exams.
+
+==================================================
+
+FINAL RESULT
+
+==================================================
+
+The Weekly Quiz page should feel like a clone of the Exams page.
+
+A user should not notice any structural difference.
+
+Only these labels should change:
+
+Exam
+
+↓
+
+Weekly Quiz
+
+Everything else should behave exactly the same.
+
+==================================================
+
+FINAL REPORT
+
+==================================================
+
+Generate:
+
+QUIZ_PAGE_PARITY_REPORT.md
+
+Include:
+
+- shared components reused
+
+- duplicated code removed
+
+- APIs reused
+
+- tests passed
+
+- confirmation that the Weekly Quiz page is now functionally and visually identical to the Exams page.
+ 
