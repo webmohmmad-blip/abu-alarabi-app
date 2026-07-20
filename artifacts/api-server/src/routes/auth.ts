@@ -6,8 +6,6 @@ import {
   studentProfilesTable,
 } from "@workspace/db";
 import {
-  hashPassword,
-  comparePassword,
   signToken,
   requireAuth,
   type AuthRequest,
@@ -18,9 +16,6 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-
-/** Roles that require a real password — never allowed via phone-only flow */
-const PRIVILEGED_ROLES = ["admin", "super_admin", "moderator", "teacher", "assistant_teacher"];
 
 function userResponse(user: typeof usersTable.$inferSelect) {
   return {
@@ -37,9 +32,8 @@ function userResponse(user: typeof usersTable.$inferSelect) {
 
 // ─── REGISTER ────────────────────────────────────────────────────────────────
 // Accepts: { fullName, phone }
-// • New phone   → create student account + return JWT
-// • Existing student phone → auto-login (return JWT)
-// • Existing privileged phone → reject (must use password login)
+// • New phone     → create student account + return JWT
+// • Existing phone → auto-login (return JWT) regardless of role
 router.post("/auth/register", async (req, res): Promise<void> => {
   const parsed = RegisterBody.safeParse(req.body);
   if (!parsed.success) {
@@ -54,18 +48,13 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     .where(eq(usersTable.phone, phone));
 
   if (existing) {
-    // Privileged accounts must go through the password login flow
-    if (PRIVILEGED_ROLES.includes(existing.role)) {
-      res.status(403).json({ error: "هذا الحساب يتطلب كلمة مرور للدخول" });
-      return;
-    }
-    // Student: auto-login by phone
     const token = signToken({ userId: existing.id, role: existing.role });
     res.json({ user: userResponse(existing), token });
     return;
   }
 
-  // New user — passwordless student account
+  // New user — phone-only account
+  const { hashPassword } = await import("../lib/auth");
   const passwordHash = await hashPassword(crypto.randomUUID());
   const [user] = await db
     .insert(usersTable)
@@ -85,17 +74,15 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 });
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
-// Accepts: { phone, password? }
-// • Student + no password   → phone-only login (passwordless flow)
-// • Any role + password     → verify password
-// • Privileged role + no password → reject
+// Accepts: { phone }
+// All roles authenticate by phone number only — no password required.
 router.post("/auth/login", async (req, res): Promise<void> => {
   const parsed = LoginBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { phone, password } = parsed.data;
+  const { phone } = parsed.data;
 
   const [user] = await db
     .select()
@@ -107,21 +94,6 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  if (password) {
-    // Password provided — verify it (works for all roles including admins)
-    const valid = await comparePassword(password, user.passwordHash);
-    if (!valid) {
-      res.status(401).json({ error: "رقم الهاتف أو كلمة المرور غير صحيحة" });
-      return;
-    }
-  } else {
-    // No password — only allowed for student accounts
-    if (PRIVILEGED_ROLES.includes(user.role)) {
-      res.status(401).json({ error: "هذا الحساب يتطلب كلمة مرور للدخول" });
-      return;
-    }
-  }
-
   const token = signToken({ userId: user.id, role: user.role });
   res.json({ user: userResponse(user), token });
 });
@@ -129,29 +101,6 @@ router.post("/auth/login", async (req, res): Promise<void> => {
 // ─── LOGOUT ───────────────────────────────────────────────────────────────────
 router.post("/auth/logout", (_req, res): void => {
   res.json({ success: true });
-});
-
-// ─── TEMP: reset super_admin password ────────────────────────────────────────
-// Protected by a one-time secret header. Remove after first use.
-router.post("/auth/reset-admin", async (req, res): Promise<void> => {
-  const secret = req.headers["x-reset-secret"];
-  if (secret !== "abu-alarabi-reset-2025") {
-    res.status(403).json({ error: "Forbidden" });
-    return;
-  }
-  const { phone, newPassword } = req.body as { phone: string; newPassword: string };
-  if (!phone || !newPassword) {
-    res.status(400).json({ error: "phone and newPassword required" });
-    return;
-  }
-  const hash = await hashPassword(newPassword);
-  const [user] = await db
-    .update(usersTable)
-    .set({ passwordHash: hash })
-    .where(eq(usersTable.phone, phone))
-    .returning();
-  if (!user) { res.status(404).json({ error: "User not found" }); return; }
-  res.json({ ok: true, phone: user.phone, role: user.role });
 });
 
 // ─── ME ───────────────────────────────────────────────────────────────────────

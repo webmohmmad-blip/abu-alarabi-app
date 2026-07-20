@@ -42,9 +42,7 @@ export const RegisterResponse = zod.object({
 
 
 export const LoginBody = zod.object({
-  "phone": zod.string(),
-  "password": zod.string().optional(),
-  "rememberMe": zod.boolean().optional()
+  "phone": zod.string()
 })
 
 export const LoginResponse = zod.object({
