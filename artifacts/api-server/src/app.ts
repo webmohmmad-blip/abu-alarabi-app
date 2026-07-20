@@ -20,6 +20,7 @@ app.use(
 const allowedOrigins = [
   /\.replit\.dev$/,
   /\.replit\.app$/,
+  /malsahori\.com$/,
   /localhost/,
   /127\.0\.0\.1/,
 ];
