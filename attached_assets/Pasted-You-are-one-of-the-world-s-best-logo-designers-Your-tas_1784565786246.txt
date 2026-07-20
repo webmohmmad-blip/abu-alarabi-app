@@ -1,0 +1,314 @@
+You are one of the world's best logo designers.
+
+Your task is to create an iconic premium vector logo for an Arabic educational platform called:
+
+أبو العربي
+
+This logo will become the permanent visual identity of the brand across:
+
+• Website
+
+• Mobile App
+
+• iPad App
+
+• Dashboard
+
+• PDF Dossiers
+
+• Social Media
+
+• YouTube
+
+• Watermarks
+
+• Certificates
+
+• App Icon
+
+• Browser Favicon
+
+==================================================
+
+DESIGN PHILOSOPHY
+
+==================================================
+
+The logo should look like a premium global technology brand.
+
+Think:
+
+Apple
+
+OpenAI
+
+Notion
+
+Linear
+
+Arc Browser
+
+Stripe
+
+It should feel modern, intelligent, elegant and timeless.
+
+No clichés.
+
+==================================================
+
+TYPOGRAPHY
+
+==================================================
+
+Create a completely custom Arabic wordmark.
+
+Use only:
+
+أبو العربي
+
+Do NOT use existing Arabic fonts.
+
+Design custom geometric Arabic letterforms.
+
+The typography itself should become part of the identity.
+
+==================================================
+
+ICON
+
+==================================================
+
+Create a standalone icon that works perfectly even without text.
+
+The icon should be inspired by:
+
+Arabic calligraphy
+
+Arabic letterforms
+
+Arabic dots
+
+The Arabic letter (ع)
+
+The Arabic letter (أ)
+
+Geometric balance
+
+Knowledge
+
+Confidence
+
+Growth
+
+Mastery
+
+The icon must be extremely memorable.
+
+==================================================
+
+DO NOT USE
+
+==================================================
+
+No books
+
+No graduation caps
+
+No pencils
+
+No pens
+
+No light bulbs
+
+No owls
+
+No generic education symbols
+
+No shields
+
+No globes
+
+No stars
+
+No laurels
+
+==================================================
+
+STYLE
+
+==================================================
+
+Flat vector.
+
+Minimal.
+
+Premium.
+
+Perfect geometry.
+
+Smooth curves.
+
+No gradients.
+
+No shadows.
+
+No textures.
+
+No 3D.
+
+Pixel perfect.
+
+Timeless.
+
+==================================================
+
+COLORS
+
+==================================================
+
+Primary Purple
+
+#5A2D82
+
+Secondary Turquoise
+
+#0D9BB5
+
+Gold Accent
+
+#C79A2D
+
+Success Green
+
+#2FA84F
+
+Background
+
+#FAFAF8
+
+Generate:
+
+Full Color
+
+Black
+
+White
+
+Monochrome
+
+==================================================
+
+USAGE
+
+==================================================
+
+The logo must remain recognizable at:
+
+16px
+
+24px
+
+32px
+
+48px
+
+64px
+
+128px
+
+512px
+
+It should look perfect as:
+
+Browser favicon
+
+Website header logo
+
+Sidebar icon
+
+App icon
+
+Profile icon
+
+PDF cover
+
+Watermark
+
+Social media avatar
+
+==================================================
+
+HEADER VERSION
+
+==================================================
+
+Create a horizontal lockup specifically for the website header.
+
+The icon appears first.
+
+Then:
+
+أبو العربي
+
+The total height should fit perfectly inside a website navbar.
+
+==================================================
+
+APP ICON
+
+==================================================
+
+Create an app icon using only the standalone symbol.
+
+It must be instantly recognizable.
+
+==================================================
+
+OUTPUT
+
+==================================================
+
+Generate:
+
+1. Main Logo
+
+2. Icon Only
+
+3. Wordmark Only
+
+4. Horizontal Logo
+
+5. Vertical Logo
+
+6. White Version
+
+7. Black Version
+
+8. Monochrome Version
+
+9. App Icon
+
+10. Favicon
+
+11. SVG
+
+12. AI
+
+13. EPS
+
+14. PDF
+
+15. Transparent PNG
+
+==================================================
+
+FINAL GOAL
+
+==================================================
+
+This should become one of the most recognizable educational logos in the Arab world.
+
+Students should instantly recognize the icon without reading the text.
+
+The quality should be comparable to branding created by Pentagram, Landor or Wolff Olins.
+ 

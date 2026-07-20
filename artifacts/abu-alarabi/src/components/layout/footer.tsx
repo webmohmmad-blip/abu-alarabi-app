@@ -95,7 +95,7 @@ export function Footer() {
                   </g>
                   <circle cx="50" cy="50" r="31" fill="white"/>
                   <text x="50" y="65" textAnchor="middle" fontSize="40" fontWeight="900"
-                    fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="#111" clipPath="url(#fcc)">ض</text>
+                    fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="#111" clipPath="url(#fcc)">ع</text>
                 </svg>
               </div>
               <span className="text-2xl font-bold tracking-wide">أبو العربي</span>

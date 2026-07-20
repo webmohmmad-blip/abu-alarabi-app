@@ -222,7 +222,7 @@ export function Header() {
                 fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif"
                 fill="#111"
                 clipPath="url(#cc)"
-              >ض</text>
+              >ع</text>
             </svg>
           </div>
           <span className="text-lg font-bold text-white tracking-tight">أبو العربي</span>
