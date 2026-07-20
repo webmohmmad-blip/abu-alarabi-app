@@ -603,10 +603,11 @@ router.delete("/worksheets/:id", async (req, res): Promise<void> => {
 
 // ─── EXAMS (admin CRUD) ──────────────────────────────────────────────────────
 router.get("/exams", async (req, res) => {
+  // Exclude "weekly" type — those are managed via the quiz admin page
   const exams = await db
     .select()
     .from(examsTable)
-    .where(isNull(examsTable.deletedAt))
+    .where(and(isNull(examsTable.deletedAt), ne(examsTable.type, "weekly")))
     .orderBy(desc(examsTable.createdAt));
   res.json({ items: exams });
 });
@@ -643,63 +644,51 @@ router.delete("/exams/:id", async (req, res): Promise<void> => {
   res.json({ ok: true, message: "تم حذف الامتحان بنجاح" });
 });
 
-// ─── WEEKLY QUIZ ADMIN ───────────────────────────────────────────────────────
+// ─── WEEKLY QUIZ ADMIN (backed by examsTable with type="weekly") ─────────────
 router.get("/quiz", async (req, res) => {
   const quizzes = await db
-    .select({
-      id: weeklyQuizzesTable.id,
-      title: weeklyQuizzesTable.title,
-      description: weeklyQuizzesTable.description,
-      subjectId: weeklyQuizzesTable.subjectId,
-      examId: weeklyQuizzesTable.examId,
-      startsAt: weeklyQuizzesTable.startsAt,
-      endsAt: weeklyQuizzesTable.endsAt,
-      prizes: weeklyQuizzesTable.prizes,
-      isActive: weeklyQuizzesTable.isActive,
-      createdAt: weeklyQuizzesTable.createdAt,
-      subjectName: subjectsTable.name,
-    })
-    .from(weeklyQuizzesTable)
-    .leftJoin(subjectsTable, eq(weeklyQuizzesTable.subjectId, subjectsTable.id))
-    .orderBy(desc(weeklyQuizzesTable.createdAt));
+    .select()
+    .from(examsTable)
+    .where(and(eq(examsTable.type, "weekly"), isNull(examsTable.deletedAt)))
+    .orderBy(desc(examsTable.createdAt));
   res.json({ items: quizzes });
 });
 
 router.post("/quiz", async (req, res) => {
-  const { title, description, subjectId, examId, startsAt, endsAt, prizes, isActive } = req.body;
-  const [quiz] = await db.insert(weeklyQuizzesTable).values({
+  const { title, subjectId, durationMinutes, maxAttempts, passingScore, totalScore, instructions, status, isAvailable } = req.body;
+  const [quiz] = await db.insert(examsTable).values({
     title,
-    description: description ?? null,
     subjectId: parseInt(subjectId),
-    examId: examId ? parseInt(examId) : null,
-    startsAt: new Date(startsAt),
-    endsAt: new Date(endsAt),
-    prizes: prizes ?? null,
-    isActive: isActive ?? true,
-  }).returning();
+    type: "weekly",
+    durationMinutes: durationMinutes ?? 20,
+    maxAttempts: maxAttempts ?? 1,
+    passingScore: passingScore ?? "50",
+    totalScore: totalScore ?? "100",
+    instructions: instructions ?? null,
+    status: status ?? "draft",
+    isAvailable: isAvailable ?? false,
+    questionCount: 0,
+  } as any).returning();
   res.status(201).json(quiz);
 });
 
-router.patch("/quiz/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
-  const { title, description, subjectId, examId, startsAt, endsAt, prizes, isActive } = req.body;
-  const updates: Record<string, any> = {};
-  if (title !== undefined) updates.title = title;
-  if (description !== undefined) updates.description = description;
-  if (subjectId !== undefined) updates.subjectId = parseInt(subjectId);
-  if (examId !== undefined) updates.examId = examId ? parseInt(examId) : null;
-  if (startsAt !== undefined) updates.startsAt = new Date(startsAt);
-  if (endsAt !== undefined) updates.endsAt = new Date(endsAt);
-  if (prizes !== undefined) updates.prizes = prizes;
-  if (isActive !== undefined) updates.isActive = isActive;
-  const [quiz] = await db.update(weeklyQuizzesTable).set(updates).where(eq(weeklyQuizzesTable.id, id)).returning();
+router.patch("/quiz/:id", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  const [quiz] = await db.update(examsTable).set(req.body as any)
+    .where(and(eq(examsTable.id, id), eq(examsTable.type, "weekly")))
+    .returning();
+  if (!quiz) { res.status(404).json({ ok: false, message: "الكويز غير موجود" }); return; }
   res.json(quiz);
 });
 
-router.delete("/quiz/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
-  await db.delete(weeklyQuizzesTable).where(eq(weeklyQuizzesTable.id, id));
-  res.status(204).send();
+router.delete("/quiz/:id", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (!id || isNaN(id)) { res.status(400).json({ ok: false, message: "معرّف الكويز غير صالح" }); return; }
+  const [existing] = await db.select({ id: examsTable.id }).from(examsTable)
+    .where(and(eq(examsTable.id, id), eq(examsTable.type, "weekly"), isNull(examsTable.deletedAt)));
+  if (!existing) { res.status(404).json({ ok: false, message: "الكويز غير موجود" }); return; }
+  await db.update(examsTable).set({ deletedAt: new Date() } as any).where(eq(examsTable.id, id));
+  res.json({ ok: true, message: "تم حذف الكويز بنجاح" });
 });
 
 // ─── COMMENTS (moderation) ───────────────────────────────────────────────────
