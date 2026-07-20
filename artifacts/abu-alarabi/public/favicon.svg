@@ -14,7 +14,6 @@
 
   <!-- Dense white calligraphy ring — two rows -->
   <g mask="url(#rm)" font-family="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="white" font-size="9" font-weight="700" text-anchor="middle">
-    <!-- outer row -->
     <text transform="rotate(0   50 50) translate(50 8)">لغة</text>
     <text transform="rotate(20  50 50) translate(50 8)">الضاد</text>
     <text transform="rotate(40  50 50) translate(50 8)">بيان</text>
@@ -33,7 +32,6 @@
     <text transform="rotate(300 50 50) translate(50 8)">أدب</text>
     <text transform="rotate(320 50 50) translate(50 8)">كتاب</text>
     <text transform="rotate(340 50 50) translate(50 8)">لسان</text>
-    <!-- inner row -->
     <text transform="rotate(10  50 50) translate(50 15)">العربية</text>
     <text transform="rotate(30  50 50) translate(50 15)">حرف</text>
     <text transform="rotate(50  50 50) translate(50 15)">كلمة</text>
@@ -57,14 +55,26 @@
   <!-- White inner circle -->
   <circle cx="50" cy="50" r="31" fill="white"/>
 
-  <!-- ض letter — large bold black -->
+  <!-- Ornamental inner ring -->
+  <circle cx="50" cy="50" r="28.5" fill="none" stroke="#111" stroke-width="0.8"/>
+  <circle cx="50" cy="21.5" r="1.4" fill="#111"/>
+  <circle cx="70.2" cy="29.8" r="1.4" fill="#111"/>
+  <circle cx="78.5" cy="50" r="1.4" fill="#111"/>
+  <circle cx="70.2" cy="70.2" r="1.4" fill="#111"/>
+  <circle cx="50" cy="78.5" r="1.4" fill="#111"/>
+  <circle cx="29.8" cy="70.2" r="1.4" fill="#111"/>
+  <circle cx="21.5" cy="50" r="1.4" fill="#111"/>
+  <circle cx="29.8" cy="29.8" r="1.4" fill="#111"/>
+  <circle cx="50" cy="50" r="25.5" fill="none" stroke="#111" stroke-width="0.4" stroke-dasharray="1.5 2.5"/>
+
+  <!-- ع letter — large bold black -->
   <text
-    x="50" y="65"
+    x="50" y="68"
     text-anchor="middle"
-    font-size="40"
+    font-size="52"
     font-weight="900"
     font-family="'Amiri','Scheherazade New','Traditional Arabic',serif"
     fill="#111"
     clip-path="url(#cc)"
-  >ض</text>
+  >ع</text>
 </svg>
