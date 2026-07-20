@@ -6,6 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";
+import { AdminToast } from "@/components/admin/shared/admin-toast";
+import { DeleteDialog } from "@/components/admin/shared/delete-dialog";
 import { useState, type ChangeEvent } from "react";
 import {
   BookOpen, Plus, Trash2, Pencil, ChevronDown, ChevronRight,
@@ -58,36 +60,7 @@ const useDossiers = (subjectId: number) =>
     enabled: subjectId > 0,
   });
 
-// ─── Simple toast ─────────────────────────────────────────────────────────────
-
-function Toast({
-  message,
-  type,
-  onDone,
-}: {
-  message: string;
-  type: "success" | "error";
-  onDone: () => void;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 40 }}
-      onAnimationComplete={() => setTimeout(onDone, 2500)}
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-2xl text-sm font-bold ${
-        type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-      }`}
-    >
-      {type === "success" ? (
-        <CheckCircle2 className="w-4 h-4" />
-      ) : (
-        <AlertCircle className="w-4 h-4" />
-      )}
-      {message}
-    </motion.div>
-  );
-}
+// AdminToast and DeleteDialog are imported from @/components/admin/shared/
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -305,76 +278,21 @@ export default function AdminContent() {
       )}
 
       {/* ── Delete Subject Confirmation ───────────────────────────────── */}
-      <AnimatePresence>
-        {confirmDeleteSubject && (
-          <motion.div
-            key="del-subject-modal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-            onClick={(e) => {
-              if (e.target === e.currentTarget && !deleteSubject.isPending)
-                setConfirmDeleteSubject(null);
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#1a1030] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
-                  <Trash2 className="w-5 h-5 text-red-400" />
-                </div>
-                <div>
-                  <h2 className="font-bold text-white">حذف المادة</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    سيتم حذف المادة وجميع دوسياتها
-                  </p>
-                </div>
-              </div>
-              <p className="text-sm font-bold text-white bg-white/5 rounded-xl px-3 py-2 mb-5 truncate">
-                «{confirmDeleteSubject.name}»
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() =>
-                    !deleteSubject.isPending && setConfirmDeleteSubject(null)
-                  }
-                  disabled={deleteSubject.isPending}
-                  className="flex-1 py-2.5 rounded-xl border border-white/10 text-white text-sm font-bold hover:bg-white/5 transition-colors disabled:opacity-40"
-                >
-                  إلغاء
-                </button>
-                <button
-                  onClick={() => deleteSubject.mutate(confirmDeleteSubject.id)}
-                  disabled={deleteSubject.isPending}
-                  className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-                >
-                  {deleteSubject.isPending ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      جارٍ الحذف...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-3.5 h-3.5" />
-                      حذف المادة
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <DeleteDialog
+        open={!!confirmDeleteSubject}
+        onClose={() => setConfirmDeleteSubject(null)}
+        onConfirm={() => confirmDeleteSubject && deleteSubject.mutate(confirmDeleteSubject.id)}
+        isPending={deleteSubject.isPending}
+        title="حذف المادة"
+        subtitle="سيتم حذف المادة وجميع دوسياتها"
+        itemText={confirmDeleteSubject?.name ?? ""}
+        confirmText="حذف المادة"
+      />
 
       {/* ── Toast ────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {toast && (
-          <Toast
+          <AdminToast
             key="toast"
             message={toast.message}
             type={toast.type}
@@ -591,68 +509,17 @@ function DossiersPanel({
       )}
 
       {/* Delete dossier confirmation */}
-      <AnimatePresence>
-        {confirmDelete && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-            onClick={(e) => {
-              if (e.target === e.currentTarget && !del.isPending)
-                setConfirmDelete(null);
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#1a1030] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
-                  <Trash2 className="w-5 h-5 text-red-400" />
-                </div>
-                <div>
-                  <h2 className="font-bold text-white">حذف الدوسية</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    لا يمكن التراجع عن هذا الإجراء
-                  </p>
-                </div>
-              </div>
-              <p className="text-sm font-bold text-white bg-white/5 rounded-xl px-3 py-2 mb-5 truncate">
-                «{confirmDelete.title}»
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => !del.isPending && setConfirmDelete(null)}
-                  disabled={del.isPending}
-                  className="flex-1 py-2.5 rounded-xl border border-white/10 text-white text-sm font-bold hover:bg-white/5 transition-colors disabled:opacity-40"
-                >
-                  إلغاء
-                </button>
-                <button
-                  onClick={() => del.mutate(confirmDelete.id)}
-                  disabled={del.isPending}
-                  className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-                >
-                  {del.isPending ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      جارٍ الحذف...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-3.5 h-3.5" />
-                      حذف الدوسية
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <DeleteDialog
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => confirmDelete && del.mutate(confirmDelete.id)}
+        isPending={del.isPending}
+        title="حذف الدوسية"
+        subtitle="لا يمكن التراجع عن هذا الإجراء"
+        itemText={confirmDelete?.title ?? ""}
+        confirmText="حذف الدوسية"
+        zClass="z-[60]"
+      />
     </div>
   );
 }

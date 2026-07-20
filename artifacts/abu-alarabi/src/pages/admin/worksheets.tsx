@@ -7,6 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";
+import { AdminToast } from "@/components/admin/shared/admin-toast";
+import { DeleteDialog } from "@/components/admin/shared/delete-dialog";
+import { StatusBadge } from "@/components/admin/shared/status-badge";
+import { StatsCards } from "@/components/admin/shared/stats-cards";
 import {
   FileText, Plus, Trash2, Pencil, Search, X,
   Eye, EyeOff, Archive, Clock, CheckCircle2, AlertCircle,
@@ -43,20 +47,7 @@ const DIFFICULTY_META: Record<string, { label: string; color: string; bg: string
   hard:   { label: "صعب",   color: "text-red-400",    bg: "bg-red-500/10 border-red-500/20"      },
 };
 
-const STATUS_META: Record<string, { label: string; cls: string }> = {
-  published: { label: "منشور",  cls: "bg-green-500/10 text-green-400 border-green-500/20"   },
-  draft:     { label: "مسودة",  cls: "bg-white/10 text-white/60 border-white/10"            },
-  archived:  { label: "مؤرشف", cls: "bg-orange-500/10 text-orange-400 border-orange-500/20" },
-};
-
-const statusBadge = (s: string) => {
-  const m = STATUS_META[s] ?? STATUS_META.draft;
-  return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${m.cls}`}>
-      {m.label}
-    </span>
-  );
-};
+// StatusBadge → imported from @/components/admin/shared/status-badge
 
 const diffBadge = (d: string) => {
   const m = DIFFICULTY_META[d];
@@ -84,24 +75,7 @@ const useSubjects = () =>
     queryFn: () => customFetch<Subject[]>("/api/subjects", { method: "GET" }),
   });
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
-function Toast({ message, type, onDone }: { message: string; type: "success" | "error"; onDone: () => void }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 40 }}
-      onAnimationComplete={() => setTimeout(onDone, 2500)}
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-2xl text-sm font-bold ${
-        type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-      }`}
-    >
-      {type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-      {message}
-    </motion.div>
-  );
-}
+// AdminToast → imported from @/components/admin/shared/admin-toast
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -138,7 +112,7 @@ export default function AdminWorksheets() {
       customFetch(`/api/admin/worksheets/${id}`, { method: "PATCH", body: JSON.stringify({ status }) }),
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: ["/api/admin/worksheets"] });
-      const label = STATUS_META[vars.status]?.label ?? vars.status;
+      const label = ({ published: "منشور", draft: "مسودة", archived: "مؤرشف" } as Record<string, string>)[vars.status] ?? vars.status;
       showToast(`تم تغيير الحالة إلى: ${label}`);
     },
     onError: () => showToast("فشل تغيير الحالة", "error"),
@@ -217,21 +191,12 @@ export default function AdminWorksheets() {
         </motion.div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: "الكل",    value: stats.total,     color: "text-white"        },
-            { label: "منشور",   value: stats.published, color: "text-green-400"    },
-            { label: "مسودة",   value: stats.draft,     color: "text-white/60"     },
-            { label: "مؤرشف",  value: stats.archived,  color: "text-orange-400"   },
-          ].map((s) => (
-            <Card key={s.label} className="bg-white/5 border-white/10">
-              <CardContent className="p-4 text-center">
-                <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
-                <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <StatsCards stats={[
+          { label: "الكل",   value: stats.total,     color: "text-white"      },
+          { label: "منشور",  value: stats.published, color: "text-green-400"  },
+          { label: "مسودة",  value: stats.draft,     color: "text-white/60"   },
+          { label: "مؤرشف", value: stats.archived,  color: "text-orange-400" },
+        ]} />
 
         {/* Search + filters */}
         <div className="flex flex-col sm:flex-row gap-3">
@@ -319,71 +284,21 @@ export default function AdminWorksheets() {
       )}
 
       {/* ── Delete Confirmation ───────────────────────────────────────────── */}
-      <AnimatePresence>
-        {confirmDelete && (
-          <motion.div
-            key="del-modal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-            onClick={(e) => { if (e.target === e.currentTarget && !del.isPending) setConfirmDelete(null); }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#1a1030] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
-                  <Trash2 className="w-5 h-5 text-red-400" />
-                </div>
-                <div>
-                  <h2 className="font-bold text-white">حذف ورقة العمل</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    هذا الإجراء قد يكون دائماً ولا يمكن التراجع عنه
-                  </p>
-                </div>
-              </div>
-              <p className="text-sm font-bold text-white bg-white/5 rounded-xl px-3 py-2 mb-5 truncate">
-                «{confirmDelete.title}»
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => !del.isPending && setConfirmDelete(null)}
-                  disabled={del.isPending}
-                  className="flex-1 py-2.5 rounded-xl border border-white/10 text-white text-sm font-bold hover:bg-white/5 transition-colors disabled:opacity-40"
-                >
-                  إلغاء
-                </button>
-                <button
-                  onClick={() => del.mutate(confirmDelete.id)}
-                  disabled={del.isPending}
-                  className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-                >
-                  {del.isPending ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      جارٍ الحذف...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-3.5 h-3.5" />
-                      حذف ورقة العمل
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <DeleteDialog
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => confirmDelete && del.mutate(confirmDelete.id)}
+        isPending={del.isPending}
+        title="حذف ورقة العمل"
+        subtitle="هذا الإجراء لا يمكن التراجع عنه"
+        itemText={confirmDelete?.title ?? ""}
+        confirmText="حذف ورقة العمل"
+      />
 
       {/* ── Toast ────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {toast && (
-          <Toast key="toast" message={toast.message} type={toast.type} onDone={() => setToast(null)} />
+          <AdminToast key="toast" message={toast.message} type={toast.type} onDone={() => setToast(null)} />
         )}
       </AnimatePresence>
     </AdminLayout>
@@ -437,7 +352,7 @@ function WorksheetRow({
             {/* Title row */}
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <span className="font-semibold text-white truncate max-w-[280px]">{ws.title}</span>
-              {statusBadge(ws.status)}
+              <StatusBadge status={ws.status} />
               {diffBadge(ws.difficulty)}
             </div>
             {/* Meta row */}

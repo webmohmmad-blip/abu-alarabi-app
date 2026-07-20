@@ -3,3 +3,4 @@
 - [Full-stack Audit 2026-07-17](audit-2026-07-17.md) — sessions goal bug, security headers, settings wiring, exam real data, PDF viewer, auth logout all fixed.
 - [ACMS Implementation](acms-2026-07-17.md) — summaries table+API+pages, exam question builder (7 types), content status workflow, admin nav updated.
 - [Study Room 2.0](study-room-2.md) — GoodNotes-like workspace: pdfjs-dist v6, per-page annotation canvas, DB tables for annotations/bookmarks/progress, object storage for PDF upload.
+- [Two Shared Systems Refactor](two-shared-systems.md) — 5 shared components extracted; ~1,260 lines removed; 4 admin pages preserved; exams+quiz share examsTable via type='weekly'.
