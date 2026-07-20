@@ -19,6 +19,7 @@ app.use(
 // ─── CORS ────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
   /\.replit\.dev$/,
+  /\.replit\.app$/,
   /localhost/,
   /127\.0\.0\.1/,
 ];

@@ -179,12 +179,8 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-sidebar-foreground/50">
+        <div className="border-t border-white/10 pt-8 text-center text-sm text-sidebar-foreground/50">
           <p>© {new Date().getFullYear()} منصة أبو العربي — الأستاذ محمد الساحوري. جميع الحقوق محفوظة.</p>
-          <div className="flex gap-4">
-            <Link href="/terms" className="hover:text-white transition-colors">الشروط والأحكام</Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">سياسة الخصوصية</Link>
-          </div>
         </div>
       </div>
     </footer>
