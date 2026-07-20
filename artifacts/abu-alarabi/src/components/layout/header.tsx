@@ -213,11 +213,23 @@ export function Header() {
               {/* White inner circle */}
               <circle cx="50" cy="50" r="31" fill="white"/>
 
-              {/* ض — large, bold, black */}
+              {/* Ornamental inner ring — thin dark circle */}
+              <circle cx="50" cy="50" r="28.5" fill="none" stroke="#111" strokeWidth="0.8"/>
+              {/* Ornamental dots evenly around the ring */}
+              {[0,45,90,135,180,225,270,315].map((deg, i) => {
+                const rad = (deg * Math.PI) / 180;
+                const cx = 50 + 28.5 * Math.sin(rad);
+                const cy = 50 - 28.5 * Math.cos(rad);
+                return <circle key={i} cx={cx} cy={cy} r="1.4" fill="#111"/>;
+              })}
+              {/* Second finer ring */}
+              <circle cx="50" cy="50" r="25.5" fill="none" stroke="#111" strokeWidth="0.4" strokeDasharray="1.5 2.5"/>
+
+              {/* ع — big, bold, black */}
               <text
-                x="50" y="65"
+                x="50" y="68"
                 textAnchor="middle"
-                fontSize="40"
+                fontSize="52"
                 fontWeight="900"
                 fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif"
                 fill="#111"

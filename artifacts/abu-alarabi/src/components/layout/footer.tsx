@@ -94,8 +94,18 @@ export function Footer() {
                     <text transform="rotate(340 50 50) translate(50 17)">قلم</text>
                   </g>
                   <circle cx="50" cy="50" r="31" fill="white"/>
-                  <text x="50" y="65" textAnchor="middle" fontSize="40" fontWeight="900"
-                    fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="#111" clipPath="url(#fcc)">ع</text>
+                {/* Ornamental inner ring */}
+                <circle cx="50" cy="50" r="28.5" fill="none" stroke="#111" strokeWidth="0.8"/>
+                {[0,45,90,135,180,225,270,315].map((deg, i) => {
+                  const rad = (deg * Math.PI) / 180;
+                  const cx2 = 50 + 28.5 * Math.sin(rad);
+                  const cy2 = 50 - 28.5 * Math.cos(rad);
+                  return <circle key={i} cx={cx2} cy={cy2} r="1.4" fill="#111"/>;
+                })}
+                <circle cx="50" cy="50" r="25.5" fill="none" stroke="#111" strokeWidth="0.4" strokeDasharray="1.5 2.5"/>
+                {/* ع — big */}
+                <text x="50" y="68" textAnchor="middle" fontSize="52" fontWeight="900"
+                  fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="#111" clipPath="url(#fcc)">ع</text>
                 </svg>
               </div>
               <span className="text-2xl font-bold tracking-wide">أبو العربي</span>
