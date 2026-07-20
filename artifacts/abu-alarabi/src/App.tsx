@@ -46,7 +46,7 @@ import AdminQuiz from '@/pages/admin/quiz';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: 0,          // no retries — prevents cascading refetches on 401
       staleTime: 30_000,
     },
   },

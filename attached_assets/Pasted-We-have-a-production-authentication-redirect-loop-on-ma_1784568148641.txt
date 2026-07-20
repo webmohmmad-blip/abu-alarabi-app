@@ -1,0 +1,471 @@
+We have a production authentication redirect loop on malsahori.com.
+
+Current behavior:
+
+1. The user enters a phone number.
+
+2. Login appears to succeed.
+
+3. The app redirects to /dashboard.
+
+4. The dashboard immediately redirects back to /login.
+
+5. This repeats continuously.
+
+The application now uses phone-only authentication with no password and no onboarding.
+
+Do not only explain the issue. Inspect and fix the project completely.
+
+==================================================
+
+1. TRACE THE FULL AUTH FLOW
+
+==================================================
+
+Inspect:
+
+- Login page
+
+- Authentication API
+
+- Session creation
+
+- Session storage
+
+- Cookie configuration
+
+- /api/auth/me
+
+- Protected route logic
+
+- Student layout
+
+- Dashboard redirects
+
+- Global auth provider
+
+- Query caching
+
+- Production proxy configuration
+
+Identify the exact point where the authenticated session is lost.
+
+==================================================
+
+2. FIX SESSION CREATION
+
+==================================================
+
+After successful phone login:
+
+- Regenerate the session safely if needed.
+
+- Assign the authenticated user ID and role to the session.
+
+- Explicitly save the session before returning success.
+
+- Do not redirect before session.save() completes.
+
+Example flow:
+
+req.session.regenerate(error => {
+
+  if (error) return next(error);
+
+  req.session.userId = user.id;
+
+  req.session.role = user.role;
+
+  req.session.save(saveError => {
+
+    if (saveError) return next(saveError);
+
+    res.status(200).json({
+
+      ok: true,
+
+      user
+
+    });
+
+  });
+
+});
+
+Use the implementation that matches the existing framework and session library.
+
+==================================================
+
+3. FIX PRODUCTION PROXY SETTINGS
+
+==================================================
+
+Because the application is deployed behind Replit or another reverse proxy:
+
+- Enable Express trust proxy correctly.
+
+Example:
+
+app.set("trust proxy", 1);
+
+Ensure this is configured before session middleware.
+
+==================================================
+
+4. FIX COOKIE CONFIGURATION
+
+==================================================
+
+Audit the production session cookie.
+
+It must work correctly on:
+https://malsahori.com
+
+Use appropriate production settings:
+
+- httpOnly: true
+
+- secure: true in production
+
+- sameSite: "lax" for same-site frontend and API
+
+- path: "/"
+
+- correct maxAge
+
+- do not hardcode an incorrect domain
+
+Prefer leaving the cookie domain undefined unless cross-subdomain sharing is actually required.
+
+Do not use:
+
+- localhost domain
+
+- replit.dev domain
+
+- an old deployment domain
+
+- sameSite: "strict" if it breaks the flow
+
+- sameSite: "none" unless cross-site cookies are necessary
+
+If sameSite is "none", secure must be true.
+
+==================================================
+
+5. FIX FRONTEND REQUEST CREDENTIALS
+
+==================================================
+
+Ensure every authentication request includes credentials.
+
+For fetch:
+
+credentials: "include"
+
+For Axios:
+
+withCredentials: true
+
+Apply this to:
+
+- phone login
+
+- /api/auth/me
+
+- logout
+
+- session refresh
+
+- protected API requests
+
+Use one centralized API client instead of inconsistent request code.
+
+==================================================
+
+6. FIX LOGIN REDIRECT LOGIC
+
+==================================================
+
+The Login page must not redirect based on stale or unresolved auth state.
+
+Use three explicit states:
+
+- loading
+
+- authenticated
+
+- unauthenticated
+
+Rules:
+
+- While auth state is loading, show a loading state.
+
+- If authenticated, redirect once to the correct destination.
+
+- If unauthenticated, remain on the login page.
+
+- Do not redirect repeatedly inside render.
+
+- Do not combine multiple competing useEffect redirects.
+
+- Use replace navigation after successful login.
+
+Student:
+
+/dashboard
+
+Admin:
+
+/admin
+
+==================================================
+
+7. FIX PROTECTED ROUTES
+
+==================================================
+
+Protected routes must:
+
+- Wait until /api/auth/me finishes.
+
+- Not redirect while auth is still loading.
+
+- Redirect to /login only after a confirmed 401.
+
+- Avoid infinite retries.
+
+- Avoid redirecting back and forth between layouts.
+
+Disable automatic retry for 401 responses.
+
+==================================================
+
+8. REMOVE OLD ONBOARDING CONDITIONS
+
+==================================================
+
+Search the entire project for:
+
+- onboarding
+
+- onboardingCompleted
+
+- completedOnboarding
+
+- isFirstLogin
+
+- firstVisit
+
+- profileCompleted
+
+- setupCompleted
+
+Remove any redirect or guard that sends the user away from /dashboard.
+
+The final flow is:
+
+Login success → /dashboard
+
+There is no onboarding.
+
+==================================================
+
+9. FIX PHONE AUTH CONTRACT
+
+==================================================
+
+The login request should contain only the normalized phone number.
+
+Expected behavior:
+
+If the phone number exists:
+
+- log the user in.
+
+If it does not exist:
+
+- either return a clear 404/registration-required response,
+
+or create the user only if that is the finalized product behavior.
+
+Do not silently alternate between conflicting login and registration logic.
+
+Normalize Jordanian phone numbers consistently before lookup.
+
+==================================================
+
+10. VERIFY SESSION STORE
+
+==================================================
+
+Ensure production does not use MemoryStore.
+
+Use the existing persistent session store linked to the production database.
+
+Verify:
+
+- the session table exists
+
+- sessions are written
+
+- sessions are read on the next request
+
+- expired sessions are cleaned up
+
+- deployment restarts do not instantly destroy all sessions
+
+==================================================
+
+11. FIX LOGOUT
+
+==================================================
+
+Logout must:
+
+- destroy the server session
+
+- clear the cookie using the same cookie options used to create it
+
+- return success once
+
+- redirect to /login without creating another loop
+
+==================================================
+
+12. ADD SAFE DIAGNOSTIC LOGGING
+
+==================================================
+
+Temporarily log safe authentication diagnostics:
+
+- login request received
+
+- normalized phone lookup result
+
+- user ID
+
+- session ID
+
+- session save success/failure
+
+- whether /api/auth/me received a session
+
+- cookie presence boolean
+
+- response status
+
+Never log:
+
+- full cookies
+
+- session secrets
+
+- database URL
+
+- personal data beyond what is necessary
+
+Remove verbose diagnostics after the fix is confirmed.
+
+==================================================
+
+13. END-TO-END TESTS
+
+==================================================
+
+Run these tests against the production-style configuration:
+
+1. New browser session.
+
+2. Enter a valid existing phone number.
+
+3. Login returns 200.
+
+4. Session cookie is set.
+
+5. /api/auth/me immediately returns 200.
+
+6. Redirect to /dashboard happens once.
+
+7. Refresh /dashboard.
+
+8. User remains logged in.
+
+9. Open a protected student page.
+
+10. It remains accessible.
+
+11. Logout.
+
+12. /api/auth/me returns 401.
+
+13. /dashboard redirects once to /login.
+
+14. No infinite redirect occurs.
+
+Also test:
+
+- private window
+
+- Chrome
+
+- Safari/iPad
+
+- mobile browser
+
+- production domain malsahori.com
+
+==================================================
+
+14. BUILD AND DEPLOY VERIFICATION
+
+==================================================
+
+After the fix:
+
+- run typecheck
+
+- run build
+
+- run production start
+
+- verify the deployed build contains the new auth code
+
+- clear stale service worker/cache if one exists
+
+- redeploy
+
+- verify the production cookie on malsahori.com
+
+==================================================
+
+15. FINAL REPORT
+
+==================================================
+
+Create:
+
+AUTH_REDIRECT_LOOP_FIX_REPORT.md
+
+Include:
+
+- root cause
+
+- files changed
+
+- cookie settings
+
+- proxy settings
+
+- session-store verification
+
+- frontend credential changes
+
+- redirect logic changes
+
+- test results
+
+- confirmation that login no longer loops
+أبو العربي — منصة محمد الساحوري للغة العربية
+دوسيات عربي، أوراق عمل، امتحانات محلولة. توجيهي الأردن جيل 2010 مع الأستاذ محمد الساحوري.
+ 

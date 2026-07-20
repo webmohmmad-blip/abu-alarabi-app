@@ -2,7 +2,8 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation } from "wouter";
-import { useLogin } from "@workspace/api-client-react";
+import { useLogin, getGetMeQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ type LoginValues = z.infer<typeof loginSchema>;
 export default function Login() {
   const [, setLocation] = useLocation();
   const loginMutation = useLogin();
+  const queryClient = useQueryClient();
   const [error, setError] = useState("");
 
   const form = useForm<LoginValues>({
@@ -33,8 +35,16 @@ export default function Login() {
       { data: { phone: data.phone } },
       {
         onSuccess: (res) => {
+          // 1. Store the token
           localStorage.setItem("token", res.token);
-          setLocation("/dashboard");
+          // 2. Seed the auth cache with the user from the login response
+          //    so DashboardLayout sees isAuthenticated=true immediately
+          queryClient.setQueryData(getGetMeQueryKey(), res.user);
+          // 3. Redirect based on role
+          const dest = ["admin", "super_admin"].includes(res.user.role)
+            ? "/admin"
+            : "/dashboard";
+          setLocation(dest);
         },
         onError: (err: any) => {
           const msg = err?.response?.data?.error ?? err?.message ?? "";
@@ -58,7 +68,6 @@ export default function Login() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
         <div className="flex justify-center mb-8">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">

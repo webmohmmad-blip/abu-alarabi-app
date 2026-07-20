@@ -2,7 +2,8 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation } from "wouter";
-import { useRegister } from "@workspace/api-client-react";
+import { useRegister, getGetMeQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function Register() {
   const [, setLocation] = useLocation();
   const registerMutation = useRegister();
+  const queryClient = useQueryClient();
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -31,7 +33,11 @@ export default function Register() {
       { data },
       {
         onSuccess: (res) => {
+          // 1. Store the token
           localStorage.setItem("token", res.token);
+          // 2. Seed the auth cache immediately so protected routes see isAuthenticated=true
+          queryClient.setQueryData(getGetMeQueryKey(), res.user);
+          // 3. Students always go to dashboard
           setLocation("/dashboard");
         },
       }
@@ -40,8 +46,8 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
-      <div className="absolute bottom-0 right-0 w-full h-1/2 bg-secondary/5 skew-y-6 transform origin-bottom-right -z-10"></div>
-      <div className="absolute top-10 left-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10"></div>
+      <div className="absolute bottom-0 right-0 w-full h-1/2 bg-secondary/5 skew-y-6 transform origin-bottom-right -z-10" />
+      <div className="absolute top-10 left-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

@@ -1,5 +1,5 @@
-import { createContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { useGetMe, User } from '@workspace/api-client-react';
+import { createContext, useCallback, ReactNode } from 'react';
+import { useGetMe, getGetMeQueryKey, User } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 
 export interface AuthContextType {
@@ -18,32 +18,27 @@ export const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const { data: user, isLoading: isQueryLoading, isError } = useGetMe({
+
+  const { data: user, isLoading, isError } = useGetMe({
     query: {
-      retry: false,
+      queryKey: getGetMeQueryKey(),
+      retry: false,          // never retry 401 — avoids delay on unauthenticated users
       refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 min — reduce /auth/me chatter
     }
   });
-
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    if (!isQueryLoading) {
-      setIsReady(true);
-    }
-  }, [isQueryLoading]);
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     queryClient.clear();
-    window.location.href = '/login';
+    window.location.replace('/login');
   }, [queryClient]);
 
   return (
     <AuthContext.Provider
       value={{
-        user: isError ? null : user ?? null,
-        isLoading: !isReady || isQueryLoading,
+        user: isError ? null : (user ?? null),
+        isLoading,
         isAuthenticated: !!user && !isError,
         logout,
       }}
