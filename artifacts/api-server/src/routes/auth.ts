@@ -10,6 +10,7 @@ import {
   requireAuth,
   type AuthRequest,
 } from "../lib/auth";
+import { validatePhone, PHONE_ERROR_AR } from "../lib/phone";
 import {
   RegisterBody,
   LoginBody,
@@ -40,7 +41,13 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { fullName, phone } = parsed.data;
+  const phoneResult = validatePhone(parsed.data.phone);
+  if (!phoneResult.ok) {
+    res.status(400).json({ ok: false, message: phoneResult.error });
+    return;
+  }
+  const { fullName } = parsed.data;
+  const phone = phoneResult.phone;
 
   const [existing] = await db
     .select()
@@ -82,7 +89,12 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { phone } = parsed.data;
+  const phoneResult = validatePhone(parsed.data.phone);
+  if (!phoneResult.ok) {
+    res.status(400).json({ ok: false, message: phoneResult.error });
+    return;
+  }
+  const phone = phoneResult.phone;
 
   const [user] = await db
     .select()

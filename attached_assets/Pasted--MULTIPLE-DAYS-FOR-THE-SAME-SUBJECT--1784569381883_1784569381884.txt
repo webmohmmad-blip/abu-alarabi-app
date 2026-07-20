@@ -1,0 +1,182 @@
+==================================================
+
+MULTIPLE DAYS FOR THE SAME SUBJECT
+
+==================================================
+
+A personal subject can be scheduled on multiple days of the week.
+
+Do not restrict a subject to only one day.
+
+When the student selects a subject, allow selecting one or more days using multi-select checkboxes or toggle buttons:
+
+- الأحد
+
+- الاثنين
+
+- الثلاثاء
+
+- الأربعاء
+
+- الخميس
+
+- الجمعة
+
+- السبت
+
+Example:
+
+Subject: الرياضيات
+
+Selected days:
+
+- الأحد
+
+- الثلاثاء
+
+- الخميس
+
+Time:
+
+- From 08:00
+
+- To 09:00
+
+After saving, create separate schedule entries for the same subject on all selected days.
+
+The weekly schedule should display:
+
+- الرياضيات on Sunday
+
+- الرياضيات on Tuesday
+
+- الرياضيات on Thursday
+
+All entries must use the same subject name and color.
+
+The student may also add the same subject again with a different time or different days.
+
+Example:
+
+رياضيات:
+
+- Sunday 08:00–09:00
+
+- Tuesday 08:00–09:00
+
+- Thursday 10:00–11:00
+
+Do not create duplicate personal subjects.
+
+Create one personal subject record, then create multiple schedule-entry records linked to it.
+
+==================================================
+
+EDITING AND DELETING
+
+==================================================
+
+When editing a scheduled subject, allow the student to:
+
+- change the selected days
+
+- change the start time
+
+- change the end time
+
+- add another day
+
+- remove one day only
+
+- remove all scheduled entries without deleting the subject
+
+- delete the personal subject and all its schedule entries after confirmation
+
+==================================================
+
+CONFLICT VALIDATION
+
+==================================================
+
+Before saving, check every selected day for time conflicts.
+
+If another schedule entry overlaps on one of the selected days:
+
+- do not create conflicting entries
+
+- show a short Arabic message:
+
+"يوجد تعارض مع مادة أخرى في هذا الوقت"
+
+Clearly identify the conflicting day.
+
+Allow saving the valid days only after explicit confirmation, or require the student to correct the conflict before saving.
+
+==================================================
+
+DATABASE BEHAVIOR
+
+==================================================
+
+One personal subject can have many schedule entries.
+
+Required relationship:
+
+personal_schedule_subjects
+
+1 → many
+
+student_schedule_entries
+
+Each selected day must create an independent schedule entry containing:
+
+- id
+
+- userId
+
+- personalSubjectId
+
+- dayOfWeek
+
+- startTime
+
+- endTime
+
+- createdAt
+
+- updatedAt
+
+Add indexes for:
+
+- userId
+
+- personalSubjectId
+
+- dayOfWeek
+
+- startTime
+
+Do not store selected days as one comma-separated text field.
+
+Use separate schedule-entry rows so every day can be edited or deleted independently.
+
+==================================================
+
+FINAL USER FLOW
+
+==================================================
+
+1. Student clicks "إضافة مادة".
+
+2. Student creates or selects a personal subject.
+
+3. Student selects multiple days.
+
+4. Student chooses start and end time.
+
+5. System validates time conflicts.
+
+6. System creates one schedule entry for every selected day.
+
+7. The subject appears on all selected days in the weekly timetable.
+ 

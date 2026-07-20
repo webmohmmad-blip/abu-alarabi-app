@@ -11,13 +11,19 @@ import { Card } from "@/components/ui/card";
 import { BookOpen, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
+// ─── Validation ─────────────────────────────────────────────────────────────
+const JORDAN_PHONE_RE = /^(077|078|079)\d{7}$/;
+
 const registerSchema = z.object({
   fullName: z.string().min(3, "الاسم يجب أن يكون 3 أحرف على الأقل"),
-  phone: z.string().min(10, "رقم الهاتف يجب أن يتكون من 10 أرقام على الأقل"),
+  phone: z
+    .string()
+    .regex(JORDAN_PHONE_RE, "رقم الهاتف غير صالح"),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+// ─── Component ───────────────────────────────────────────────────────────────
 export default function Register() {
   const [, setLocation] = useLocation();
   const registerMutation = useRegister();
@@ -28,17 +34,23 @@ export default function Register() {
     defaultValues: { fullName: "", phone: "" },
   });
 
+  // Strip non-digits and cap at 10 characters on every keystroke
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const clean = e.target.value.replace(/\D/g, "").slice(0, 10);
+    form.setValue("phone", clean, { shouldValidate: form.formState.isSubmitted });
+  };
+
   const onSubmit = (data: RegisterFormValues) => {
     registerMutation.mutate(
       { data },
       {
         onSuccess: (res) => {
-          // 1. Store the token
           localStorage.setItem("token", res.token);
-          // 2. Seed the auth cache immediately so protected routes see isAuthenticated=true
           queryClient.setQueryData(getGetMeQueryKey(), res.user);
-          // 3. Students always go to dashboard
           setLocation("/dashboard");
+        },
+        onError: () => {
+          form.setError("phone", { message: "رقم الهاتف غير صالح" });
         },
       }
     );
@@ -70,13 +82,6 @@ export default function Register() {
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {registerMutation.isError && (
-              <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-sm font-bold flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                <span>حدث خطأ أثناء التسجيل. حاول مجدداً.</span>
-              </div>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="fullName">الاسم الرباعي</Label>
               <Input
@@ -85,7 +90,10 @@ export default function Register() {
                 {...form.register("fullName")}
               />
               {form.formState.errors.fullName && (
-                <p className="text-xs text-destructive font-bold">{form.formState.errors.fullName.message}</p>
+                <p className="text-xs text-destructive font-bold flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  {form.formState.errors.fullName.message}
+                </p>
               )}
             </div>
 
@@ -93,13 +101,20 @@ export default function Register() {
               <Label htmlFor="phone">رقم الهاتف</Label>
               <Input
                 id="phone"
-                placeholder="079XXXXXXX"
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="07XXXXXXXX"
                 dir="ltr"
                 className="text-right"
-                {...form.register("phone")}
+                value={form.watch("phone")}
+                onChange={handlePhoneChange}
               />
               {form.formState.errors.phone && (
-                <p className="text-xs text-destructive font-bold">{form.formState.errors.phone.message}</p>
+                <p className="text-xs text-destructive font-bold flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  {form.formState.errors.phone.message}
+                </p>
               )}
             </div>
 

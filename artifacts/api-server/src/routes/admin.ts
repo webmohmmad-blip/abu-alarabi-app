@@ -20,9 +20,9 @@ import {
   commentReportsTable,
   studySessionsTable,
 } from "@workspace/db";
-import { requireAuth, requireRole } from "../lib/auth";
+import { requireAuth, requireRole, hashPassword } from "../lib/auth";
+import { validatePhone } from "../lib/phone";
 import { eq, desc, and, like, sql, count, isNull, ne, or } from "drizzle-orm";
-import { hashPassword } from "../lib/auth";
 
 const router = Router();
 
@@ -219,10 +219,17 @@ router.post("/users", async (req, res) => {
     return;
   }
 
+  const phoneResult = validatePhone(phone);
+  if (!phoneResult.ok) {
+    res.status(400).json({ ok: false, message: phoneResult.error });
+    return;
+  }
+  const normalizedPhone = phoneResult.phone;
+
   const passwordHash = await hashPassword(password);
   const [user] = await db
     .insert(usersTable)
-    .values({ fullName, phone, email, passwordHash, role, status: "active", isActive: true })
+    .values({ fullName, phone: normalizedPhone, email, passwordHash, role, status: "active", isActive: true })
     .returning();
 
   if (role === "student" && user) {
@@ -354,13 +361,20 @@ router.post("/users/import", async (req, res) => {
 
   for (const u of users) {
     try {
-      const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.phone, u.phone)).limit(1);
+      const phoneResult = validatePhone(u.phone ?? "");
+      if (!phoneResult.ok) {
+        errors.push(`${u.phone}: ${phoneResult.error}`);
+        continue;
+      }
+      const normalizedPhone = phoneResult.phone;
+
+      const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.phone, normalizedPhone)).limit(1);
       if (existing[0]) { skipped++; continue; }
 
-      const passwordHash = await hashPassword(defaultPassword || u.phone.slice(-6));
+      const passwordHash = await hashPassword(defaultPassword || normalizedPhone.slice(-6));
       const [newUser] = await db.insert(usersTable).values({
         fullName: u.fullName,
-        phone: u.phone,
+        phone: normalizedPhone,
         email: u.email ?? null,
         passwordHash,
         role: (u.role || defaultRole) as any,

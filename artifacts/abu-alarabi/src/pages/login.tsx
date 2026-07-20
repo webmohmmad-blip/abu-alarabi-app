@@ -10,48 +10,53 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { BookOpen, AlertCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+
+// ─── Validation ─────────────────────────────────────────────────────────────
+const JORDAN_PHONE_RE = /^(077|078|079)\d{7}$/;
 
 const loginSchema = z.object({
-  phone: z.string().min(10, "رقم الهاتف يجب أن يتكون من 10 أرقام على الأقل"),
+  phone: z
+    .string()
+    .regex(JORDAN_PHONE_RE, "رقم الهاتف غير صالح"),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
 
+// ─── Component ───────────────────────────────────────────────────────────────
 export default function Login() {
   const [, setLocation] = useLocation();
   const loginMutation = useLogin();
   const queryClient = useQueryClient();
-  const [error, setError] = useState("");
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { phone: "" },
   });
 
+  // Strip non-digits and cap at 10 characters on every keystroke
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const clean = e.target.value.replace(/\D/g, "").slice(0, 10);
+    form.setValue("phone", clean, { shouldValidate: form.formState.isSubmitted });
+  };
+
   const handleSubmit = (data: LoginValues) => {
-    setError("");
     loginMutation.mutate(
       { data: { phone: data.phone } },
       {
         onSuccess: (res) => {
-          // 1. Store the token
           localStorage.setItem("token", res.token);
-          // 2. Seed the auth cache with the user from the login response
-          //    so DashboardLayout sees isAuthenticated=true immediately
           queryClient.setQueryData(getGetMeQueryKey(), res.user);
-          // 3. Redirect based on role
           const dest = ["admin", "super_admin"].includes(res.user.role)
             ? "/admin"
             : "/dashboard";
           setLocation(dest);
         },
         onError: (err: any) => {
-          const msg = err?.response?.data?.error ?? err?.message ?? "";
+          const msg = err?.data?.error ?? err?.message ?? "";
           if (msg.includes("غير مسجل")) {
-            setError("رقم الهاتف غير مسجل. تحقق من الرقم أو أنشئ حساباً جديداً.");
+            form.setError("phone", { message: "رقم الهاتف غير مسجل" });
           } else {
-            setError(msg || "حدث خطأ. حاول مجدداً.");
+            form.setError("phone", { message: "رقم الهاتف غير صالح" });
           }
         },
       }
@@ -83,25 +88,23 @@ export default function Login() {
             <p className="text-muted-foreground text-sm">أدخل رقم هاتفك للدخول إلى حسابك.</p>
           </div>
 
-          {error && (
-            <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-sm font-bold flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="phone">رقم الهاتف</Label>
               <Input
                 id="phone"
-                placeholder="079XXXXXXX"
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="07XXXXXXXX"
                 dir="ltr"
                 className="text-right"
-                {...form.register("phone")}
+                value={form.watch("phone")}
+                onChange={handlePhoneChange}
               />
               {form.formState.errors.phone && (
-                <p className="text-xs text-destructive font-bold">
+                <p className="text-xs text-destructive font-bold flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   {form.formState.errors.phone.message}
                 </p>
               )}

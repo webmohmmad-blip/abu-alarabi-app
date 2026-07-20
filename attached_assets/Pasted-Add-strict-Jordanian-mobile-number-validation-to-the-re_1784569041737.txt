@@ -1,0 +1,144 @@
+Add strict Jordanian mobile-number validation to the registration and login flow.
+
+The phone number must:
+
+- Contain exactly 10 digits.
+
+- Accept digits only.
+
+- Reject letters.
+
+- Reject spaces.
+
+- Reject symbols.
+
+- Reject country-code formats such as +962.
+
+- Start with only one of these prefixes:
+
+  - 077
+
+  - 078
+
+  - 079
+
+Valid examples:
+
+0771234567
+
+0781234567
+
+0791234567
+
+Invalid examples:
+
+761234567
+
+079123456
+
+07912345678
+
+0761234567
+
++962791234567
+
+079-123-4567
+
+079 123 4567
+
+abcdefghij
+
+Do not display these rules as visible helper text on the interface.
+
+Implement the validation silently in the code.
+
+Frontend requirements:
+
+1. Use an input configured for telephone/numeric entry:
+
+   - type="tel"
+
+   - inputMode="numeric"
+
+   - maxLength={10}
+
+2. On every input change:
+
+   - Remove all non-digit characters.
+
+   - Keep no more than 10 digits.
+
+3. Before submitting, validate using this exact rule:
+
+/^(077|078|079)\d{7}$/
+
+4. If invalid:
+
+   - Prevent the API request.
+
+   - Show only a short Arabic error message:
+
+     "رقم الهاتف غير صالح"
+
+5. Do not expose the full validation rules in the UI.
+
+Backend requirements:
+
+1. Repeat the same validation on the server.
+
+2. Never trust frontend validation alone.
+
+3. Normalize the value before validating by removing any non-digit characters.
+
+4. Reject an invalid number with HTTP 400.
+
+5. Return a safe Arabic response:
+
+{
+
+  "ok": false,
+
+  "message": "رقم الهاتف غير صالح"
+
+}
+
+6. Apply this validation to:
+
+   - Registration
+
+   - Login
+
+   - Updating the phone number
+
+   - Admin user creation
+
+   - Imported users
+
+   - Any API accepting a phone number
+
+7. Add a database CHECK constraint if supported:
+
+phone ~ '^(077|078|079)[0-9]{7}$'
+
+8. Preserve the UNIQUE constraint on the normalized phone number.
+
+9. Add automated tests for:
+
+   - All three valid prefixes
+
+   - Fewer than 10 digits
+
+   - More than 10 digits
+
+   - Invalid prefixes
+
+   - Letters
+
+   - Symbols
+
+   - Spaces
+
+   - Duplicate numbers
+
+Do not change the visible design of the registration page except for showing the short error only when validation fails.
+ 

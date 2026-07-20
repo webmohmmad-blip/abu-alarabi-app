@@ -1,0 +1,366 @@
+# FIX EXAM DELETE FUNCTIONALITY
+
+# Abu Al-Arabi Admin Dashboard
+
+There is a bug in the Admin Exams page.
+
+The delete button is visible, but exams cannot be deleted.
+
+Do not only explain the issue.
+
+Inspect the full delete flow and fix it end-to-end.
+
+==================================================
+
+1. TRACE THE CURRENT DELETE FLOW
+
+==================================================
+
+Inspect:
+
+- Admin exams page
+
+- Delete button component
+
+- Click handler
+
+- Confirmation modal
+
+- API client
+
+- DELETE exam endpoint
+
+- Authorization middleware
+
+- Database relations
+
+- Foreign key constraints
+
+- Query cache invalidation
+
+- UI refresh after deletion
+
+Identify the exact root cause.
+
+==================================================
+
+2. DELETE BUTTON BEHAVIOR
+
+==================================================
+
+When the admin clicks the delete icon:
+
+- Open a confirmation dialog.
+
+- Show the exam title.
+
+- Clearly explain that deletion is permanent.
+
+- Provide two buttons:
+
+إلغاء
+
+حذف الامتحان
+
+Do not delete immediately without confirmation.
+
+==================================================
+
+3. DELETE API
+
+==================================================
+
+Ensure there is a working endpoint such as:
+
+DELETE /api/admin/exams/:id
+
+Requirements:
+
+- Admin authentication required.
+
+- Correct permission required.
+
+- Validate the exam ID.
+
+- Return 404 if the exam does not exist.
+
+- Return 403 if the user lacks permission.
+
+- Return 200 after successful deletion.
+
+- Return safe Arabic error messages.
+
+Successful response:
+
+{
+
+  "ok": true,
+
+  "message": "تم حذف الامتحان بنجاح"
+
+}
+
+==================================================
+
+4. HANDLE RELATED DATA
+
+==================================================
+
+Audit all tables related to an exam, including:
+
+- exam_questions
+
+- exam_attempts
+
+- exam_answers
+
+- exam_results
+
+- weekly_quiz_links
+
+- comments
+
+- notifications
+
+- publishing targets
+
+- analytics
+
+- scheduled jobs
+
+Choose one safe deletion strategy.
+
+Preferred strategy:
+
+Use a database transaction.
+
+Delete child records in the correct order before deleting the exam.
+
+Example:
+
+1. Delete student answers.
+
+2. Delete attempts and results.
+
+3. Delete question relations.
+
+4. Delete comments and notifications.
+
+5. Delete publishing and scheduling records.
+
+6. Delete the exam.
+
+If business rules require keeping historical attempts, use soft delete instead.
+
+==================================================
+
+5. SOFT DELETE OPTION
+
+==================================================
+
+If exams with student attempts must not be permanently removed:
+
+- Add deletedAt or status="deleted".
+
+- Hide deleted exams from students.
+
+- Hide them from the default admin list.
+
+- Keep historical attempts and grades intact.
+
+- Add an optional archived/deleted filter for admins.
+
+Use this rule:
+
+- Draft exam with no attempts → allow permanent deletion.
+
+- Published exam with attempts → soft delete or archive.
+
+- Never destroy student results accidentally.
+
+==================================================
+
+6. DATABASE CONSTRAINTS
+
+==================================================
+
+Inspect all foreign keys.
+
+Fix any constraint preventing valid deletion.
+
+Use one of:
+
+- ON DELETE CASCADE for disposable child records.
+
+- ON DELETE SET NULL where historical records should remain.
+
+- Explicit transaction-based cleanup.
+
+Do not disable foreign-key protection globally.
+
+==================================================
+
+7. FRONTEND UPDATE
+
+==================================================
+
+After successful deletion:
+
+- Close the confirmation modal.
+
+- Remove the deleted exam from the list immediately.
+
+- Invalidate and refetch the exams query.
+
+- Update the summary counters.
+
+- Show an Arabic success toast:
+
+"تم حذف الامتحان بنجاح"
+
+On failure:
+
+- Keep the exam visible.
+
+- Show the real safe Arabic error message.
+
+- Do not show a generic silent failure.
+
+==================================================
+
+8. PREVENT DOUBLE SUBMISSION
+
+==================================================
+
+While deletion is running:
+
+- Disable the delete confirmation button.
+
+- Show loading state:
+
+  "جارٍ الحذف..."
+
+- Prevent duplicate DELETE requests.
+
+==================================================
+
+9. PERMISSIONS
+
+==================================================
+
+Verify that:
+
+- Super Admin can delete exams.
+
+- Authorized Admin can delete exams.
+
+- Student cannot call the endpoint.
+
+- Unauthenticated requests return 401.
+
+- Unauthorized admins return 403.
+
+==================================================
+
+10. DELETE QUESTIONS
+
+==================================================
+
+The page also contains question delete icons.
+
+Verify that deleting a single question works separately.
+
+Required endpoint example:
+
+DELETE /api/admin/exams/:examId/questions/:questionId
+
+After deletion:
+
+- Remove the question from the list.
+
+- Update the question count.
+
+- Update the total score if necessary.
+
+- Preserve question ordering.
+
+- Show success feedback.
+
+==================================================
+
+11. LOGGING
+
+==================================================
+
+Add an audit-log event containing:
+
+- adminUserId
+
+- action
+
+- examId
+
+- examTitle
+
+- deletionType
+
+- timestamp
+
+Do not log private student answers.
+
+==================================================
+
+12. TESTS
+
+==================================================
+
+Test all scenarios:
+
+1. Delete a draft exam with no questions.
+
+2. Delete a draft exam with questions.
+
+3. Delete an exam with attempts.
+
+4. Cancel the confirmation dialog.
+
+5. Unauthorized user tries to delete.
+
+6. Invalid exam ID.
+
+7. Database failure during deletion.
+
+8. Double-click delete.
+
+9. Delete one question.
+
+10. Refresh the page after deletion.
+
+Confirm there are no orphan records.
+
+==================================================
+
+13. FINAL REPORT
+
+==================================================
+
+Create:
+
+EXAM_DELETE_FIX_REPORT.md
+
+Include:
+
+- root cause
+
+- files modified
+
+- endpoint behavior
+
+- database strategy
+
+- permission checks
+
+- tests performed
+
+- confirmation that exam deletion now works
+ 
