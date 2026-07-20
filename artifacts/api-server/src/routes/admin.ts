@@ -614,10 +614,16 @@ router.patch("/exams/:id", async (req, res) => {
   res.json(exam);
 });
 
-router.delete("/exams/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
+router.delete("/exams/:id", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (!id || isNaN(id)) { res.status(400).json({ ok: false, message: "معرّف الامتحان غير صالح" }); return; }
+
+  const [existing] = await db.select({ id: examsTable.id, title: examsTable.title })
+    .from(examsTable).where(and(eq(examsTable.id, id), isNull(examsTable.deletedAt)));
+  if (!existing) { res.status(404).json({ ok: false, message: "الامتحان غير موجود" }); return; }
+
   await db.update(examsTable).set({ deletedAt: new Date() } as any).where(eq(examsTable.id, id));
-  res.status(204).send();
+  res.json({ ok: true, message: "تم حذف الامتحان بنجاح" });
 });
 
 // ─── WEEKLY QUIZ ADMIN ───────────────────────────────────────────────────────

@@ -1,0 +1,568 @@
+# CONSOLIDATE THE PLATFORM INTO TWO SHARED SYSTEMS
+
+# Abu Al-Arabi Platform
+
+The platform now has two shared content systems.
+
+Do not maintain four independent duplicated implementations.
+
+Preserve four separate user-facing pages, but unify their internal architecture.
+
+==================================================
+
+SYSTEM 1: EDUCATIONAL FILES
+
+==================================================
+
+This shared system includes:
+
+- Dossiers
+
+- Electronic Worksheets
+
+Use one shared architecture with a content-type discriminator:
+
+DOSSIER
+
+WORKSHEET
+
+Both types must share:
+
+- Admin page structure
+
+- Search
+
+- Status filters
+
+- Statistics
+
+- Creation and editing foundation
+
+- PDF upload
+
+- PDF replacement
+
+- PDF preview
+
+- Cover image
+
+- Publishing
+
+- Scheduling
+
+- Archiving
+
+- Duplication
+
+- Deletion
+
+- Permissions
+
+- Audit logging
+
+- Loading states
+
+- Empty states
+
+- Responsive behavior
+
+Keep separate visible routes:
+
+/admin/dossiers
+
+/admin/worksheets
+
+Keep separate student routes:
+
+/dossiers
+
+/worksheets
+
+Do not combine both content types into one visible page.
+
+Reuse shared components internally.
+
+Create reusable components such as:
+
+- EducationalFilePage
+
+- EducationalFileForm
+
+- EducationalFileCard
+
+- EducationalFileFilters
+
+- EducationalFileActions
+
+- PdfUploadField
+
+- PublishControls
+
+- DeleteConfirmationDialog
+
+The page receives a type property:
+
+type="DOSSIER"
+
+or:
+
+type="WORKSHEET"
+
+==================================================
+
+DOSSIER-SPECIFIC FIELDS
+
+==================================================
+
+Dossiers may include:
+
+- title
+
+- description
+
+- PDF
+
+- cover image
+
+- page count
+
+- grade
+
+- target group
+
+- display order
+
+- publish status
+
+- scheduled publish date
+
+==================================================
+
+WORKSHEET-SPECIFIC FIELDS
+
+==================================================
+
+Worksheets may include:
+
+- title
+
+- description
+
+- PDF
+
+- grade
+
+- target group
+
+- difficulty
+
+- question count
+
+- estimated completion time
+
+- publish status
+
+- scheduled publish date
+
+Do not display worksheet-only fields in dossier forms.
+
+Do not display dossier-only fields in worksheet forms.
+
+==================================================
+
+SYSTEM 2: ELECTRONIC ASSESSMENTS
+
+==================================================
+
+This shared system includes:
+
+- Electronic Exams
+
+- Weekly Quizzes
+
+Use one shared assessment architecture with:
+
+EXAM
+
+WEEKLY_QUIZ
+
+Both types must share:
+
+- Management-page structure
+
+- Statistics
+
+- Search and filters
+
+- Question builder
+
+- Question ordering
+
+- Scoring
+
+- Duration
+
+- Instructions
+
+- Preview
+
+- Publishing
+
+- Scheduling
+
+- Attempts
+
+- Results
+
+- Duplication
+
+- Archiving
+
+- Deletion
+
+- Permissions
+
+- Audit logging
+
+- Responsive design
+
+Keep separate visible routes:
+
+/admin/exams
+
+/admin/weekly-quizzes
+
+Keep separate student routes:
+
+/exams
+
+/weekly-quiz
+
+Reuse shared internal components such as:
+
+- AssessmentManagementPage
+
+- AssessmentForm
+
+- AssessmentCard
+
+- QuestionBuilder
+
+- QuestionEditor
+
+- AssessmentPreview
+
+- AssessmentFilters
+
+- AssessmentActions
+
+- ResultsViewer
+
+- DeleteAssessmentDialog
+
+Pass the type:
+
+type="EXAM"
+
+or:
+
+type="WEEKLY_QUIZ"
+
+==================================================
+
+EXAM-SPECIFIC RULES
+
+==================================================
+
+Electronic exams may support:
+
+- longer duration
+
+- larger question sets
+
+- multiple attempts according to admin settings
+
+- full result reports
+
+- start and end availability dates
+
+==================================================
+
+WEEKLY-QUIZ-SPECIFIC RULES
+
+==================================================
+
+Weekly quizzes may support:
+
+- week label or week number
+
+- shorter duration
+
+- recurring weekly publishing
+
+- one active quiz per defined week if configured
+
+- automatic closing date
+
+Do not show quiz-specific fields in exam forms unless applicable.
+
+==================================================
+
+DATABASE ARCHITECTURE
+
+==================================================
+
+Prefer shared models instead of duplicated tables where migration is safe.
+
+Educational files:
+
+educational_files
+
+Suggested fields:
+
+- id
+
+- type: DOSSIER | WORKSHEET
+
+- title
+
+- description
+
+- fileUrl
+
+- coverUrl
+
+- gradeId
+
+- targetGroupId
+
+- status
+
+- publishAt
+
+- archivedAt
+
+- createdBy
+
+- createdAt
+
+- updatedAt
+
+- metadata JSONB for type-specific optional fields
+
+Assessments:
+
+assessments
+
+Suggested fields:
+
+- id
+
+- type: EXAM | WEEKLY_QUIZ
+
+- title
+
+- instructions
+
+- durationMinutes
+
+- totalMarks
+
+- status
+
+- publishAt
+
+- closeAt
+
+- createdBy
+
+- createdAt
+
+- updatedAt
+
+- metadata JSONB for type-specific fields
+
+Shared related tables:
+
+- assessment_questions
+
+- assessment_attempts
+
+- assessment_answers
+
+- assessment_results
+
+- assessment_targets
+
+Do not force a risky database rewrite if existing production data may be lost.
+
+If current tables must remain, create shared service and repository layers over them first, then provide a safe staged migration.
+
+==================================================
+
+API ARCHITECTURE
+
+==================================================
+
+Use shared service logic with type filtering.
+
+Examples:
+
+GET /api/admin/educational-files?type=DOSSIER
+
+GET /api/admin/educational-files?type=WORKSHEET
+
+POST /api/admin/educational-files
+
+GET /api/admin/assessments?type=EXAM
+
+GET /api/admin/assessments?type=WEEKLY_QUIZ
+
+POST /api/admin/assessments
+
+The backend must validate which fields are allowed for each type.
+
+Never trust the frontend type alone.
+
+==================================================
+
+DELETION RULES
+
+==================================================
+
+Educational files:
+
+- Confirm before deletion.
+
+- Remove associated disposable file references safely.
+
+- Preserve audit logs.
+
+- Do not leave orphan database records.
+
+Assessments:
+
+- Draft with no attempts may be permanently deleted.
+
+- Published assessment with attempts should be archived or soft-deleted.
+
+- Never destroy student attempts or results accidentally.
+
+==================================================
+
+NO UI MERGING
+
+==================================================
+
+Important:
+
+The student and admin must still see four clear sections:
+
+- الدوسيات
+
+- أوراق العمل
+
+- الامتحانات الإلكترونية
+
+- الكويز الأسبوعي
+
+Do not show technical labels such as:
+
+DOSSIER
+
+WORKSHEET
+
+EXAM
+
+WEEKLY_QUIZ
+
+These values are internal only.
+
+==================================================
+
+REMOVE DUPLICATION
+
+==================================================
+
+Audit and remove duplicated:
+
+- Components
+
+- Hooks
+
+- API clients
+
+- Validation schemas
+
+- Status logic
+
+- Delete logic
+
+- Publishing logic
+
+- Query keys
+
+- Loading and empty states
+
+Do not remove specialized behavior required by each type.
+
+==================================================
+
+TESTS
+
+==================================================
+
+Verify:
+
+1. Create, edit, publish and delete a dossier.
+
+2. Create, edit, publish and delete a worksheet.
+
+3. Dossier fields do not leak into worksheet forms.
+
+4. Worksheet fields do not leak into dossier forms.
+
+5. Create and publish an electronic exam.
+
+6. Create and publish a weekly quiz.
+
+7. Both assessments use the same working question builder.
+
+8. Exams and quizzes remain separated in student views.
+
+9. Permissions work for all four content types.
+
+10. Existing production data remains intact.
+
+11. Counters and filters show data for the correct type only.
+
+12. No page displays content belonging to the other type.
+
+==================================================
+
+FINAL REPORT
+
+==================================================
+
+Create:
+
+TWO_SHARED_SYSTEMS_ARCHITECTURE_REPORT.md
+
+Include:
+
+- shared components created
+
+- duplicated code removed
+
+- database approach used
+
+- APIs consolidated
+
+- existing data migration status
+
+- routes preserved
+
+- tests performed
+
+- confirmation that the platform now uses two internal systems while retaining four separate user-facing sections
+ 

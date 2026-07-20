@@ -64,6 +64,24 @@ const useQuestions = (examId: number | null) => useQuery<Question[]>({
   enabled: !!examId,
 });
 
+// ─── Simple toast ─────────────────────────────────────────────────────────────
+function Toast({ message, type, onDone }: { message: string; type: "success" | "error"; onDone: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 40 }}
+      onAnimationComplete={() => setTimeout(onDone, 2500)}
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-2xl text-sm font-bold ${
+        type === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"
+      }`}
+    >
+      {type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+      {message}
+    </motion.div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminExams() {
   const qc = useQueryClient();
@@ -76,10 +94,27 @@ export default function AdminExams() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
 
+  // Confirmation modal state
+  const [confirmDelete, setConfirmDelete] = useState<Exam | null>(null);
+
+  // Toast state
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const showToast = (message: string, type: "success" | "error" = "success") =>
+    setToast({ message, type });
+
   const deleteExam = useMutation({
-    mutationFn: (id: number) => customFetch(`/api/admin/exams/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/admin/exams-list"] }),
+    mutationFn: (id: number) =>
+      customFetch<{ ok: boolean; message: string }>(`/api/admin/exams/${id}`, { method: "DELETE" }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/exams-list"] });
+      setConfirmDelete(null);
+      showToast(data?.message ?? "تم حذف الامتحان بنجاح");
+    },
+    onError: (e: any) => {
+      showToast(e?.data?.message ?? e?.message ?? "فشل حذف الامتحان", "error");
+    },
   });
+
   const duplicateExam = useMutation({
     mutationFn: (id: number) => customFetch(`/api/admin/exams/${id}/duplicate`, { method: "POST", body: JSON.stringify({}) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/admin/exams-list"] }),
@@ -96,7 +131,12 @@ export default function AdminExams() {
     return true;
   });
 
-  const stats = { total: exams?.length ?? 0, published: exams?.filter(e => e.status === "published").length ?? 0, draft: exams?.filter(e => e.status === "draft").length ?? 0, archived: exams?.filter(e => e.status === "archived").length ?? 0 };
+  const stats = {
+    total: exams?.length ?? 0,
+    published: exams?.filter(e => e.status === "published").length ?? 0,
+    draft: exams?.filter(e => e.status === "draft").length ?? 0,
+    archived: exams?.filter(e => e.status === "archived").length ?? 0,
+  };
 
   return (
     <AdminLayout>
@@ -104,7 +144,9 @@ export default function AdminExams() {
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2"><PenTool className="w-6 h-6 text-primary" /> إدارة الامتحانات</h1>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              <PenTool className="w-6 h-6 text-primary" /> إدارة الامتحانات
+            </h1>
             <p className="text-muted-foreground text-sm mt-0.5">بناء الامتحانات وإدارة أسئلتها ونشرها</p>
           </div>
           <Button onClick={() => setShowCreate(true)} className="bg-primary hover:bg-primary/90 gap-2">
@@ -114,10 +156,12 @@ export default function AdminExams() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[{ label: "الكل", value: stats.total, color: "text-white" },
+          {[
+            { label: "الكل", value: stats.total, color: "text-white" },
             { label: "منشور", value: stats.published, color: "text-green-400" },
             { label: "مسودة", value: stats.draft, color: "text-white/60" },
-            { label: "مؤرشف", value: stats.archived, color: "text-orange-400" }].map(s => (
+            { label: "مؤرشف", value: stats.archived, color: "text-orange-400" },
+          ].map(s => (
             <Card key={s.label} className="bg-white/5 border-white/10">
               <CardContent className="p-4 text-center">
                 <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
@@ -131,13 +175,20 @@ export default function AdminExams() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="البحث في الامتحانات..." value={search} onChange={e => setSearch(e.target.value)}
-              className="pr-9 bg-white/5 border-white/10 text-white placeholder:text-muted-foreground" />
+            <Input
+              placeholder="البحث في الامتحانات..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pr-9 bg-white/5 border-white/10 text-white placeholder:text-muted-foreground"
+            />
           </div>
           <div className="flex gap-1">
             {[{ v: "all", l: "الكل" }, { v: "draft", l: "مسودة" }, { v: "published", l: "منشور" }, { v: "archived", l: "مؤرشف" }].map(f => (
-              <button key={f.v} onClick={() => setStatusFilter(f.v)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${statusFilter === f.v ? "bg-primary text-white" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}>
+              <button
+                key={f.v}
+                onClick={() => setStatusFilter(f.v)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${statusFilter === f.v ? "bg-primary text-white" : "bg-white/5 text-muted-foreground hover:bg-white/10"}`}
+              >
                 {f.l}
               </button>
             ))}
@@ -159,11 +210,14 @@ export default function AdminExams() {
             {filtered.map((exam, i) => {
               const isOpen = expandedId === exam.id;
               const subjectName = (subjects as any[])?.find((s: any) => s.id === exam.subjectId)?.name ?? "";
+              const isDeleting = deleteExam.isPending && confirmDelete?.id === exam.id;
               return (
                 <motion.div key={exam.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
                   <Card className="bg-white/5 border-white/10 overflow-hidden">
-                    <div className="flex items-center gap-3 p-4 cursor-pointer hover:bg-white/5 transition-colors select-none"
-                      onClick={() => setExpandedId(isOpen ? null : exam.id)}>
+                    <div
+                      className="flex items-center gap-3 p-4 cursor-pointer hover:bg-white/5 transition-colors select-none"
+                      onClick={() => setExpandedId(isOpen ? null : exam.id)}
+                    >
                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                         <PenTool className="w-5 h-5 text-primary" />
                       </div>
@@ -181,33 +235,46 @@ export default function AdminExams() {
                       </div>
                       <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                         {exam.status === "draft" && (
-                          <button onClick={() => setStatus.mutate({ id: exam.id, status: "published", isAvailable: true })}
-                            className="p-1.5 rounded-lg text-green-400 hover:bg-green-500/10 transition-colors" title="نشر">
+                          <button
+                            onClick={() => setStatus.mutate({ id: exam.id, status: "published", isAvailable: true })}
+                            className="p-1.5 rounded-lg text-green-400 hover:bg-green-500/10 transition-colors" title="نشر"
+                          >
                             <Eye className="w-4 h-4" />
                           </button>
                         )}
                         {exam.status === "published" && (
-                          <button onClick={() => setStatus.mutate({ id: exam.id, status: "draft", isAvailable: false })}
-                            className="p-1.5 rounded-lg text-yellow-400 hover:bg-yellow-500/10 transition-colors" title="إلغاء النشر">
+                          <button
+                            onClick={() => setStatus.mutate({ id: exam.id, status: "draft", isAvailable: false })}
+                            className="p-1.5 rounded-lg text-yellow-400 hover:bg-yellow-500/10 transition-colors" title="إلغاء النشر"
+                          >
                             <EyeOff className="w-4 h-4" />
                           </button>
                         )}
                         {exam.status !== "archived" && (
-                          <button onClick={() => setStatus.mutate({ id: exam.id, status: "archived", isAvailable: false })}
-                            className="p-1.5 rounded-lg text-orange-400 hover:bg-orange-500/10 transition-colors" title="أرشفة">
+                          <button
+                            onClick={() => setStatus.mutate({ id: exam.id, status: "archived", isAvailable: false })}
+                            className="p-1.5 rounded-lg text-orange-400 hover:bg-orange-500/10 transition-colors" title="أرشفة"
+                          >
                             <Archive className="w-4 h-4" />
                           </button>
                         )}
-                        <button onClick={() => duplicateExam.mutate(exam.id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors" title="نسخ">
+                        <button
+                          onClick={() => duplicateExam.mutate(exam.id)}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors" title="نسخ"
+                        >
                           <Copy className="w-4 h-4" />
                         </button>
-                        <button onClick={() => { setEditingExam(exam); setShowCreate(true); }}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors" title="تعديل">
+                        <button
+                          onClick={() => { setEditingExam(exam); setShowCreate(true); }}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors" title="تعديل"
+                        >
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button onClick={() => { if (confirm(`حذف "${exam.title}"؟`)) deleteExam.mutate(exam.id); }}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors" title="حذف">
+                        <button
+                          onClick={() => setConfirmDelete(exam)}
+                          disabled={isDeleting}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40" title="حذف"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -215,7 +282,7 @@ export default function AdminExams() {
                     </div>
 
                     {/* Question Builder Panel */}
-                    {isOpen && <QuestionPanel examId={exam.id} qc={qc} />}
+                    {isOpen && <QuestionPanel examId={exam.id} qc={qc} onToast={showToast} />}
                   </Card>
                 </motion.div>
               );
@@ -224,6 +291,7 @@ export default function AdminExams() {
         )}
       </div>
 
+      {/* ── Exam Create/Edit Modal ──────────────────────────────────────────── */}
       {showCreate && (
         <ExamFormModal
           exam={editingExam}
@@ -232,24 +300,107 @@ export default function AdminExams() {
           onSuccess={() => { setShowCreate(false); setEditingExam(null); qc.invalidateQueries({ queryKey: ["/api/admin/exams-list"] }); }}
         />
       )}
+
+      {/* ── Delete Confirmation Modal ───────────────────────────────────────── */}
+      <AnimatePresence>
+        {confirmDelete && (
+          <motion.div
+            key="delete-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={e => { if (e.target === e.currentTarget && !deleteExam.isPending) setConfirmDelete(null); }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#1a1030] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-white">تأكيد الحذف</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">هذا الإجراء لا يمكن التراجع عنه</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-white/80 mb-2">
+                هل أنت متأكد من حذف الامتحان:
+              </p>
+              <p className="text-sm font-bold text-white bg-white/5 rounded-xl px-3 py-2 mb-5 truncate">
+                «{confirmDelete.title}»
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => !deleteExam.isPending && setConfirmDelete(null)}
+                  disabled={deleteExam.isPending}
+                  className="flex-1 py-2.5 rounded-xl border border-white/10 text-white text-sm font-bold hover:bg-white/5 transition-colors disabled:opacity-40"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={() => deleteExam.mutate(confirmDelete.id)}
+                  disabled={deleteExam.isPending}
+                  className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {deleteExam.isPending
+                    ? <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />جارٍ الحذف...</>
+                    : <><Trash2 className="w-3.5 h-3.5" />حذف الامتحان</>
+                  }
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Toast ──────────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {toast && (
+          <Toast key="toast" message={toast.message} type={toast.type} onDone={() => setToast(null)} />
+        )}
+      </AnimatePresence>
     </AdminLayout>
   );
 }
 
 // ─── Question Panel ────────────────────────────────────────────────────────────
-function QuestionPanel({ examId, qc }: { examId: number; qc: ReturnType<typeof useQueryClient> }) {
+function QuestionPanel({
+  examId,
+  qc,
+  onToast,
+}: {
+  examId: number;
+  qc: ReturnType<typeof useQueryClient>;
+  onToast: (msg: string, type?: "success" | "error") => void;
+}) {
   const { data: questions, isLoading } = useQuestions(examId);
   const [addingType, setAddingType] = useState<string | null>(null);
+  const [confirmDeleteQ, setConfirmDeleteQ] = useState<Question | null>(null);
 
   const deleteQ = useMutation({
-    mutationFn: (id: number) => customFetch(`/api/admin/questions/${id}`, { method: "DELETE" }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/admin/exams", examId, "questions"] }); qc.invalidateQueries({ queryKey: ["/api/admin/exams-list"] }); },
+    mutationFn: (id: number) =>
+      customFetch<{ ok: boolean }>(`/api/admin/questions/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/exams", examId, "questions"] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/exams-list"] });
+      setConfirmDeleteQ(null);
+      onToast("تم حذف السؤال بنجاح");
+    },
+    onError: () => onToast("فشل حذف السؤال", "error"),
   });
 
   return (
     <div className="border-t border-white/10 bg-black/20 p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-white text-sm flex items-center gap-2"><FileQuestion className="w-4 h-4 text-primary" /> الأسئلة ({questions?.length ?? 0})</h3>
+        <h3 className="font-bold text-white text-sm flex items-center gap-2">
+          <FileQuestion className="w-4 h-4 text-primary" /> الأسئلة ({questions?.length ?? 0})
+        </h3>
         <div className="flex gap-1">
           {!addingType && (
             <div className="relative group">
@@ -258,8 +409,11 @@ function QuestionPanel({ examId, qc }: { examId: number; qc: ReturnType<typeof u
               </Button>
               <div className="absolute left-0 top-full mt-1 w-44 bg-[#1a1030] border border-white/10 rounded-xl shadow-2xl hidden group-hover:block z-20">
                 {QUESTION_TYPES.map(t => (
-                  <button key={t.value} onClick={() => setAddingType(t.value)}
-                    className="w-full text-right px-3 py-2 text-sm text-white hover:bg-white/10 transition-colors first:rounded-t-xl last:rounded-b-xl">
+                  <button
+                    key={t.value}
+                    onClick={() => setAddingType(t.value)}
+                    className="w-full text-right px-3 py-2 text-sm text-white hover:bg-white/10 transition-colors first:rounded-t-xl last:rounded-b-xl"
+                  >
                     {t.label}
                   </button>
                 ))}
@@ -285,8 +439,11 @@ function QuestionPanel({ examId, qc }: { examId: number; qc: ReturnType<typeof u
                 <p className="text-sm text-white/90 line-clamp-1">{q.text}</p>
                 {q.correctAnswer && <p className="text-[10px] text-green-400 mt-0.5">✓ {q.correctAnswer}</p>}
               </div>
-              <button onClick={() => { if (confirm("حذف السؤال؟")) deleteQ.mutate(q.id); }}
-                className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all">
+              <button
+                onClick={() => setConfirmDeleteQ(q)}
+                disabled={deleteQ.isPending && confirmDeleteQ?.id === q.id}
+                className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all disabled:opacity-40"
+              >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -302,10 +459,66 @@ function QuestionPanel({ examId, qc }: { examId: number; qc: ReturnType<typeof u
           examId={examId}
           type={addingType}
           onTypeChange={setAddingType}
-          onDone={() => { setAddingType(null); qc.invalidateQueries({ queryKey: ["/api/admin/exams", examId, "questions"] }); qc.invalidateQueries({ queryKey: ["/api/admin/exams-list"] }); }}
+          onDone={() => {
+            setAddingType(null);
+            qc.invalidateQueries({ queryKey: ["/api/admin/exams", examId, "questions"] });
+            qc.invalidateQueries({ queryKey: ["/api/admin/exams-list"] });
+          }}
           onCancel={() => setAddingType(null)}
         />
       )}
+
+      {/* Question delete confirmation */}
+      <AnimatePresence>
+        {confirmDeleteQ && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={e => { if (e.target === e.currentTarget && !deleteQ.isPending) setConfirmDeleteQ(null); }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#1a1030] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-white">حذف السؤال</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">لا يمكن التراجع عن هذا الإجراء</p>
+                </div>
+              </div>
+              <p className="text-sm text-white/70 bg-white/5 rounded-xl px-3 py-2 mb-5 line-clamp-2">
+                {confirmDeleteQ.text}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => !deleteQ.isPending && setConfirmDeleteQ(null)}
+                  disabled={deleteQ.isPending}
+                  className="flex-1 py-2.5 rounded-xl border border-white/10 text-white text-sm font-bold hover:bg-white/5 transition-colors disabled:opacity-40"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={() => deleteQ.mutate(confirmDeleteQ.id)}
+                  disabled={deleteQ.isPending}
+                  className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {deleteQ.isPending
+                    ? <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />جارٍ الحذف...</>
+                    : <><Trash2 className="w-3.5 h-3.5" />حذف السؤال</>
+                  }
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -396,13 +609,18 @@ function AddQuestionForm({ examId, type, onTypeChange, onDone, onCancel }: {
           <label className="text-xs text-muted-foreground">الخيارات (اختر الإجابة الصحيحة)</label>
           {["A", "B", "C", "D"].map((key, i) => (
             <div key={key} className="flex items-center gap-2">
-              <button onClick={() => setMcqCorrect(key)}
-                className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black shrink-0 transition-colors ${mcqCorrect === key ? "border-green-400 bg-green-400/10 text-green-400" : "border-white/20 text-muted-foreground hover:border-white/40"}`}>
+              <button
+                onClick={() => setMcqCorrect(key)}
+                className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black shrink-0 transition-colors ${mcqCorrect === key ? "border-green-400 bg-green-400/10 text-green-400" : "border-white/20 text-muted-foreground hover:border-white/40"}`}
+              >
                 {key}
               </button>
-              <input value={mcqChoices[i]} onChange={e => { const c = [...mcqChoices]; c[i] = e.target.value; setMcqChoices(c); }}
+              <input
+                value={mcqChoices[i]}
+                onChange={e => { const c = [...mcqChoices]; c[i] = e.target.value; setMcqChoices(c); }}
                 className="flex-1 bg-white/5 border border-white/10 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-primary/50"
-                placeholder={`الخيار ${key}`} />
+                placeholder={`الخيار ${key}`}
+              />
             </div>
           ))}
         </div>
@@ -413,8 +631,11 @@ function AddQuestionForm({ examId, type, onTypeChange, onDone, onCancel }: {
           <label className="text-xs text-muted-foreground mb-2 block">الإجابة الصحيحة</label>
           <div className="flex gap-3">
             {[{ v: "true", l: "✓ صح" }, { v: "false", l: "✗ خطأ" }].map(o => (
-              <button key={o.v} onClick={() => setCorrectAnswer(o.v)}
-                className={`flex-1 py-2 rounded-lg border text-sm font-bold transition-colors ${correctAnswer === o.v ? "border-green-400 bg-green-400/10 text-green-400" : "border-white/10 text-muted-foreground hover:border-white/30"}`}>
+              <button
+                key={o.v}
+                onClick={() => setCorrectAnswer(o.v)}
+                className={`flex-1 py-2 rounded-lg border text-sm font-bold transition-colors ${correctAnswer === o.v ? "border-green-400 bg-green-400/10 text-green-400" : "border-white/10 text-muted-foreground hover:border-white/30"}`}
+              >
                 {o.l}
               </button>
             ))}
@@ -425,9 +646,12 @@ function AddQuestionForm({ examId, type, onTypeChange, onDone, onCancel }: {
       {type === "fill_blank" && (
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">الإجابة الصحيحة</label>
-          <input value={correctAnswer} onChange={e => setCorrectAnswer(e.target.value)}
+          <input
+            value={correctAnswer}
+            onChange={e => setCorrectAnswer(e.target.value)}
             className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
-            placeholder="الكلمة أو العبارة الصحيحة" />
+            placeholder="الكلمة أو العبارة الصحيحة"
+          />
           <p className="text-[11px] text-muted-foreground mt-1">ضع ___ في نص السؤال لتحديد مكان الفراغ.</p>
         </div>
       )}
@@ -437,13 +661,19 @@ function AddQuestionForm({ examId, type, onTypeChange, onDone, onCancel }: {
           <label className="text-xs text-muted-foreground">أزواج الوصل (يسار → يمين)</label>
           {matchLeft.map((_, i) => (
             <div key={i} className="flex items-center gap-2">
-              <input value={matchLeft[i]} onChange={e => { const a = [...matchLeft]; a[i] = e.target.value; setMatchLeft(a); }}
+              <input
+                value={matchLeft[i]}
+                onChange={e => { const a = [...matchLeft]; a[i] = e.target.value; setMatchLeft(a); }}
                 className="flex-1 bg-white/5 border border-white/10 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-                placeholder={`عنصر يسار ${i + 1}`} />
+                placeholder={`عنصر يسار ${i + 1}`}
+              />
               <span className="text-muted-foreground">←</span>
-              <input value={matchRight[i]} onChange={e => { const a = [...matchRight]; a[i] = e.target.value; setMatchRight(a); }}
+              <input
+                value={matchRight[i]}
+                onChange={e => { const a = [...matchRight]; a[i] = e.target.value; setMatchRight(a); }}
                 className="flex-1 bg-white/5 border border-white/10 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-                placeholder={`عنصر يمين ${i + 1}`} />
+                placeholder={`عنصر يمين ${i + 1}`}
+              />
             </div>
           ))}
         </div>
@@ -455,9 +685,12 @@ function AddQuestionForm({ examId, type, onTypeChange, onDone, onCancel }: {
           {orderItems.map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="text-xs font-bold text-muted-foreground w-4">{i + 1}</span>
-              <input value={item} onChange={e => { const a = [...orderItems]; a[i] = e.target.value; setOrderItems(a); }}
+              <input
+                value={item}
+                onChange={e => { const a = [...orderItems]; a[i] = e.target.value; setOrderItems(a); }}
                 className="flex-1 bg-white/5 border border-white/10 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-                placeholder={`العنصر ${i + 1}`} />
+                placeholder={`العنصر ${i + 1}`}
+              />
             </div>
           ))}
         </div>
@@ -466,9 +699,13 @@ function AddQuestionForm({ examId, type, onTypeChange, onDone, onCancel }: {
       {type === "essay" && (
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">نموذج الإجابة (للمراجعة)</label>
-          <textarea value={explanation} onChange={e => setExplanation(e.target.value)} rows={3}
+          <textarea
+            value={explanation}
+            onChange={e => setExplanation(e.target.value)}
+            rows={3}
             className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm resize-none focus:outline-none"
-            placeholder="اكتب نموذج الإجابة هنا..." />
+            placeholder="اكتب نموذج الإجابة هنا..."
+          />
         </div>
       )}
 
@@ -476,15 +713,24 @@ function AddQuestionForm({ examId, type, onTypeChange, onDone, onCancel }: {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">الدرجة</label>
-          <input type="number" value={score} onChange={e => setScore(e.target.value)} min="0.5" step="0.5"
-            className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none" />
+          <input
+            type="number"
+            value={score}
+            onChange={e => setScore(e.target.value)}
+            min="0.5"
+            step="0.5"
+            className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none"
+          />
         </div>
         {type !== "essay" && (
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">شرح الإجابة (اختياري)</label>
-            <input value={explanation} onChange={e => setExplanation(e.target.value)}
+            <input
+              value={explanation}
+              onChange={e => setExplanation(e.target.value)}
               className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none"
-              placeholder="توضيح..." />
+              placeholder="توضيح..."
+            />
           </div>
         )}
       </div>
@@ -530,57 +776,95 @@ function ExamFormModal({ exam, subjects, onClose, onSuccess }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" dir="rtl">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="bg-[#1a1030] border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-[#1a1030] border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto"
+      >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-white">{exam ? "تعديل الامتحان" : "امتحان جديد"}</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-white"><X className="w-5 h-5" /></button>
         </div>
         <div className="space-y-4">
-          <div><label className="text-sm text-muted-foreground mb-1 block">عنوان الامتحان *</label>
-            <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-              className="bg-white/5 border-white/10 text-white" placeholder="مثال: امتحان وزاري 2024" /></div>
+          <div>
+            <label className="text-sm text-muted-foreground mb-1 block">عنوان الامتحان *</label>
+            <Input
+              value={form.title}
+              onChange={e => setForm({ ...form, title: e.target.value })}
+              className="bg-white/5 border-white/10 text-white"
+              placeholder="أدخل عنوان الامتحان"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-muted-foreground mb-1 block">المادة *</label>
+            <select
+              value={form.subjectId}
+              onChange={e => setForm({ ...form, subjectId: parseInt(e.target.value) })}
+              className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm"
+            >
+              {subjects.map((s: any) => <option key={s.id} value={s.id} className="bg-[#1a1030]">{s.name}</option>)}
+            </select>
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="text-sm text-muted-foreground mb-1 block">المادة</label>
-              <select value={form.subjectId} onChange={e => setForm({ ...form, subjectId: parseInt(e.target.value) })}
-                className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm">
-                {subjects.map((s: any) => <option key={s.id} value={s.id} className="bg-[#1a1030]">{s.name}</option>)}
-              </select></div>
-            <div><label className="text-sm text-muted-foreground mb-1 block">النوع</label>
-              <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm">
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">النوع</label>
+              <select
+                value={form.type}
+                onChange={e => setForm({ ...form, type: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm"
+              >
                 {EXAM_TYPES.map(t => <option key={t.value} value={t.value} className="bg-[#1a1030]">{t.label}</option>)}
-              </select></div>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">المدة (دقيقة)</label>
+              <Input
+                type="number"
+                value={form.durationMinutes}
+                onChange={e => setForm({ ...form, durationMinutes: parseInt(e.target.value) })}
+                className="bg-white/5 border-white/10 text-white"
+              />
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div><label className="text-sm text-muted-foreground mb-1 block">المدة (دقيقة)</label>
-              <Input type="number" value={form.durationMinutes} onChange={e => setForm({ ...form, durationMinutes: parseInt(e.target.value) })}
-                className="bg-white/5 border-white/10 text-white" /></div>
-            <div><label className="text-sm text-muted-foreground mb-1 block">المحاولات</label>
-              <Input type="number" value={form.maxAttempts} onChange={e => setForm({ ...form, maxAttempts: parseInt(e.target.value) })}
-                className="bg-white/5 border-white/10 text-white" /></div>
-            <div><label className="text-sm text-muted-foreground mb-1 block">درجة النجاح %</label>
-              <Input type="number" value={form.passingScore} onChange={e => setForm({ ...form, passingScore: e.target.value })}
-                className="bg-white/5 border-white/10 text-white" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">درجة النجاح</label>
+              <Input
+                type="number"
+                value={form.passingScore}
+                onChange={e => setForm({ ...form, passingScore: e.target.value })}
+                className="bg-white/5 border-white/10 text-white"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">عدد المحاولات</label>
+              <Input
+                type="number"
+                value={form.maxAttempts}
+                onChange={e => setForm({ ...form, maxAttempts: parseInt(e.target.value) })}
+                className="bg-white/5 border-white/10 text-white"
+              />
+            </div>
           </div>
-          <div><label className="text-sm text-muted-foreground mb-1 block">الحالة</label>
-            <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm">
-              {[{ v: "draft", l: "مسودة" }, { v: "published", l: "منشور" }, { v: "archived", l: "مؤرشف" }].map(o => (
-                <option key={o.v} value={o.v} className="bg-[#1a1030]">{o.l}</option>
-              ))}
-            </select></div>
-          <div><label className="text-sm text-muted-foreground mb-1 block">التعليمات (اختياري)</label>
-            <textarea value={form.instructions} onChange={e => setForm({ ...form, instructions: e.target.value })} rows={3}
-              className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm resize-none focus:outline-none"
-              placeholder="تعليمات تظهر للطالب قبل بدء الامتحان..." /></div>
-          {error && <p className="text-red-400 text-xs">{error}</p>}
-        </div>
-        <div className="flex gap-3 mt-6">
-          <Button onClick={() => save.mutate()} disabled={!form.title.trim() || save.isPending} className="flex-1 bg-primary">
-            {save.isPending ? "جاري الحفظ..." : exam ? "تحديث" : "إنشاء الامتحان"}
-          </Button>
-          <Button variant="outline" onClick={onClose} className="border-white/10 bg-white/5 text-white hover:bg-white/10">إلغاء</Button>
+          <div>
+            <label className="text-sm text-muted-foreground mb-1 block">تعليمات الامتحان</label>
+            <textarea
+              value={form.instructions}
+              onChange={e => setForm({ ...form, instructions: e.target.value })}
+              rows={3}
+              className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
+              placeholder="أدخل تعليمات الامتحان..."
+            />
+          </div>
+
+          {error && <p className="text-red-400 text-sm flex items-center gap-2"><AlertCircle className="w-4 h-4" />{error}</p>}
+
+          <div className="flex gap-3 pt-2">
+            <Button onClick={onClose} variant="outline" className="flex-1 border-white/10 bg-white/5 text-white hover:bg-white/10">إلغاء</Button>
+            <Button onClick={() => save.mutate()} disabled={save.isPending} className="flex-1 bg-primary">
+              {save.isPending ? "جاري الحفظ..." : exam ? "حفظ التعديلات" : "إنشاء الامتحان"}
+            </Button>
+          </div>
         </div>
       </motion.div>
     </div>
