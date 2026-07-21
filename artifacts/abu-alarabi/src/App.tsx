@@ -46,6 +46,7 @@ const AdminAnnouncements= lazy(() => import('@/pages/admin/announcements'));
 const AdminWorksheets   = lazy(() => import('@/pages/admin/worksheets'));
 const AdminQuiz           = lazy(() => import('@/pages/admin/quiz'));
 const AdminAdvertisements = lazy(() => import('@/pages/admin/advertisements'));
+const AdminHomepageSettings = lazy(() => import('@/pages/admin/homepage-settings'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -121,6 +122,7 @@ function Router() {
         <Route path="/admin/worksheets" component={AdminWorksheets} />
         <Route path="/admin/quiz" component={AdminQuiz} />
         <Route path="/admin/advertisements" component={AdminAdvertisements} />
+        <Route path="/admin/homepage-settings" component={AdminHomepageSettings} />
 
         <Route component={NotFound} />
       </Switch>

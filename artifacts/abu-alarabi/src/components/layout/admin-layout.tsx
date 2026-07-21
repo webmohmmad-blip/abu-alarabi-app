@@ -20,6 +20,7 @@ import {
   PenTool,
   AlignLeft,
   Wallpaper,
+  Layout,
 } from "lucide-react";
 import { useLogout } from "@workspace/api-client-react";
 
@@ -33,6 +34,7 @@ const adminNavItems = [
   { name: "الصلاحيات", href: "/admin/roles", icon: ShieldCheck },
   { name: "الإعلانات", href: "/admin/announcements", icon: Megaphone },
   { name: "لافتات الصفحة", href: "/admin/advertisements", icon: Wallpaper },
+  { name: "الصفحة الرئيسية", href: "/admin/homepage-settings", icon: Layout },
   { name: "التقارير", href: "/admin/reports", icon: BarChart3 },
   { name: "سجل المراجعة", href: "/admin/audit", icon: ScrollText },
   { name: "الإعدادات", href: "/admin/settings", icon: Settings },

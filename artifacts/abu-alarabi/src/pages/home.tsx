@@ -1,6 +1,7 @@
+import React from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   BookOpen,
@@ -16,8 +17,42 @@ import {
   Trophy,
   ArrowLeft,
 } from "lucide-react";
-import { useGetPlatformStats, useListDossiers } from "@workspace/api-client-react";
+import { useGetPlatformStats, useListDossiers, customFetch } from "@workspace/api-client-react";
 import { HeroAdvertisement } from "@/components/HeroAdvertisement";
+import { useContext } from "react";
+import { AuthContext } from "@/contexts/auth-context";
+import { useQuery } from "@tanstack/react-query";
+
+interface HeroContent {
+  badgeText: string;
+  badgeEnabled: boolean;
+  titleLine1: string;
+  titleLine2: string;
+  description: string;
+  descriptionEnabled: boolean;
+  primaryButtonText: string;
+  primaryButtonLink: string;
+  primaryButtonEnabled: boolean;
+  secondaryButtonText: string;
+  secondaryButtonLink: string;
+  secondaryButtonEnabled: boolean;
+}
+
+const HERO_DEFAULTS: HeroContent = {
+  badgeText: "المنصة المتخصصة في اللغة العربية",
+  badgeEnabled: true,
+  titleLine1: "أتقن العربية.",
+  titleLine2: "افهمها. تفوق.",
+  description:
+    "مع الأستاذ محمد الساحوري — أبو العربي — طريقك لإتقان اللغة العربية والتفوق في التوجيهي أصبح أوضح وأسهل من أي وقت مضى.",
+  descriptionEnabled: true,
+  primaryButtonText: "أنشئ جدولك الدراسي",
+  primaryButtonLink: "/schedule",
+  primaryButtonEnabled: true,
+  secondaryButtonText: "تصفح الدوسيات",
+  secondaryButtonLink: "/dossiers",
+  secondaryButtonEnabled: true,
+};
 
 const TRACKS = [
   { label: "توجيهي", sub: "الصف الثاني عشر", color: "#5A2D82" },
@@ -58,6 +93,28 @@ const FEATURES = [
 export default function Home() {
   const { data: stats } = useGetPlatformStats();
   const { data: dossiersList } = useListDossiers({ limit: 3 });
+  const { isAuthenticated } = useContext(AuthContext);
+  const [, setLocation] = useLocation();
+
+  const { data: heroData } = useQuery<HeroContent>({
+    queryKey: ["/api/homepage-settings"],
+    queryFn: () => customFetch<HeroContent>("/api/homepage-settings", { method: "GET" }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Use live DB values; fall back to defaults while loading (prevents layout shift)
+  const hero: HeroContent = heroData ?? HERO_DEFAULTS;
+
+  // Primary CTA: authenticated → go directly to destination; guest → /login?redirect=<dest>
+  function handlePrimaryCTA(e: React.MouseEvent) {
+    e.preventDefault();
+    const dest = hero.primaryButtonLink || "/schedule";
+    if (isAuthenticated) {
+      setLocation(dest);
+    } else {
+      setLocation(`/login?redirect=${encodeURIComponent(dest)}`);
+    }
+  }
 
   return (
     <MainLayout>
@@ -91,17 +148,19 @@ export default function Home() {
           <div className="flex-1 min-w-0">
 
             {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 mb-10"
-            >
-              <div className="flex items-center gap-2 border border-primary/40 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-bold backdrop-blur-sm">
-                <Sparkles className="w-4 h-4 text-accent fill-accent" />
-                المنصة المتخصصة في اللغة العربية
-              </div>
-            </motion.div>
+            {hero.badgeEnabled && hero.badgeText && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 mb-10"
+              >
+                <div className="flex items-center gap-2 border border-primary/40 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-bold backdrop-blur-sm">
+                  <Sparkles className="w-4 h-4 text-accent fill-accent" />
+                  {hero.badgeText}
+                </div>
+              </motion.div>
+            )}
 
             {/* Heading */}
             <motion.h1
@@ -111,7 +170,7 @@ export default function Home() {
               className="text-5xl md:text-7xl font-black leading-[1.1] text-white mb-8"
               style={{ letterSpacing: "-0.01em" }}
             >
-              أتقن العربية.
+              {hero.titleLine1}
               <br />
               <span
                 className="text-transparent"
@@ -122,21 +181,22 @@ export default function Home() {
                   backgroundClip: "text",
                 }}
               >
-                افهمها. تفوق.
+                {hero.titleLine2}
               </span>
             </motion.h1>
 
-            {/* Sub */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-lg md:text-xl text-white/60 leading-relaxed mb-12 max-w-xl"
-              style={{ fontWeight: 400 }}
-            >
-              مع الأستاذ محمد الساحوري — أبو العربي — طريقك لإتقان اللغة العربية والتفوق في التوجيهي أصبح
-              أوضح وأسهل من أي وقت مضى.
-            </motion.p>
+            {/* Description */}
+            {hero.descriptionEnabled && hero.description && (
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-lg md:text-xl text-white/60 leading-relaxed mb-12 max-w-xl"
+                style={{ fontWeight: 400 }}
+              >
+                {hero.description}
+              </motion.p>
+            )}
 
             {/* CTAs */}
             <motion.div
@@ -145,24 +205,28 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-wrap gap-4 items-center"
             >
-              <Link href="/register">
-                <Button
-                  size="lg"
-                  className="h-14 px-10 text-base font-bold shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-shadow"
-                >
-                  صنّ جدولك الدراسي
-                </Button>
-              </Link>
-              <Link href="/dossiers">
-                <Button
-                  size="lg"
-                  variant="ghost"
-                  className="h-14 px-8 text-base font-bold text-white/80 hover:text-white hover:bg-white/10 gap-2"
-                >
-                  تصفح الدوسيات
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-              </Link>
+              {hero.primaryButtonEnabled && hero.primaryButtonText && (
+                <a href={hero.primaryButtonLink || "/schedule"} onClick={handlePrimaryCTA}>
+                  <Button
+                    size="lg"
+                    className="h-14 px-10 text-base font-bold shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-shadow"
+                  >
+                    {hero.primaryButtonText}
+                  </Button>
+                </a>
+              )}
+              {hero.secondaryButtonEnabled && hero.secondaryButtonText && (
+                <Link href={hero.secondaryButtonLink || "/dossiers"}>
+                  <Button
+                    size="lg"
+                    variant="ghost"
+                    className="h-14 px-8 text-base font-bold text-white/80 hover:text-white hover:bg-white/10 gap-2"
+                  >
+                    {hero.secondaryButtonText}
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                </Link>
+              )}
             </motion.div>
 
           </div>

@@ -21,6 +21,7 @@ import storageRouter from "./storage";
 import workspaceRouter from "./workspace";
 import scheduleRouter from "./schedule";
 import advertisementsRouter from "./advertisements";
+import homepageSettingsRouter from "./homepage-settings";
 
 const router: IRouter = Router();
 
@@ -46,5 +47,6 @@ router.use(storageRouter);
 router.use(workspaceRouter);
 router.use(scheduleRouter);
 router.use(advertisementsRouter);
+router.use(homepageSettingsRouter);
 
 export default router;

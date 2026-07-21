@@ -9,3 +9,4 @@
 - [Weekly Quiz Table Split](weekly-quiz-split.md) — weekly quizzes live in examsTable (type="weekly"), not weeklyQuizzesTable; /quiz/:id/start now uses examsTable directly; lib/db dist must be rebuilt after schema changes.
 - [QA Audit & Route Chain Fix 2026-07-21](qa-audit-2026-07-21.md) — 38/38 regression tests pass; full 14-part remediation complete; auth-rate-limiter max=500 in dev, 15 in prod.
 - [Homepage Advertisements System](advertisements-system.md) — homepage_ads table, 7 endpoints, admin CRUD page, AdCarousel, button contrast fixes; no requireAdmin — use requireRole.
+- [Hero Content CMS](hero-cms.md) — Hero text stored as JSON in system_settings key='hero_content'; public GET /api/homepage-settings returns defaults if no row; admin page at /admin/homepage-settings; primary CTA routes to /schedule (not /register).
