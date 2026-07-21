@@ -1,9 +1,9 @@
 import React from "react";
-import { SEO, SITE_URL, WEBSITE_SCHEMA, ORGANIZATION_SCHEMA } from "@/components/SEO";
+import { SEO, WEBSITE_SCHEMA, ORGANIZATION_SCHEMA } from "@/components/SEO";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { motion } from "framer-motion";
+// framer-motion removed — below-fold animations use CSS data-fade + IntersectionObserver
 import {
   BookOpen,
   FileText,
@@ -69,15 +69,6 @@ const HERO_DEFAULTS: HeroContent = {
   secondaryButtonEnabled: true,
 };
 
-const TRACKS = [
-  { label: "توجيهي", sub: "الصف الثاني عشر", color: "#5A2D82" },
-  { label: "أول ثانوي", sub: "الصف الحادي عشر", color: "#0D9BB5" },
-  { label: "التاسع", sub: "الصف التاسع", color: "#C79A2D" },
-  { label: "دورة الإعراب", sub: "النحو والصرف", color: "#2FA84F" },
-  { label: "دورة البلاغة", sub: "الأساليب البلاغية", color: "#5A2D82" },
-  { label: "مراجعة نهائية", sub: "تحضير الامتحانات", color: "#0D9BB5" },
-];
-
 const FEATURES = [
   {
     icon: BookOpen,
@@ -111,9 +102,8 @@ export default function Home() {
   const queryClient = useQueryClient();
 
   // ── Single combined fetch: hero + ads + featured dossiers ─────────────────
-  // initialData uses window.__HOMEPAGE__ when available — this is pre-fetched by
-  // the inline <script> in index.html before React even loads, so when React mounts
-  // the data is already there and no API round-trip is needed.
+  // initialData uses window.__HOMEPAGE__ when available — pre-fetched by
+  // the inline <script> in index.html before React even loads.
   const { data: homepage } = useQuery<HomepageData>({
     queryKey: ["/api/public/homepage"],
     queryFn: () => customFetch<HomepageData>("/api/public/homepage", { method: "GET" }),
@@ -123,18 +113,36 @@ export default function Home() {
       : undefined,
   });
 
-  // Seed the ads into React Query cache so HeroAdvertisement uses it immediately
-  // without making a separate network request.
+  // Seed ads into React Query cache so HeroAdvertisement gets them on first render
   useEffect(() => {
     if (homepage?.ads && homepage.ads.length > 0) {
       queryClient.setQueryData(["advertisements", "active"], homepage.ads);
     }
   }, [homepage?.ads, queryClient]);
 
+  // ── IntersectionObserver for data-fade scroll animations ──────────────────
+  // Replaces framer-motion whileInView — CSS transitions handle the animation
+  // (see index.css: [data-fade] / [data-fade].in-view). This saves ~140 KB JS.
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in-view");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" },
+    );
+    document.querySelectorAll("[data-fade]").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
   const hero: HeroContent = homepage?.hero ?? HERO_DEFAULTS;
   const featuredDossiers: FeaturedDossier[] = homepage?.featuredDossiers ?? [];
 
-  // Primary CTA: authenticated → go directly to destination; guest → /login?redirect=<dest>
+  // Primary CTA: authenticated → go to destination; guest → /login?redirect=<dest>
   function handlePrimaryCTA(e: React.MouseEvent) {
     e.preventDefault();
     const dest = hero.primaryButtonLink || "/schedule";
@@ -182,22 +190,17 @@ export default function Home() {
         <div className="relative z-10 container mx-auto px-6 py-16 lg:py-24 flex flex-col lg:flex-row lg:items-center gap-10 lg:gap-16">
           <div className="flex-1 min-w-0">
 
-            {/* Badge */}
+            {/* Badge — rendered immediately (no animation) so FCP is not blocked */}
             {hero.badgeEnabled && hero.badgeText && (
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 mb-10"
-              >
+              <div className="inline-flex items-center gap-2 mb-10">
                 <div className="flex items-center gap-2 border border-primary/40 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-bold backdrop-blur-sm">
                   <Sparkles className="w-4 h-4 text-accent fill-accent" />
                   {hero.badgeText}
                 </div>
-              </motion.div>
+              </div>
             )}
 
-            {/* Heading — rendered at full opacity immediately so LCP is not gated on JS animation */}
+            {/* Heading — plain element at full opacity; LCP element must not wait on animations */}
             <h1
               className="text-5xl md:text-7xl font-black leading-[1.1] text-white mb-8"
               style={{ letterSpacing: "-0.01em" }}
@@ -217,26 +220,18 @@ export default function Home() {
               </span>
             </h1>
 
-            {/* Description */}
+            {/* Description — visible immediately */}
             {hero.descriptionEnabled && hero.description && (
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
+              <p
                 className="text-lg md:text-xl text-white/60 leading-relaxed mb-12 max-w-xl"
                 style={{ fontWeight: 400 }}
               >
                 {hero.description}
-              </motion.p>
+              </p>
             )}
 
-            {/* CTAs */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex flex-wrap gap-4 items-center"
-            >
+            {/* CTAs — visible immediately */}
+            <div className="flex flex-wrap gap-4 items-center">
               {hero.primaryButtonEnabled && hero.primaryButtonText && (
                 <a href={hero.primaryButtonLink || "/schedule"} onClick={handlePrimaryCTA}>
                   <Button
@@ -259,7 +254,7 @@ export default function Home() {
                   </Button>
                 </Link>
               )}
-            </motion.div>
+            </div>
 
           </div>
           {/* Advertisement — sits in the empty dark column beside the text */}
@@ -278,11 +273,8 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
 
             {/* Image column */}
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
+            <div
+              data-fade
               className="relative order-last lg:order-first"
             >
               {/* Decorative rings */}
@@ -292,25 +284,19 @@ export default function Home() {
 
               {/* Photo frame */}
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/20 border border-primary/10">
-                {/* Responsive WebP with JPEG fallback — lazy since it's below the fold */}
+                {/* Responsive AVIF/WebP/JPEG — lazy since below the fold */}
                 <picture>
-                  {/* AVIF: smallest size (~6-27 KB) — Chrome, Firefox, Edge 121+ */}
                   <source
                     type="image/avif"
                     srcSet="/teacher-sahouri-380.avif 380w, /teacher-sahouri-760.avif 760w"
                     sizes="(max-width: 640px) 380px, 760px"
                   />
-                  {/* WebP fallback (~13-58 KB) — Safari 14+ and all modern browsers */}
                   <source
                     type="image/webp"
                     srcSet="/teacher-sahouri-380.webp 380w, /teacher-sahouri-760.webp 760w"
                     sizes="(max-width: 640px) 380px, 760px"
                   />
-                  {/* JPEG fallback for very old browsers */}
-                  <source
-                    type="image/jpeg"
-                    srcSet="/teacher-sahouri-760.jpg"
-                  />
+                  <source type="image/jpeg" srcSet="/teacher-sahouri-760.jpg" />
                   <img
                     src="/teacher-sahouri-760.jpg"
                     alt="الأستاذ محمد الساحوري — أبو العربي"
@@ -336,14 +322,11 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Content column */}
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
+            <div
+              data-fade
               className="space-y-8"
             >
               <div>
@@ -400,7 +383,7 @@ export default function Home() {
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
               </Link>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -418,13 +401,10 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {FEATURES.map((f, i) => (
-              <motion.div
+            {FEATURES.map((f) => (
+              <div
                 key={f.title}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
+                data-fade
                 className="group bg-card border border-border rounded-2xl p-7 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
                 <div
@@ -435,7 +415,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-lg font-bold text-foreground mb-3">{f.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -460,13 +440,10 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {featuredDossiers.map((dossier, i) => (
-              <motion.div
+            {featuredDossiers.map((dossier) => (
+              <div
                 key={dossier.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                data-fade
               >
                 <Link href={`/dossiers/${dossier.id}`}>
                   <div className="group border border-border bg-card rounded-2xl overflow-hidden hover:shadow-xl hover:border-primary/20 transition-all duration-300 cursor-pointer h-full flex flex-col">
@@ -516,18 +493,15 @@ export default function Home() {
                     </div>
                   </div>
                 </Link>
-              </motion.div>
+              </div>
             ))}
 
             {/* Fallback cards if no dossiers yet */}
             {featuredDossiers.length === 0 &&
-              ["نحو وصرف — توجيهي", "البلاغة والأدب — توجيهي", "مراجعة شاملة — توجيهي"].map((title, i) => (
-                <motion.div
+              ["نحو وصرف — توجيهي", "البلاغة والأدب — توجيهي", "مراجعة شاملة — توجيهي"].map((title) => (
+                <div
                   key={title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
+                  data-fade
                   className="border border-border bg-card rounded-2xl overflow-hidden h-64 flex items-center justify-center"
                 >
                   <div className="text-center">
@@ -537,7 +511,7 @@ export default function Home() {
                     <p className="text-sm font-medium text-muted-foreground">{title}</p>
                     <p className="text-xs text-muted-foreground/60 mt-1">قريباً</p>
                   </div>
-                </motion.div>
+                </div>
               ))}
           </div>
 
@@ -597,15 +571,11 @@ export default function Home() {
             {/* JO Academy */}
             <a href="https://www.joacademy.com/teachers/%D9%85%D8%AD%D9%85%D8%AF-%D8%A7%D9%84%D8%B3%D8%A7%D8%AD%D9%88%D8%B1%D9%8A/shababeek" target="_blank" rel="noreferrer"
               className="group flex items-center gap-3 px-6 py-3.5 rounded-2xl border border-white/10 bg-white/5 hover:bg-[#0D9BB5]/10 hover:border-[#0D9BB5]/30 transition-all duration-200">
-              {/* JO Academy logo — dark asterisk + blue dots */}
               <svg className="w-5 h-5" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* 6-arm asterisk body */}
                 <rect x="44" y="10" width="12" height="80" rx="6" fill="#0D3044"/>
                 <rect x="44" y="10" width="12" height="80" rx="6" fill="#0D3044" transform="rotate(60 50 50)"/>
                 <rect x="44" y="10" width="12" height="80" rx="6" fill="#0D3044" transform="rotate(120 50 50)"/>
-                {/* Center circle */}
                 <circle cx="50" cy="50" r="9" fill="#0D3044"/>
-                {/* Blue dots at tips */}
                 <circle cx="50" cy="7"  r="6" fill="#29ABE2"/>
                 <circle cx="50" cy="93" r="6" fill="#29ABE2"/>
                 <circle cx="87" cy="29" r="6" fill="#29ABE2"/>
@@ -625,10 +595,8 @@ export default function Home() {
       ═══════════════════════════════════════════════ */}
       <section className="py-32">
         <div className="container mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+          <div
+            data-fade
             className="max-w-2xl mx-auto text-center"
           >
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-8">
@@ -650,7 +618,7 @@ export default function Home() {
                 <Link href="/login">لدي حساب</Link>
               </Button>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 

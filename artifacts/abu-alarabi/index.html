@@ -37,11 +37,11 @@
     <!-- <meta name="msvalidate.01" content="REPLACE_WITH_BING_VERIFICATION_TOKEN" /> -->
 
     <!-- ═══ Performance ═══════════════════════════════════════════════════════════ -->
-
-    <!-- Tajawal is self-hosted in /fonts/ — no Google Fonts DNS / connection needed.
-         Preload weight 900 (the h1 LCP text weight) so it arrives before React mounts. -->
-    <link rel="preload" as="font" type="font/woff2"
-      href="/fonts/tajawal-900.woff2" crossorigin />
+    <!-- Tajawal WOFF2 files are processed by Vite (src/assets/tajawal-*.woff2)
+         and emitted with content-hash filenames for immutable long-term caching.
+         font-display:swap in index.css means the pre-rendered hero text shows
+         immediately in the system-ui fallback and swaps to Tajawal when loaded.
+         No preload needed — font-display:swap prevents invisible text.         -->
 
     <!-- ═══ LCP Bootstrap script ════════════════════════════════════════════════
          Fires the API call BEFORE React loads (no JS framework needed).

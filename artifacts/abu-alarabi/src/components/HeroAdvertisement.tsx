@@ -12,7 +12,6 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 
@@ -48,7 +47,10 @@ const SLIDE_DURATION = 5000;
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function HeroAdvertisement() {
-  const prefersReduced = useReducedMotion();
+  // Native browser API — no framer-motion needed for a single boolean
+  const prefersReduced =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // Use bootstrap data from window.__HOMEPAGE__ as initialData when available.
   // The inline <script> in index.html pre-fetches this before React loads,

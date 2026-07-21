@@ -44,6 +44,13 @@ index.html `<head>` contains an inline `<script>` that fires `fetch('/api/public
 
 Pre-rendered hero HTML is in `<div id="root">` (inline CSS, matches real hero design) — gives FCP < 0.3s instead of 5.6s.
 
-Self-hosted Tajawal in `/public/fonts/` (3 × ~8.7 KB WOFF2); `@font-face` in `index.css`; preload for weight 900 in `<head>`. No Google Fonts DNS/CDN needed.
+## Self-hosted Tajawal fonts
+WOFF2 files live in `src/assets/` (NOT `public/`) so Vite hashes them → `assets/tajawal-900.[hash].woff2` → immutable cache headers. `@font-face` in index.css uses relative paths `./assets/`. No `<link rel="preload">` needed — `font-display:swap` prevents FOIT.
+
+## CSS deferral (Vite plugin)
+`deferNonCriticalCss()` in vite.config.ts (`apply:'build'`, `enforce:'post'`) rewrites the built HTML to add `media="print" onload="this.media='all'"` to the Tailwind CSS bundle link. Eliminates ~1060ms render-blocking. Safe because the pre-rendered hero uses inline styles. Dev mode unaffected.
+
+## framer-motion removed from initial bundle
+home.tsx and HeroAdvertisement.tsx no longer import framer-motion. Replaced with: plain HTML for hero animations (they show immediately — good for LCP); `[data-fade]` CSS class + IntersectionObserver for below-fold scroll animations; `window.matchMedia('(prefers-reduced-motion: reduce)')` for the hook. Saves ~140–160 KB gzip from the initial bundle. Other lazy pages still use framer-motion normally via their own chunks.
 
 **Why:** Mobile users on slow connections were downloading 2+ MB on first paint. Every extra network round-trip adds 300–1000ms on mobile. The h1 opacity animation was the single biggest LCP killer. The LCP image was undiscoverable until HTML → JS → React → API — a 6+ second chain. The bootstrap script collapses that chain to HTML → API (parallel with JS) → image cached before React mounts.
