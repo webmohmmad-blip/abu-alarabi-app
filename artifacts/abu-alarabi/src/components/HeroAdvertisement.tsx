@@ -143,13 +143,18 @@ export function HeroAdvertisement() {
             className="relative bg-white/5 overflow-hidden"
             style={{ aspectRatio: "16 / 9" }}
           >
-            {/* Desktop / tablet image */}
+            {/* Desktop / tablet image — eager + high priority (potential LCP element) */}
             <img
               key={`desk-${ad.id}`}
               src={ad.imageUrl ?? ""}
               alt={ad.title}
               className="absolute inset-0 w-full h-full object-cover hidden sm:block select-none"
               draggable={false}
+              width="800"
+              height="450"
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
             />
             {/* Mobile image — falls back to desktop src */}
             <img
@@ -158,6 +163,11 @@ export function HeroAdvertisement() {
               alt={ad.title}
               className="absolute inset-0 w-full h-full object-cover block sm:hidden select-none"
               draggable={false}
+              width="480"
+              height="270"
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
             />
           </div>
         </AdLink>

@@ -4,11 +4,14 @@ import { TooltipProvider } from '@radix-ui/react-tooltip';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { AuthProvider } from '@/contexts/auth-context';
 
-// ── Public pages (loaded eagerly — needed immediately on first visit) ──────────
+// ── Public pages ──────────────────────────────────────────────────────────────
+// Home and NotFound are always eager (zero layout shift on first paint).
+// Login and Register are lazy: ~80 % of traffic never needs them during a session.
 import Home from '@/pages/home';
-import Login from '@/pages/login';
-import Register from '@/pages/register';
 import NotFound from '@/pages/not-found';
+
+const Login    = lazy(() => import('@/pages/login'));
+const Register = lazy(() => import('@/pages/register'));
 
 // ── Student pages (lazy — only needed after login) ────────────────────────────
 const Dashboard       = lazy(() => import('@/pages/dashboard'));

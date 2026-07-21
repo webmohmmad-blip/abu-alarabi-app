@@ -12,3 +12,4 @@
 - [Hero Content CMS](hero-cms.md) — Hero text stored as JSON in system_settings key='hero_content'; public GET /api/homepage-settings returns defaults if no row; admin page at /admin/homepage-settings; primary CTA routes to /schedule (not /register).
 - [Users Excel Export](users-excel-export.md) — GET /api/admin/users/export; ExcelJS; route registered before adminRouter to prevent /users/:id shadowing; phone cells numFmt "@" prevents scientific notation.
 - [SEO Implementation](seo-implementation.md) — react-helmet-async; per-page SEO component; dynamic sitemap at /api/sitemap.xml; robots.txt; analytics stubs in index.html.
+- [Mobile Performance Optimization](mobile-performance.md) — baseline 58→target 85+; h1 LCP fix, WebP teacher photo, combined /api/public/homepage, font @import removed, lazy Login/Register.

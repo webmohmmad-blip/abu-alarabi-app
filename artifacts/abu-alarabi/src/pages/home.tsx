@@ -13,16 +13,14 @@ import {
   Star,
   Users,
   Clock,
-  Target,
   Sparkles,
   Trophy,
-  ArrowLeft,
 } from "lucide-react";
-import { useGetPlatformStats, useListDossiers, customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/api-client-react";
 import { HeroAdvertisement } from "@/components/HeroAdvertisement";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { AuthContext } from "@/contexts/auth-context";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface HeroContent {
   badgeText: string;
@@ -37,6 +35,22 @@ interface HeroContent {
   secondaryButtonText: string;
   secondaryButtonLink: string;
   secondaryButtonEnabled: boolean;
+}
+
+interface FeaturedDossier {
+  id: number;
+  title: string;
+  coverUrl: string | null;
+  subjectName: string | null;
+  pageCount: number;
+  rating: string;
+}
+
+interface HomepageData {
+  ok: boolean;
+  hero: HeroContent;
+  ads: unknown[];
+  featuredDossiers: FeaturedDossier[];
 }
 
 const HERO_DEFAULTS: HeroContent = {
@@ -92,19 +106,29 @@ const FEATURES = [
 ];
 
 export default function Home() {
-  const { data: stats } = useGetPlatformStats();
-  const { data: dossiersList } = useListDossiers({ limit: 3 });
   const { isAuthenticated } = useContext(AuthContext);
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
 
-  const { data: heroData } = useQuery<HeroContent>({
-    queryKey: ["/api/homepage-settings"],
-    queryFn: () => customFetch<HeroContent>("/api/homepage-settings", { method: "GET" }),
-    staleTime: 5 * 60 * 1000,
+  // ── Single combined fetch: hero + ads + featured dossiers ─────────────────
+  // One round-trip instead of three. Server caches 60 s.
+  const { data: homepage } = useQuery<HomepageData>({
+    queryKey: ["/api/public/homepage"],
+    queryFn: () => customFetch<HomepageData>("/api/public/homepage", { method: "GET" }),
+    staleTime: 60_000,
+    placeholderData: { ok: true, hero: HERO_DEFAULTS, ads: [], featuredDossiers: [] },
   });
 
-  // Use live DB values; fall back to defaults while loading (prevents layout shift)
-  const hero: HeroContent = heroData ?? HERO_DEFAULTS;
+  // Seed the ads into React Query cache so HeroAdvertisement uses it immediately
+  // without making a separate network request.
+  useEffect(() => {
+    if (homepage?.ads && homepage.ads.length > 0) {
+      queryClient.setQueryData(["advertisements", "active"], homepage.ads);
+    }
+  }, [homepage?.ads, queryClient]);
+
+  const hero: HeroContent = homepage?.hero ?? HERO_DEFAULTS;
+  const featuredDossiers: FeaturedDossier[] = homepage?.featuredDossiers ?? [];
 
   // Primary CTA: authenticated → go directly to destination; guest → /login?redirect=<dest>
   function handlePrimaryCTA(e: React.MouseEvent) {
@@ -169,11 +193,8 @@ export default function Home() {
               </motion.div>
             )}
 
-            {/* Heading */}
-            <motion.h1
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
+            {/* Heading — rendered at full opacity immediately so LCP is not gated on JS animation */}
+            <h1
               className="text-5xl md:text-7xl font-black leading-[1.1] text-white mb-8"
               style={{ letterSpacing: "-0.01em" }}
             >
@@ -190,7 +211,7 @@ export default function Home() {
               >
                 {hero.titleLine2}
               </span>
-            </motion.h1>
+            </h1>
 
             {/* Description */}
             {hero.descriptionEnabled && hero.description && (
@@ -267,12 +288,28 @@ export default function Home() {
 
               {/* Photo frame */}
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/20 border border-primary/10">
-                <img
-                  src="/teacher-sahouri.jpg"
-                  alt="الأستاذ محمد الساحوري — أبو العربي"
-                  className="w-full object-cover object-top"
-                  style={{ aspectRatio: "4/5", maxHeight: "560px" }}
-                />
+                {/* Responsive WebP with JPEG fallback — lazy since it's below the fold */}
+                <picture>
+                  <source
+                    type="image/webp"
+                    srcSet="/teacher-sahouri-380.webp 380w, /teacher-sahouri-760.webp 760w"
+                    sizes="(max-width: 640px) 380px, 760px"
+                  />
+                  <source
+                    type="image/jpeg"
+                    srcSet="/teacher-sahouri-760.jpg"
+                  />
+                  <img
+                    src="/teacher-sahouri-760.jpg"
+                    alt="الأستاذ محمد الساحوري — أبو العربي"
+                    className="w-full object-cover object-top"
+                    style={{ aspectRatio: "4/5", maxHeight: "560px" }}
+                    width="760"
+                    height="950"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
                 {/* Overlay gradient at bottom */}
                 <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-foreground/40 to-transparent" />
                 <div className="absolute bottom-4 right-4 left-4 flex items-end justify-between">
@@ -411,7 +448,7 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {dossiersList?.items?.slice(0, 3).map((dossier, i) => (
+            {featuredDossiers.map((dossier, i) => (
               <motion.div
                 key={dossier.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -428,6 +465,10 @@ export default function Home() {
                           src={dossier.coverUrl}
                           alt={dossier.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          width="400"
+                          height="176"
+                          loading="lazy"
+                          decoding="async"
                         />
                       ) : (
                         <div className="flex flex-col items-center gap-3">
@@ -467,7 +508,7 @@ export default function Home() {
             ))}
 
             {/* Fallback cards if no dossiers yet */}
-            {(!dossiersList?.items || dossiersList.items.length === 0) &&
+            {featuredDossiers.length === 0 &&
               ["نحو وصرف — توجيهي", "البلاغة والأدب — توجيهي", "مراجعة شاملة — توجيهي"].map((title, i) => (
                 <motion.div
                   key={title}

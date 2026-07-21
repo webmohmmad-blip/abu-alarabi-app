@@ -81,6 +81,7 @@ router.get("/advertisements/active", async (_req, res): Promise<void> => {
       .where(activeFilter())
       .orderBy(asc(homepageAdsTable.position), desc(homepageAdsTable.createdAt));
 
+    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.json({ ok: true, items: ads.map(serializeAd) });
   } catch (err) {
     console.error("[advertisements] active fetch error", err);

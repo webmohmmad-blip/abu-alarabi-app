@@ -66,8 +66,10 @@ function isValidLink(link: unknown): boolean {
 router.get("/homepage-settings", async (_req, res): Promise<void> => {
   try {
     const content = await getHeroContent();
+    res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=900");
     res.json(content);
   } catch {
+    res.setHeader("Cache-Control", "no-store");
     res.json({ ...HERO_DEFAULTS });
   }
 });

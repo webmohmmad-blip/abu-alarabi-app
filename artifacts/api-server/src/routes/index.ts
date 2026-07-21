@@ -24,9 +24,11 @@ import advertisementsRouter from "./advertisements";
 import homepageSettingsRouter from "./homepage-settings";
 import adminUsersExportRouter from "./admin-users-export";
 import sitemapRouter from "./sitemap";
+import publicHomepageRouter from "./public-homepage";
 
 const router: IRouter = Router();
 
+router.use(publicHomepageRouter); // combined homepage data — must be early, no auth
 router.use(healthRouter);
 router.use(authRouter);
 router.use(usersRouter);
