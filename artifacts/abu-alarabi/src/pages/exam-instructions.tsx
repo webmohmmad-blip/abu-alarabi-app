@@ -29,12 +29,16 @@ export default function ExamInstructions() {
   const startExam = useStartExam();
 
   const handleStart = () => {
+    if (startExam.isPending) return; // prevent double-click
     startExam.mutate(
-      { data: { examId } },
+      { id: examId },
       {
         onSuccess: (data) => {
           setLocation(`/exams/${examId}/take?attemptId=${data.id}`);
-        }
+        },
+        onError: () => {
+          // error is surfaced via startExam.isError / startExam.error below
+        },
       }
     );
   };
@@ -151,15 +155,22 @@ export default function ExamInstructions() {
                   لقد استنفدت جميع محاولاتك لهذا الامتحان.
                 </div>
               ) : (
-                <Button 
-                  size="lg" 
-                  className="w-full sm:w-auto px-12 text-lg gap-2"
-                  onClick={handleStart}
-                  disabled={startExam.isPending}
-                >
-                  <PenTool className="w-5 h-5" />
-                  {startExam.isPending ? "جاري التجهيز..." : "ابدأ الامتحان الآن"}
-                </Button>
+                <>
+                  <Button 
+                    size="lg" 
+                    className="w-full sm:w-auto px-12 text-lg gap-2"
+                    onClick={handleStart}
+                    disabled={startExam.isPending}
+                  >
+                    <PenTool className="w-5 h-5" />
+                    {startExam.isPending ? "جارٍ بدء الامتحان..." : "ابدأ الامتحان الآن"}
+                  </Button>
+                  {startExam.isError && (
+                    <p className="text-destructive text-sm font-medium mt-2 text-center">
+                      {(startExam.error as any)?.message ?? "الامتحان غير متاح حالياً"}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </CardContent>

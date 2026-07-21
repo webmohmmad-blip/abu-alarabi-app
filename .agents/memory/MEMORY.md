@@ -6,3 +6,4 @@
 - [Two Shared Systems Refactor](two-shared-systems.md) — 5 shared components extracted; ~1,260 lines removed; 4 admin pages preserved; exams+quiz share examsTable via type='weekly'.
 - [Dossier File Pipeline](dossier-file-pipeline.md) — storage objects must be auth-free; PDF.js requires range requests (206); download/view are separate endpoints; fileUrl stored as /api/storage/objects/uploads/<uuid>.
 - [Worksheet PDF Refactor](worksheet-pdf-refactor.md) — worksheets are now PDF study materials; sourceType state in Study Room routes annotations to separate DB tables; dossierId var reused as generic sourceId.
+- [Weekly Quiz Table Split](weekly-quiz-split.md) — weekly quizzes live in examsTable (type="weekly"), not weeklyQuizzesTable; useStartExam expects {id: number}, not {data:{examId}}.

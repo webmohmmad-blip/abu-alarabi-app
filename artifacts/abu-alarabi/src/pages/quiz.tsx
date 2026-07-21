@@ -4,12 +4,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Clock, Users, Gift, Medal, ArrowLeft } from "lucide-react";
+import { Trophy, Clock, Users, Gift, Medal, ArrowLeft, FileQuestion, Target } from "lucide-react";
 import { motion } from "framer-motion";
+import { useLocation } from "wouter";
 
 export default function Quiz() {
   const { data: currentQuiz, isLoading: quizLoading } = useGetCurrentQuiz();
   const { data: leaderboard, isLoading: boardLoading } = useGetQuizLeaderboard();
+  const [, setLocation] = useLocation();
+
+  const handleStartQuiz = () => {
+    if (currentQuiz) {
+      // Weekly quizzes are stored as exams — navigate to the exam instructions page
+      setLocation(`/exams/${currentQuiz.id}`);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -84,7 +93,7 @@ export default function Quiz() {
                       )}
                     </div>
                   ) : (
-                    <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground text-lg gap-2">
+                    <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground text-lg gap-2" onClick={handleStartQuiz}>
                       ابدأ التحدي الآن <ArrowLeft className="w-5 h-5" />
                     </Button>
                   )}

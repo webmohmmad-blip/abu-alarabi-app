@@ -392,42 +392,60 @@ router.post(
 );
 
 // ─── WEEKLY QUIZ ────────────────────────────────────────
+// NOTE: Weekly quizzes are stored in examsTable with type="weekly".
+// The old weeklyQuizzesTable is a separate legacy table — do not use it here.
 router.get("/quiz/current", async (_req, res): Promise<void> => {
   const now = new Date();
 
-  const quizzes = await db
+  // Find published, available weekly quizzes from examsTable
+  const rows = await db
     .select({
-      quiz: weeklyQuizzesTable,
+      exam: examsTable,
       subjectName: subjectsTable.name,
     })
-    .from(weeklyQuizzesTable)
-    .leftJoin(subjectsTable, eq(weeklyQuizzesTable.subjectId, subjectsTable.id));
+    .from(examsTable)
+    .leftJoin(subjectsTable, eq(examsTable.subjectId, subjectsTable.id))
+    .where(
+      and(
+        eq(examsTable.type, "weekly"),
+        eq((examsTable as any).status, "published"),
+        eq(examsTable.isAvailable, true),
+        isNull(examsTable.deletedAt),
+      )
+    );
 
-  const active = quizzes.find(
-    (q) =>
-      q.quiz.isActive &&
-      new Date(q.quiz.startsAt) <= now &&
-      new Date(q.quiz.endsAt) >= now
-  );
-
-  const target = active ?? quizzes[0];
-
-  if (!target) {
+  if (!rows.length) {
     res.status(404).json({ error: "لا يوجد كويز حالياً" });
     return;
   }
 
+  // Prefer non-expired quiz; fall back to the most-recently-created one
+  const active =
+    rows.find((r) => {
+      const expires = r.exam.expiresAt;
+      return !expires || new Date(expires) >= now;
+    }) ?? rows[0];
+
+  // Actual question count from questionsTable
+  const questionRows = await db
+    .select({ id: questionsTable.id })
+    .from(questionsTable)
+    .where(eq(questionsTable.examId, active.exam.id));
+
+  const questionCount = questionRows.length || (active.exam as any).questionCount || 0;
+
   res.json({
-    id: target.quiz.id,
-    title: target.quiz.title,
-    description: target.quiz.description,
-    subjectName: target.subjectName ?? "",
-    startsAt: target.quiz.startsAt,
-    endsAt: target.quiz.endsAt,
-    questionCount: 10,
-    durationMinutes: 15,
-    participants: 847,
-    prizes: target.quiz.prizes,
+    id: active.exam.id,
+    title: active.exam.title,
+    description: active.exam.instructions ?? null,
+    subjectName: active.subjectName ?? "",
+    startsAt: active.exam.publishedAt?.toISOString() ?? active.exam.createdAt.toISOString(),
+    endsAt: active.exam.expiresAt?.toISOString() ?? null,
+    questionCount,
+    durationMinutes: active.exam.durationMinutes,
+    totalScore: parseFloat((active.exam as any).totalScore ?? "100"),
+    participants: 0,
+    prizes: [],
     hasParticipated: false,
     userRank: null,
   });
