@@ -20,6 +20,7 @@ import adminSummariesRouter from "./admin-summaries";
 import storageRouter from "./storage";
 import workspaceRouter from "./workspace";
 import scheduleRouter from "./schedule";
+import advertisementsRouter from "./advertisements";
 
 const router: IRouter = Router();
 
@@ -44,5 +45,6 @@ router.use("/admin", adminSummariesRouter);
 router.use(storageRouter);
 router.use(workspaceRouter);
 router.use(scheduleRouter);
+router.use(advertisementsRouter);
 
 export default router;

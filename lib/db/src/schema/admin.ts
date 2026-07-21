@@ -142,6 +142,30 @@ export const announcementsTable = pgTable("announcements", {
   deletedAt: timestamp("deleted_at"),
 });
 
+// ─── HOMEPAGE ADVERTISEMENTS ────────────────────────────────────────────────
+export const homepageAdsTable = pgTable("homepage_ads", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  /** Storage key — e.g. /objects/uploads/<uuid> */
+  imageKey: text("image_key").notNull(),
+  mobileImageKey: text("mobile_image_key"),
+  tabletImageKey: text("tablet_image_key"),
+  linkUrl: text("link_url"),
+  openInNewTab: boolean("open_in_new_tab").default(false).notNull(),
+  ctaText: text("cta_text"),
+  /** "image_only" | "overlay" | "split" | "minimal" */
+  displayStyle: varchar("display_style", { length: 30 }).default("image_only").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  position: integer("position").default(0).notNull(),
+  startAt: timestamp("start_at", { withTimezone: true }),
+  endAt: timestamp("end_at", { withTimezone: true }),
+  createdBy: integer("created_by").references(() => usersTable.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+    .$onUpdate(() => new Date()),
+});
+
 // ─── LOGIN HISTORY ──────────────────────────────────────────────────────────
 export const loginHistoryTable = pgTable("login_history", {
   id: serial("id").primaryKey(),

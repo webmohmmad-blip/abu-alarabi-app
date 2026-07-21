@@ -1,0 +1,411 @@
+# HOMEPAGE ADVERTISEMENT SECTION + GLOBAL BUTTON CONTRAST FIX
+# Abu Al-Arabi Platform
+You are a senior full-stack engineer and UI/UX specialist.
+Implement a complete advertisement management system for the large homepage area shown below the main navigation and above the rest of the homepage content.
+The advertisement area must be fully manageable from the Admin Dashboard.
+Do not only create a static banner.
+Build a complete production-ready advertisement system with backend, database, admin management, frontend rendering, responsive design, validation, and testing.
+==================================================
+PART 1: ADVERTISEMENT SYSTEM GOAL
+==================================================
+Create a homepage advertisement section where the admin can:
+- add an advertisement
+- upload an advertisement image
+- enter a title
+- enter an optional description
+- add an optional destination link
+- choose whether the link opens:
+ - in the same tab
+ - in a new tab
+- activate or deactivate the advertisement
+- schedule when it starts
+- schedule when it ends
+- reorder advertisements
+- edit advertisements
+- delete advertisements
+- preview advertisements
+- hide the entire advertisement section if there are no active advertisements
+The student must never see draft, disabled, expired, or scheduled-future advertisements.
+==================================================
+PART 2: DATABASE MODEL
+==================================================
+Create a table such as:
+homepage_ads
+Recommended fields:
+- id
+- title
+- description
+- imageUrl or imageStorageKey
+- mobileImageUrl or mobileImageStorageKey
+- tabletImageUrl or tabletImageStorageKey
+- linkUrl
+- openInNewTab
+- isActive
+- position
+- startAt
+- endAt
+- createdBy
+- createdAt
+- updatedAt
+Use persistent storage for uploaded images.
+Do not store:
+- blob URLs
+- local file paths
+- temporary preview URLs
+- expiring signed URLs permanently
+If private storage is used, generate fresh signed URLs from stable storage keys.
+==================================================
+PART 3: ADMIN PAGE
+==================================================
+Add a new admin section:
+"إدارة الإعلانات"
+Recommended route:
+/admin/advertisements
+The page must contain:
+- list of all advertisements
+- thumbnail preview
+- title
+- active/inactive status
+- start date
+- end date
+- display order
+- edit button
+- preview button
+- activate/deactivate switch
+- delete button
+- create advertisement button
+Create/Edit form fields:
+1. عنوان الإعلان
+2. وصف اختياري
+3. صورة الإعلان للكمبيوتر
+4. صورة اختيارية للموبايل
+5. صورة اختيارية للتابلت
+6. رابط الإعلان
+7. فتح الرابط في نافذة جديدة
+8. حالة الإعلان
+9. تاريخ بداية العرض
+10. تاريخ نهاية العرض
+11. ترتيب الظهور
+Arabic validation messages must be clear.
+Examples:
+- "صورة الإعلان مطلوبة"
+- "الرابط غير صالح"
+- "تاريخ النهاية يجب أن يكون بعد تاريخ البداية"
+- "يرجى إدخال عنوان الإعلان"
+==================================================
+PART 4: IMAGE UPLOAD RULES
+==================================================
+Support:
+- JPG
+- JPEG
+- PNG
+- WebP
+Recommended dimensions:
+Desktop:
+- 1600 × 500
+- ratio around 3.2:1
+Tablet:
+- 1200 × 500
+Mobile:
+- 750 × 900
+- or a vertical/square variation depending on the design
+If mobile and tablet images are not uploaded, use the desktop image responsively.
+Add:
+- file type validation
+- file size validation
+- image preview
+- upload progress
+- replace image
+- remove image
+- optimized image delivery
+- WebP conversion if the existing stack supports it
+Do not stretch images.
+Use:
+object-fit: cover
+or:
+object-fit: contain
+depending on the selected display style.
+==================================================
+PART 5: HOMEPAGE DISPLAY
+==================================================
+Render the advertisement section elegantly in the large homepage area.
+The section must support:
+- one active advertisement
+- multiple active advertisements
+- carousel/slider when multiple ads exist
+- swipe on mobile
+- arrows on desktop
+- pagination dots
+- auto-slide
+- pause on hover
+- accessible controls
+- RTL direction
+Do not show an empty placeholder when there are no active ads.
+Only show ads matching:
+isActive = true
+and:
+startAt is null or startAt <= current time
+and:
+endAt is null or endAt > current time
+Order by:
+position ASC
+then:
+createdAt DESC
+==================================================
+PART 6: RESPONSIVE DESIGN
+==================================================
+Desktop:
+- wide banner
+- rounded corners
+- elegant shadow
+- balanced spacing
+- no excessive height
+- image remains sharp
+- text overlays remain readable
+Tablet:
+- keep the banner balanced
+- avoid text clipping
+- preserve touch-friendly controls
+Mobile:
+- use mobile-specific image when available
+- reduce text size
+- stack text and CTA if needed
+- allow swipe gestures
+- do not crop important image content
+- do not overflow horizontally
+Test at:
+- 320px
+- 375px
+- 430px
+- 768px
+- 1024px
+- 1280px
+- 1440px
+- 1920px
+==================================================
+PART 7: OPTIONAL TEXT AND CTA
+==================================================
+Allow the admin to optionally add:
+- title
+- description
+- CTA button text
+Example:
+"اعرف المزيد"
+or:
+"ابدأ الآن"
+or:
+"سجل الآن"
+The CTA button should only appear if:
+- button text exists
+- linkUrl exists
+Allow the admin to choose a display style:
+1. Image only
+2. Image with text overlay
+3. Split layout: image + text
+4. Minimal banner
+Default style:
+Image only
+==================================================
+PART 8: ADVERTISEMENT LINKS
+==================================================
+Support both:
+Internal links:
+- /dossiers
+- /worksheets
+- /exams
+- /weekly-quiz
+- /study-room
+External links:
+- https://example.com
+Validate URLs safely.
+For external links opened in a new tab, use:
+target="_blank"
+and:
+rel="noopener noreferrer"
+Do not allow:
+- javascript:
+- data:
+- unsafe protocols
+==================================================
+PART 9: API ENDPOINTS
+==================================================
+Create or verify endpoints such as:
+Public:
+GET /api/advertisements/active
+Admin:
+GET /api/admin/advertisements
+POST /api/admin/advertisements
+PATCH /api/admin/advertisements/:id
+DELETE /api/admin/advertisements/:id
+PATCH /api/admin/advertisements/:id/status
+PATCH /api/admin/advertisements/reorder
+Requirements:
+- public endpoint returns active valid advertisements only
+- admin routes require admin or super_admin
+- guests receive 401
+- students receive 403
+- invalid payload returns 400
+- missing advertisement returns 404
+- no stack traces are exposed
+- no internal storage paths are returned
+==================================================
+PART 10: EMPTY AND ERROR STATES
+==================================================
+Admin empty state:
+"لا توجد إعلانات مضافة بعد"
+Button:
+"إضافة إعلان جديد"
+Homepage behavior:
+- if there are no active advertisements, hide the entire section
+- do not leave a large blank space
+- do not show loading forever
+If ad loading fails:
+- fail gracefully
+- keep the rest of the homepage visible
+- do not crash the homepage
+==================================================
+PART 11: GLOBAL BUTTON CONTRAST ISSUE
+==================================================
+There is a UI bug across the website where some buttons have:
+- white background
+- white text
+This makes the button text invisible.
+Audit every button in the entire platform.
+Search for:
+- white text on white background
+- transparent backgrounds with white text on light sections
+- hover states that remove contrast
+- disabled states with unreadable labels
+- ghost buttons with poor visibility
+- outline buttons with missing border contrast
+Fix the design system globally.
+Do not patch individual buttons randomly if they use shared button components.
+Inspect:
+- shared Button component
+- CSS variables
+- Tailwind variants
+- theme tokens
+- dark mode
+- light mode
+- hover states
+- focus states
+- disabled states
+==================================================
+PART 12: APPROVED BUTTON STYLES
+==================================================
+Use consistent variants.
+Primary button:
+- background: #5A2D82
+- text: white
+- hover: darker purple
+- focus ring visible
+Secondary button:
+- background: #0D9BB5
+- text: white
+Gold/accent button:
+- background: #C79A2D
+- text: dark readable color or white only if contrast passes
+White button on dark background:
+- background: white
+- text: #5A2D82 or #1F2937
+- visible border if needed
+Outline button:
+- transparent background
+- border: #5A2D82
+- text: #5A2D82
+- hover background: light purple
+- hover text: dark purple
+Ghost button:
+- transparent background
+- readable text depending on background
+- visible hover state
+Disabled:
+- reduced opacity
+- still readable
+- cursor not-allowed
+Never allow:
+background: white
+color: white
+unless an image or strong dark overlay guarantees readability, and even then avoid it.
+==================================================
+PART 13: ACCESSIBILITY
+==================================================
+All buttons must meet accessible contrast requirements.
+Target WCAG 2.1 AA.
+Ensure:
+- visible keyboard focus
+- accessible labels
+- correct role
+- no icon-only button without aria-label
+- carousel controls are keyboard accessible
+- advertisement images have alt text
+- auto-slide pauses when focused or hovered
+- prefers-reduced-motion is respected
+==================================================
+PART 14: TESTING
+==================================================
+Add tests for:
+Advertisement admin:
+- create ad
+- upload image
+- edit ad
+- activate ad
+- deactivate ad
+- delete ad
+- schedule ad
+- expire ad
+- reorder ads
+- reject invalid URL
+- reject unsafe URL
+Public homepage:
+- active ad appears
+- inactive ad does not appear
+- future ad does not appear
+- expired ad does not appear
+- no active ads hides section
+- link opens correctly
+- responsive images load correctly
+Permissions:
+- admin can manage ads
+- student receives 403
+- guest receives 401
+Button contrast:
+- test all button variants
+- test hover
+- test focus
+- test disabled
+- test dark and light sections
+==================================================
+PART 15: FINAL VERIFICATION
+==================================================
+After implementation:
+1. Run typecheck.
+2. Run build.
+3. Run automated tests.
+4. Test the homepage.
+5. Test admin advertisement management.
+6. Test desktop.
+7. Test mobile.
+8. Test tablet.
+9. Test internal and external links.
+10. Confirm buttons are readable everywhere.
+Create:
+ADVERTISEMENT_SYSTEM_IMPLEMENTATION_REPORT.md
+Include:
+- database changes
+- API endpoints
+- admin route
+- frontend components
+- storage implementation
+- responsive behavior
+- button fixes
+- accessibility results
+- screenshots or test evidence
+- remaining issues
+Do not mark the task complete until:
+- admin can add, edit, activate, deactivate, and delete advertisements
+- advertisement images display correctly
+- links work
+- desktop, tablet, and mobile display correctly
+- no empty advertisement space remains
+- no white-text-on-white-button issue remains anywhere

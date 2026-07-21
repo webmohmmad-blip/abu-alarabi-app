@@ -19,6 +19,7 @@ import {
   MessageSquareWarning,
   PenTool,
   AlignLeft,
+  Wallpaper,
 } from "lucide-react";
 import { useLogout } from "@workspace/api-client-react";
 
@@ -31,6 +32,7 @@ const adminNavItems = [
   { name: "الكويز الأسبوعي", href: "/admin/quiz", icon: MessageSquareWarning },
   { name: "الصلاحيات", href: "/admin/roles", icon: ShieldCheck },
   { name: "الإعلانات", href: "/admin/announcements", icon: Megaphone },
+  { name: "لافتات الصفحة", href: "/admin/advertisements", icon: Wallpaper },
   { name: "التقارير", href: "/admin/reports", icon: BarChart3 },
   { name: "سجل المراجعة", href: "/admin/audit", icon: ScrollText },
   { name: "الإعدادات", href: "/admin/settings", icon: Settings },

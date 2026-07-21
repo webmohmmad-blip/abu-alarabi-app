@@ -17,6 +17,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useGetPlatformStats, useListDossiers } from "@workspace/api-client-react";
+import { AdCarousel } from "@/components/AdCarousel";
 
 const TRACKS = [
   { label: "توجيهي", sub: "الصف الثاني عشر", color: "#5A2D82" },
@@ -170,6 +171,11 @@ export default function Home() {
         {/* Bottom fade */}
         <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
       </section>
+
+      {/* ═══════════════════════════════════════════════
+          HOMEPAGE ADVERTISEMENTS
+      ═══════════════════════════════════════════════ */}
+      <AdCarousel />
 
       {/* ═══════════════════════════════════════════════
           TEACHER PROFILE — محمد الساحوري
