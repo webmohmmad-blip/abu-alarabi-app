@@ -18,6 +18,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  FileSpreadsheet,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 
 type UserRole = "student" | "teacher" | "assistant_teacher" | "moderator" | "admin" | "super_admin";
@@ -94,6 +97,38 @@ export default function AdminUsers() {
   const [page, setPage] = useState(1);
   const [activeMenu, setActiveMenu] = useState<number | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [exporting, setExporting] = useState<"idle" | "loading" | "done" | "error">("idle");
+
+  async function handleExport() {
+    if (exporting === "loading") return;
+    setExporting("loading");
+    try {
+      const qs = new URLSearchParams();
+      if (search)     qs.set("search", search);
+      if (roleFilter) qs.set("role",   roleFilter);
+      // Forward the token — customFetch adds it automatically but fetch + blob needs it manually
+      const token = localStorage.getItem("token");
+      const resp = await fetch(`/api/admin/users/export?${qs}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      const today = new Date().toISOString().slice(0, 10);
+      a.download = `users-export-${today}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setExporting("done");
+      setTimeout(() => setExporting("idle"), 3000);
+    } catch {
+      setExporting("error");
+      setTimeout(() => setExporting("idle"), 4000);
+    }
+  }
 
   const qc = useQueryClient();
   const { data, isLoading } = useAdminUsers({ search, role: roleFilter, page });
@@ -137,13 +172,38 @@ export default function AdminUsers() {
               {data?.total ? `${data.total.toLocaleString("ar")} مستخدم` : "تحميل..."}
             </p>
           </div>
-          <Button
-            onClick={() => setShowAddModal(true)}
-            className="bg-primary hover:bg-primary/90 gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            إضافة مستخدم
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Export button — admin/super_admin only (already on admin page) */}
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              disabled={exporting === "loading"}
+              className={`gap-2 border-white/10 bg-white/5 text-white hover:bg-white/10 ${
+                exporting === "done"  ? "border-emerald-500/40 text-emerald-400" :
+                exporting === "error" ? "border-red-500/40 text-red-400" : ""
+              }`}
+              title={search || roleFilter ? "سيتم تصدير جميع النتائج المطابقة للفلاتر الحالية" : "سيتم تصدير جميع المستخدمين"}
+            >
+              {exporting === "loading" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : exporting === "done" ? (
+                <CheckCircle2 className="w-4 h-4" />
+              ) : (
+                <FileSpreadsheet className="w-4 h-4" />
+              )}
+              {exporting === "loading" ? "جاري تجهيز الملف..." :
+               exporting === "done"    ? "تم التصدير بنجاح" :
+               exporting === "error"   ? "تعذر التصدير" :
+               "تصدير إلى Excel"}
+            </Button>
+            <Button
+              onClick={() => setShowAddModal(true)}
+              className="bg-primary hover:bg-primary/90 gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              إضافة مستخدم
+            </Button>
+          </div>
         </motion.div>
 
         {/* Filters */}

@@ -1,0 +1,371 @@
+# FIX MISSING SITEMAP.XML AND ROBOTS.TXT
+
+# Domain: https://malsahori.com
+
+You are a senior full-stack developer and technical SEO engineer.
+
+The production URL:
+https://malsahori.com/sitemap.xml
+
+currently returns the application's Arabic 404 page.
+
+Fix this completely.
+
+Do not only add a frontend React route. The sitemap must be returned by the production server as real XML before the SPA fallback or 404 handler.
+
+==================================================
+
+1. CREATE A REAL DYNAMIC SITEMAP
+
+==================================================
+
+Create a production endpoint:
+
+GET /sitemap.xml
+
+It must return:
+
+Status: 200
+
+Content-Type:
+
+application/xml; charset=utf-8
+
+The response must be valid XML using the standard sitemap protocol.
+
+Example structure:
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url>
+<loc>https://malsahori.com/</loc>
+<lastmod>2026-07-21</lastmod>
+<changefreq>daily</changefreq>
+<priority>1.0</priority>
+</url>
+</urlset>
+
+Use absolute HTTPS URLs only.
+
+==================================================
+
+2. INCLUDE PUBLIC INDEXABLE PAGES
+
+==================================================
+
+Include real public pages such as:
+
+- homepage
+
+- dossiers
+
+- worksheets
+
+- electronic exams
+
+- weekly quiz
+
+- public educational content
+
+- published dossier detail pages
+
+- published worksheet detail pages
+
+- published exam landing pages
+
+- any public lesson or article pages
+
+Read dynamic published records from the database.
+
+Only include content that:
+
+- is published
+
+- is publicly accessible
+
+- returns HTTP 200
+
+- is allowed to appear in Google
+
+- has a canonical public URL
+
+==================================================
+
+3. EXCLUDE PRIVATE AND ADMIN ROUTES
+
+==================================================
+
+Never include:
+
+- /admin
+
+- /admin/*
+
+- /login
+
+- /register
+
+- /auth/*
+
+- /api/*
+
+- private student dashboards
+
+- account pages
+
+- study notes
+
+- personal schedules
+
+- unpublished content
+
+- preview URLs
+
+- internal test pages
+
+- 404 pages
+
+==================================================
+
+4. ROUTE ORDER IS CRITICAL
+
+==================================================
+
+Register /sitemap.xml before:
+
+- React SPA fallback
+
+- wildcard routes
+
+- app.get("*")
+
+- not-found middleware
+
+- frontend index.html fallback
+
+The current problem suggests that /sitemap.xml is being handled by the SPA or 404 route.
+
+Fix the root cause.
+
+==================================================
+
+5. CREATE ROBOTS.TXT
+
+==================================================
+
+Create:
+
+GET /robots.txt
+
+Return:
+
+Content-Type:
+
+text/plain; charset=utf-8
+
+Suggested content:
+
+User-agent: *
+
+Allow: /
+
+Disallow: /admin/
+
+Disallow: /api/
+
+Disallow: /login
+
+Disallow: /register
+
+Sitemap: https://malsahori.com/sitemap.xml
+
+Do not block public dossiers, worksheets, exams, or lessons.
+
+==================================================
+
+6. ESCAPE XML SAFELY
+
+==================================================
+
+Escape all dynamic values correctly.
+
+Prevent malformed XML from:
+
+- &
+
+- <
+
+- >
+
+- quotes
+
+- Arabic slugs
+
+- unexpected database values
+
+Do not insert untrusted raw XML.
+
+==================================================
+
+7. DATES AND DUPLICATES
+
+==================================================
+
+Use updatedAt or publishedAt for lastmod.
+
+Use valid ISO dates:
+
+YYYY-MM-DD
+
+Remove duplicate URLs.
+
+Do not add a new lastmod timestamp on every request unless the content actually changed.
+
+==================================================
+
+8. CORRECT DOMAIN
+
+==================================================
+
+Every <loc> must begin with:
+https://malsahori.com/
+
+Do not use:
+
+- Replit development URLs
+
+- localhost
+
+- http://
+
+- preview domains
+
+- internal deployment hostnames
+
+==================================================
+
+9. VERIFY HTTP BEHAVIOR
+
+==================================================
+
+Verify in production:
+
+GET https://malsahori.com/sitemap.xml
+
+Expected:
+
+- HTTP 200
+
+- XML content
+
+- no HTML
+
+- no React application
+
+- no 404 page
+
+- no login redirect
+
+- no authentication requirement
+
+Also verify:
+
+GET https://malsahori.com/robots.txt
+
+Expected:
+
+- HTTP 200
+
+- plain text
+
+- sitemap declaration present
+
+==================================================
+
+10. TESTS
+
+==================================================
+
+Add automated tests that verify:
+
+1. /sitemap.xml returns 200
+
+2. content type is XML
+
+3. output parses as valid XML
+
+4. homepage URL is included
+
+5. published public records are included
+
+6. unpublished records are excluded
+
+7. admin routes are excluded
+
+8. login and registration are excluded
+
+9. no localhost or Replit URL appears
+
+10. duplicate URLs do not appear
+
+11. /robots.txt returns 200
+
+12. robots.txt references the correct sitemap
+
+13. route works after production build
+
+14. SPA fallback does not intercept sitemap.xml
+
+15. sitemap does not return HTML
+
+==================================================
+
+11. DEPLOY AND VERIFY THE REAL DOMAIN
+
+==================================================
+
+After implementation:
+
+- rebuild production
+
+- redeploy
+
+- test the real custom domain
+
+- do not rely only on localhost testing
+
+Open:
+https://malsahori.com/sitemap.xml
+
+and confirm that XML appears.
+
+Open:
+https://malsahori.com/robots.txt
+
+and confirm that plain text appears.
+
+Create a report:
+
+SITEMAP_AND_ROBOTS_PRODUCTION_FIX_REPORT.md
+
+Include:
+
+- root cause
+
+- files changed
+
+- route order
+
+- included URL categories
+
+- excluded URL categories
+
+- production HTTP status
+
+- content types
+
+- number of sitemap URLs
+
+- tests executed
+أبو العربي — منصة محمد الساحوري للغة العربية
+دوسيات عربي، أوراق عمل، امتحانات محلولة. توجيهي الأردن جيل 2010 مع الأستاذ محمد الساحوري.
+ 
