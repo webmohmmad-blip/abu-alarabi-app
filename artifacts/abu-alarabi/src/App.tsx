@@ -7,7 +7,6 @@ import NotFound from '@/pages/not-found';
 import Home from '@/pages/home';
 import Login from '@/pages/login';
 import Register from '@/pages/register';
-import Onboarding from '@/pages/onboarding';
 import Dashboard from '@/pages/dashboard';
 import Dossiers from '@/pages/dossiers';
 import DossierDetail from '@/pages/dossier-detail';
@@ -24,7 +23,6 @@ import Notes from '@/pages/notes';
 import Statistics from '@/pages/statistics';
 import Profile from '@/pages/profile';
 import Settings from '@/pages/settings';
-import Videos from '@/pages/videos';
 import Summaries from '@/pages/summaries';
 import SessionsHistory from '@/pages/sessions-history';
 import Schedule from '@/pages/schedule';
@@ -60,7 +58,6 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      <Route path="/onboarding" component={Onboarding} />
 
       {/* Student */}
       <Route path="/dashboard" component={Dashboard} />
@@ -68,16 +65,26 @@ function Router() {
       <Route path="/dossiers/:id" component={DossierDetail} />
       <Route path="/worksheets" component={Worksheets} />
       <Route path="/worksheets/:id" component={WorksheetDetail} />
+
+      {/* Exam routes — spec-required chain */}
       <Route path="/exams" component={Exams} />
+      <Route path="/exams/:examId/instructions" component={ExamInstructions} />
+      <Route path="/exams/:examId/attempt/:attemptId" component={ExamTake} />
+      <Route path="/exams/:examId/result/:attemptId" component={ExamResult} />
+      {/* Legacy alias — keeps old bookmarks working */}
       <Route path="/exams/:id" component={ExamInstructions} />
-      <Route path="/exams/:id/take" component={ExamTake} />
-      <Route path="/exams/results/:id" component={ExamResult} />
+
+      {/* Weekly quiz routes — spec-required chain */}
       <Route path="/quiz" component={Quiz} />
       <Route path="/weekly-quiz" component={Quiz} />
+      <Route path="/weekly-quiz/:quizId/instructions" component={ExamInstructions} />
+      <Route path="/weekly-quiz/:quizId/attempt/:attemptId" component={ExamTake} />
+      <Route path="/weekly-quiz/:quizId/result/:attemptId" component={ExamResult} />
+
+      {/* Other student pages */}
       <Route path="/study-plan" component={StudyPlan} />
       <Route path="/study-room" component={StudyRoom} />
       <Route path="/notes" component={Notes} />
-      <Route path="/videos" component={Videos} />
       <Route path="/summaries" component={Summaries} />
       <Route path="/statistics" component={Statistics} />
       <Route path="/history" component={SessionsHistory} />

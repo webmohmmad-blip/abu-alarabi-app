@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useLocation, useSearch } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -48,10 +48,12 @@ function useExamAttempt(attemptId: number) {
 }
 
 export default function ExamTake() {
-  const [, setLocation] = useLocation();
-  const search = useSearch();
-  const params = new URLSearchParams(search);
-  const attemptId = parseInt(params.get("attemptId") || "0", 10);
+  const [location, setLocation] = useLocation();
+  // Support both exam and weekly-quiz route chains
+  // /exams/:examId/attempt/:attemptId  and  /weekly-quiz/:quizId/attempt/:attemptId
+  const routeParams = useParams<{ examId?: string; quizId?: string; attemptId?: string }>();
+  const isWeeklyQuiz = location.startsWith("/weekly-quiz/");
+  const attemptId = parseInt(routeParams.attemptId || "0", 10);
 
   const { data: attempt, isLoading, isError } = useExamAttempt(attemptId);
 
@@ -118,13 +120,19 @@ export default function ExamTake() {
     if (!attempt || isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const result = await customFetch<{ id: number }>(`/api/exams/attempts/${attempt.id}/submit`, {
+      await customFetch<{ id: number }>(`/api/exams/attempts/${attempt.id}/submit`, {
         method: "POST",
         body: JSON.stringify({}),
       });
-      setLocation(`/exams/results/${attempt.id}`);
+      const resultPath = isWeeklyQuiz
+        ? `/weekly-quiz/${attempt.examId}/result/${attempt.id}`
+        : `/exams/${attempt.examId}/result/${attempt.id}`;
+      setLocation(resultPath);
     } catch {
-      setLocation(`/exams/results/${attempt.id}`);
+      const resultPath = isWeeklyQuiz
+        ? `/weekly-quiz/${attempt.examId}/result/${attempt.id}`
+        : `/exams/${attempt.examId}/result/${attempt.id}`;
+      setLocation(resultPath);
     }
   }, [attempt, isSubmitting, setLocation]);
 

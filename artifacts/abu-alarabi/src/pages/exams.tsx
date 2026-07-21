@@ -199,7 +199,7 @@ export default function Exams() {
                       asChild={exam.isAvailable}
                     >
                       {exam.isAvailable ? (
-                        <Link href={`/exams/${exam.id}`}>ابدأ الامتحان</Link>
+                        <Link href={`/exams/${exam.id}/instructions`}>ابدأ الامتحان</Link>
                       ) : (
                         <span>مغلق حالياً</span>
                       )}

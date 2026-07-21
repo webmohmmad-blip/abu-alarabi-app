@@ -391,6 +391,59 @@ router.post(
   }
 );
 
+// ─── ATTEMPT RESULT (GET) ─────────────────────────────────────────────────────
+// Used by the exam-result page to load the stored result without re-submitting.
+router.get(
+  "/exams/attempts/:attemptId/result",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const aReq = req as AuthRequest;
+    const attemptId = parseInt(req.params.attemptId, 10);
+    if (isNaN(attemptId)) { res.status(400).json({ error: "معرف غير صالح" }); return; }
+
+    const [attempt] = await db
+      .select()
+      .from(examAttemptsTable)
+      .where(
+        and(
+          eq(examAttemptsTable.id, attemptId),
+          eq(examAttemptsTable.userId, aReq.userId)
+        )
+      );
+
+    if (!attempt) { res.status(404).json({ error: "النتيجة غير موجودة" }); return; }
+
+    const [exam] = await db
+      .select({ title: examsTable.title, subjectId: examsTable.subjectId })
+      .from(examsTable)
+      .where(eq(examsTable.id, attempt.examId));
+
+    const [subject] = exam?.subjectId
+      ? await db
+          .select({ name: subjectsTable.name })
+          .from(subjectsTable)
+          .where(eq(subjectsTable.id, exam.subjectId))
+      : [undefined];
+
+    res.json({
+      id: attempt.id,
+      examId: attempt.examId,
+      examTitle: exam?.title ?? "",
+      subjectName: subject?.name ?? "",
+      score: parseFloat(attempt.score ?? "0"),
+      totalScore: parseFloat(attempt.totalScore ?? "100"),
+      percentage: parseFloat(attempt.percentage ?? "0"),
+      passed: attempt.passed ?? false,
+      timeTakenMinutes: attempt.timeTakenMinutes ?? 0,
+      correctCount: attempt.correctCount ?? 0,
+      wrongCount: attempt.wrongCount ?? 0,
+      unansweredCount: attempt.unansweredCount ?? 0,
+      rank: attempt.rank ?? null,
+      completedAt: attempt.submittedAt?.toISOString() ?? null,
+    });
+  }
+);
+
 // ─── WEEKLY QUIZ ────────────────────────────────────────
 // NOTE: Weekly quizzes are stored in examsTable with type="weekly".
 // The old weeklyQuizzesTable is a separate legacy table — do not use it here.

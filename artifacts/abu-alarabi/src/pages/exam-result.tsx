@@ -1,180 +1,229 @@
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { customFetch } from "@workspace/api-client-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Target, Clock, CheckCircle2, XCircle, AlertCircle, ChevronRight, BarChart3 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Trophy, Target, Clock, CheckCircle2, XCircle, AlertCircle,
+  ChevronRight, BarChart3
+} from "lucide-react";
 import { motion } from "framer-motion";
 
-// Mock Data
-const mockResult = {
-  examTitle: "امتحان وزاري 2023 - الدورة الصيفية",
-  subjectName: "الرياضيات",
-  score: 85,
-  totalScore: 100,
-  percentage: 85,
-  passed: true,
-  timeTakenMinutes: 105,
-  correctCount: 17,
-  wrongCount: 3,
-  unansweredCount: 0,
-  rank: 14,
-  performanceBySkill: [
-    { name: "التفاضل", score: 90 },
-    { name: "التكامل", score: 75 },
-    { name: "المتجهات", score: 100 },
-  ]
-};
+interface AttemptResult {
+  id: number;
+  examId: number;
+  examTitle: string;
+  subjectName: string;
+  score: number;
+  totalScore: number;
+  percentage: number;
+  passed: boolean;
+  timeTakenMinutes: number;
+  correctCount: number;
+  wrongCount: number;
+  unansweredCount: number;
+  rank: number | null;
+  completedAt: string | null;
+}
+
+function useAttemptResult(attemptId: number) {
+  return useQuery<AttemptResult>({
+    queryKey: ["/api/exams/attempts", attemptId, "result"],
+    queryFn: () =>
+      customFetch<AttemptResult>(`/api/exams/attempts/${attemptId}/result`, {
+        method: "GET",
+      }),
+    enabled: !!attemptId,
+    staleTime: Infinity,
+  });
+}
 
 export default function ExamResult() {
-  const { id } = useParams();
+  const [location] = useLocation();
+  const params = useParams<{
+    examId?: string;
+    quizId?: string;
+    attemptId?: string;
+  }>();
+  const isWeeklyQuiz = location.startsWith("/weekly-quiz/");
+  const attemptId = parseInt(params.attemptId || "0", 10);
 
-  // Create SVG circle calculations
+  const { data: result, isLoading, isError } = useAttemptResult(attemptId);
+
+  // SVG circle calculations
   const radius = 60;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (mockResult.percentage / 100) * circumference;
+  const strokeDashoffset = circumference - ((result?.percentage ?? 0) / 100) * circumference;
+
+  if (!attemptId) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-4xl mx-auto flex items-center justify-center min-h-[60vh]" dir="rtl">
+          <Card className="p-8 text-center max-w-md">
+            <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">معرّف المحاولة مفقود</h2>
+            <p className="text-muted-foreground mb-4">يرجى العودة لقائمة الامتحانات.</p>
+            <Button asChild><Link href="/exams">العودة للامتحانات</Link></Button>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-4xl mx-auto space-y-6" dir="rtl">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-64 w-full rounded-2xl" />
+          <div className="grid grid-cols-3 gap-4">
+            <Skeleton className="h-28 rounded-2xl" />
+            <Skeleton className="h-28 rounded-2xl" />
+            <Skeleton className="h-28 rounded-2xl" />
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (isError || !result) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-4xl mx-auto flex items-center justify-center min-h-[60vh]" dir="rtl">
+          <Card className="p-8 text-center max-w-md">
+            <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">تعذّر تحميل النتيجة</h2>
+            <p className="text-muted-foreground mb-4">يرجى المحاولة مرة أخرى.</p>
+            <Button asChild><Link href={isWeeklyQuiz ? "/weekly-quiz" : "/exams"}>العودة</Link></Button>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const backPath = isWeeklyQuiz ? "/weekly-quiz" : "/exams";
+  const backLabel = isWeeklyQuiz ? "العودة للكويز الأسبوعي" : "العودة لقائمة الامتحانات";
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6" dir="rtl">
         <Button variant="ghost" asChild className="mb-2 -ml-4 hover:bg-transparent">
-          <Link href="/exams" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-            <ChevronRight className="w-4 h-4" /> العودة لقائمة الامتحانات
+          <Link href={backPath} className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <ChevronRight className="w-4 h-4" /> {backLabel}
           </Link>
         </Button>
 
         <div className="grid md:grid-cols-3 gap-6">
           {/* Result Hero Card */}
           <Card className="md:col-span-3 border-white/60 shadow-xl overflow-hidden relative">
-            <div className={`absolute top-0 left-0 w-full h-3 ${mockResult.passed ? 'bg-success' : 'bg-destructive'}`}></div>
+            <div
+              className={`absolute top-0 left-0 w-full h-3 ${result.passed ? "bg-green-500" : "bg-destructive"}`}
+            />
             <CardContent className="p-8 md:p-12">
               <div className="flex flex-col md:flex-row items-center justify-between gap-10">
-                <div className="text-center md:text-right flex-1">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-sm mb-4">
-                    <Trophy className="w-4 h-4" /> النتيجة النهائية
-                  </div>
-                  <h1 className="text-3xl md:text-4xl font-black mb-4">{mockResult.examTitle}</h1>
-                  <p className="text-xl text-muted-foreground mb-6">مادة {mockResult.subjectName}</p>
-                  
-                  {mockResult.passed ? (
-                    <div className="bg-success/10 text-success border border-success/20 p-4 rounded-xl font-bold flex items-center gap-3">
-                      <CheckCircle2 className="w-6 h-6" /> مبروك! لقد اجتزت الامتحان بنجاح. استمر في هذا الأداء الرائع!
-                    </div>
-                  ) : (
-                    <div className="bg-destructive/10 text-destructive border border-destructive/20 p-4 rounded-xl font-bold flex items-center gap-3">
-                      <AlertCircle className="w-6 h-6" /> لم توفق هذه المرة. راجع أخطائك وحاول مرة أخرى، أنت قادر على التحسن!
-                    </div>
-                  )}
-                </div>
-
-                {/* Score Circle */}
-                <div className="relative shrink-0 flex flex-col items-center">
-                  <svg className="w-40 h-40 transform -rotate-90">
-                    <circle 
-                      cx="80" cy="80" r={radius} 
-                      stroke="currentColor" strokeWidth="12" fill="transparent" 
-                      className="text-muted/30"
-                    />
-                    <motion.circle 
+                {/* Score circle */}
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="relative flex-shrink-0"
+                >
+                  <svg width="160" height="160" viewBox="0 0 160 160" className="-rotate-90">
+                    <circle cx="80" cy="80" r={radius} fill="none" stroke="currentColor" strokeWidth="12" className="text-muted/20" />
+                    <motion.circle
+                      cx="80" cy="80" r={radius} fill="none"
+                      stroke={result.passed ? "#22c55e" : "#ef4444"}
+                      strokeWidth="12"
+                      strokeLinecap="round"
+                      strokeDasharray={circumference}
                       initial={{ strokeDashoffset: circumference }}
                       animate={{ strokeDashoffset }}
                       transition={{ duration: 1.5, ease: "easeOut" }}
-                      cx="80" cy="80" r={radius} 
-                      stroke="currentColor" strokeWidth="12" fill="transparent" 
-                      strokeLinecap="round"
-                      strokeDasharray={circumference}
-                      className={mockResult.passed ? 'text-success' : 'text-destructive'}
                     />
                   </svg>
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                    <div className="text-4xl font-black tabular-nums">{mockResult.percentage}%</div>
-                    <div className="text-sm font-bold text-muted-foreground">{mockResult.score}/{mockResult.totalScore}</div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-black text-foreground">
+                      {Math.round(result.percentage)}%
+                    </span>
+                    <span className={`text-sm font-bold mt-1 ${result.passed ? "text-green-500" : "text-destructive"}`}>
+                      {result.passed ? "ناجح" : "راسب"}
+                    </span>
+                  </div>
+                </motion.div>
+
+                {/* Exam info */}
+                <div className="flex-1 text-center md:text-right">
+                  <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
+                    {result.passed
+                      ? <Trophy className="w-6 h-6 text-amber-400" />
+                      : <Target className="w-6 h-6 text-muted-foreground" />
+                    }
+                    <h1 className="text-2xl font-black text-foreground">{result.examTitle}</h1>
+                  </div>
+                  {result.subjectName && (
+                    <p className="text-muted-foreground mb-4">{result.subjectName}</p>
+                  )}
+                  <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <BarChart3 className="w-4 h-4" />
+                      <span>
+                        {result.score.toFixed(1)} / {result.totalScore.toFixed(1)} درجة
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="w-4 h-4" />
+                      <span>{result.timeTakenMinutes} دقيقة</span>
+                    </div>
+                    {result.rank && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Trophy className="w-4 h-4" />
+                        <span>المركز {result.rank}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Stats Grid */}
-          <Card className="md:col-span-2 border-white/60 shadow-lg">
-            <CardContent className="p-6">
-              <h3 className="font-bold text-xl mb-6">تفاصيل الأداء</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-muted/40 rounded-2xl p-4 text-center border border-white">
-                  <CheckCircle2 className="w-6 h-6 mx-auto mb-2 text-success" />
-                  <div className="text-sm text-muted-foreground mb-1">إجابة صحيحة</div>
-                  <div className="font-bold text-xl text-success">{mockResult.correctCount}</div>
-                </div>
-                <div className="bg-muted/40 rounded-2xl p-4 text-center border border-white">
-                  <XCircle className="w-6 h-6 mx-auto mb-2 text-destructive" />
-                  <div className="text-sm text-muted-foreground mb-1">إجابة خاطئة</div>
-                  <div className="font-bold text-xl text-destructive">{mockResult.wrongCount}</div>
-                </div>
-                <div className="bg-muted/40 rounded-2xl p-4 text-center border border-white">
-                  <AlertCircle className="w-6 h-6 mx-auto mb-2 text-orange-400" />
-                  <div className="text-sm text-muted-foreground mb-1">لم يتم الإجابة</div>
-                  <div className="font-bold text-xl text-orange-400">{mockResult.unansweredCount}</div>
-                </div>
-                <div className="bg-muted/40 rounded-2xl p-4 text-center border border-white">
-                  <Clock className="w-6 h-6 mx-auto mb-2 text-primary" />
-                  <div className="text-sm text-muted-foreground mb-1">الوقت المستغرق</div>
-                  <div className="font-bold text-xl text-primary">{mockResult.timeTakenMinutes}د</div>
-                </div>
-              </div>
+          {/* Stats cards */}
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
+            <Card className="border-green-500/20 bg-green-500/5">
+              <CardContent className="p-6 text-center">
+                <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                <p className="text-3xl font-black text-green-500">{result.correctCount}</p>
+                <p className="text-sm text-muted-foreground mt-1">إجابات صحيحة</p>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-              <div className="mt-8 pt-8 border-t border-black/5">
-                <h4 className="font-bold mb-4 flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-primary" /> الأداء حسب المهارة/الوحدة
-                </h4>
-                <div className="space-y-4">
-                  {mockResult.performanceBySkill.map((skill, i) => (
-                    <div key={i}>
-                      <div className="flex justify-between text-sm font-bold mb-1">
-                        <span>{skill.name}</span>
-                        <span className={skill.score < 80 ? 'text-destructive' : 'text-success'}>{skill.score}%</span>
-                      </div>
-                      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${skill.score < 80 ? 'bg-destructive' : 'bg-success'}`}
-                          style={{ width: `${skill.score}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
+            <Card className="border-destructive/20 bg-destructive/5">
+              <CardContent className="p-6 text-center">
+                <XCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
+                <p className="text-3xl font-black text-destructive">{result.wrongCount}</p>
+                <p className="text-sm text-muted-foreground mt-1">إجابات خاطئة</p>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          {/* Action Card */}
-          <Card className="border-white/60 shadow-lg bg-gradient-to-br from-primary/5 to-secondary/5">
-            <CardContent className="p-6 flex flex-col h-full">
-              <h3 className="font-bold text-xl mb-4">الخطوات القادمة</h3>
-              
-              <div className="space-y-4 flex-1">
-                {mockResult.rank && (
-                  <div className="bg-white rounded-xl p-4 border border-black/5 shadow-sm text-center">
-                    <div className="text-sm text-muted-foreground mb-1">ترتيبك بين الطلاب</div>
-                    <div className="text-3xl font-black text-accent flex items-center justify-center gap-2">
-                      <Target className="w-6 h-6" /> #{mockResult.rank}
-                    </div>
-                  </div>
-                )}
-                
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  بناءً على نتيجتك، ننصحك بمراجعة وحدة "التكامل" وتقديم ورقة العمل الخاصة بها قبل الانتقال للدرس التالي.
-                </p>
-              </div>
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
+            <Card className="border-amber-500/20 bg-amber-500/5">
+              <CardContent className="p-6 text-center">
+                <AlertCircle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+                <p className="text-3xl font-black text-amber-500">{result.unansweredCount}</p>
+                <p className="text-sm text-muted-foreground mt-1">لم تُجب عليها</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
 
-              <div className="mt-6 space-y-3">
-                <Button className="w-full gap-2">
-                  <CheckCircle2 className="w-4 h-4" /> مراجعة الإجابات
-                </Button>
-                <Button variant="outline" asChild className="w-full bg-white">
-                  <Link href="/study-plan">تحديث خطة الدراسة</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Actions */}
+        <div className="flex flex-wrap gap-3 justify-center pt-2">
+          <Button asChild size="lg">
+            <Link href={backPath}>{backLabel}</Link>
+          </Button>
         </div>
       </div>
     </DashboardLayout>

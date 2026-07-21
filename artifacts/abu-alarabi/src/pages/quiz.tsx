@@ -15,8 +15,8 @@ export default function Quiz() {
 
   const handleStartQuiz = () => {
     if (currentQuiz) {
-      // Weekly quizzes are stored as exams — navigate to the exam instructions page
-      setLocation(`/exams/${currentQuiz.id}`);
+      // Weekly quizzes navigate through the weekly-quiz route chain
+      setLocation(`/weekly-quiz/${currentQuiz.id}/instructions`);
     }
   };
 

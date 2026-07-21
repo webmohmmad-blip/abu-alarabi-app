@@ -53,13 +53,12 @@ function useTodaySchedule(enabled: boolean) {
 }
 
 const STUDENT_NAV = [
-  { href: "/dashboard",   label: "لوحتي"                  },
-  { href: "/dossiers",    label: "الدوسيات"               },
-  { href: "/worksheets",  label: "أوراق العمل"            },
-  { href: "/exams",       label: "الامتحانات"             },
-  { href: "/weekly-quiz", label: "الكويز الأسبوعي"        },
-  { href: "/study-room",  label: "غرفتي الدراسية"         },
-  { href: "/schedule",    label: "جدولي الدراسي"          },
+  { href: "/dashboard",   label: "لوحتي"                     },
+  { href: "/dossiers",    label: "الدوسيات"                  },
+  { href: "/worksheets",  label: "أوراق العمل"               },
+  { href: "/exams",       label: "الامتحانات الإلكترونية"    },
+  { href: "/weekly-quiz", label: "الكويز الأسبوعي"           },
+  { href: "/study-room",  label: "غرفتي الدراسية"            },
 ] as const;
 
 export function Header() {
