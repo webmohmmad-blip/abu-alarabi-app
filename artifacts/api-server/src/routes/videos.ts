@@ -58,7 +58,7 @@ router.get("/videos", async (req, res): Promise<void> => {
 
 // ─── Public: get single video ─────────────────────────────────────────────────
 router.get("/videos/:id", async (req, res): Promise<void> => {
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id as string, 10);
   const [row] = await db
     .select({
       video: videosTable,
@@ -127,7 +127,7 @@ router.post("/admin/videos", requireAuth, requireRole(["admin", "super_admin"]),
 
 // ─── Admin: update video ──────────────────────────────────────────────────────
 router.patch("/admin/videos/:id", requireAuth, requireRole(["admin", "super_admin"]), async (req, res): Promise<void> => {
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id as string, 10);
   const { title, description, subjectId, grade, provider, videoUrl, durationMinutes, coverUrl, order, isPublished } = req.body;
 
   await db
@@ -151,7 +151,7 @@ router.patch("/admin/videos/:id", requireAuth, requireRole(["admin", "super_admi
 
 // ─── Admin: delete video (soft) ───────────────────────────────────────────────
 router.delete("/admin/videos/:id", requireAuth, requireRole(["admin", "super_admin"]), async (req, res): Promise<void> => {
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id as string, 10);
   await db.update(videosTable).set({ deletedAt: new Date() }).where(eq(videosTable.id, id));
   res.json({ message: "تم حذف الفيديو" });
 });

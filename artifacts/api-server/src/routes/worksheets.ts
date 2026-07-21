@@ -3,6 +3,7 @@ import { eq, isNull, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { worksheetsTable, subjectsTable } from "@workspace/db";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import { requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -96,7 +97,7 @@ async function streamWorksheetPdf(
 }
 
 // ─── List worksheets (students) ───────────────────────────────────────────────
-router.get("/worksheets", async (req, res): Promise<void> => {
+router.get("/worksheets", requireAuth, async (req, res): Promise<void> => {
   const { subjectId, search, page = "1", limit = "12" } = req.query as Record<string, string>;
   const pageNum = parseInt(page, 10);
   const limitNum = Math.min(parseInt(limit, 10), 50);
@@ -135,7 +136,7 @@ router.get("/worksheets", async (req, res): Promise<void> => {
 });
 
 // ─── Get single worksheet ────────────────────────────────────────────────────
-router.get("/worksheets/:id", async (req, res): Promise<void> => {
+router.get("/worksheets/:id", requireAuth, async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(rawId, 10);
 

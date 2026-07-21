@@ -22,7 +22,7 @@ function fileUrlToObjectPath(fileUrl: string): string | null {
 
 const router: IRouter = Router();
 
-router.get("/dossiers", async (req, res): Promise<void> => {
+router.get("/dossiers", requireAuth, async (req, res): Promise<void> => {
   const { subjectId, search, page = "1", limit = "12" } = req.query as Record<
     string,
     string

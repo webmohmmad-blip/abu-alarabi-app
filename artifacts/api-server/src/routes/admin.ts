@@ -363,10 +363,10 @@ router.post("/users/import", async (req, res) => {
     try {
       const phoneResult = validatePhone(u.phone ?? "");
       if (!phoneResult.ok) {
-        errors.push(`${u.phone}: ${phoneResult.error}`);
+        errors.push(`${u.phone}: ${(phoneResult as { ok: false; error: string }).error}`);
         continue;
       }
-      const normalizedPhone = phoneResult.phone;
+      const normalizedPhone = (phoneResult as { ok: true; phone: string }).phone;
 
       const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.phone, normalizedPhone)).limit(1);
       if (existing[0]) { skipped++; continue; }

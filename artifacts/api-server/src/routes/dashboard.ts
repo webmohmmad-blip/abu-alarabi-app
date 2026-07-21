@@ -146,7 +146,7 @@ router.get("/dashboard", requireAuth, async (req, res): Promise<void> => {
   });
 });
 
-router.get("/dashboard/platform-stats", async (_req, res): Promise<void> => {
+router.get("/dashboard/platform-stats", requireAuth, async (_req, res): Promise<void> => {
   res.json({
     totalStudents: 12480,
     totalDossiers: 348,

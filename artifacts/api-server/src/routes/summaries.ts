@@ -4,11 +4,12 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { summariesTable, subjectsTable } from "@workspace/db";
+import { requireAuth } from "../lib/auth";
 import { eq, isNull, desc, and } from "drizzle-orm";
 
 const router = Router();
 
-router.get("/summaries", async (req, res): Promise<void> => {
+router.get("/summaries", requireAuth, async (req, res): Promise<void> => {
   const subjectId = req.query.subjectId ? parseInt(req.query.subjectId as string) : undefined;
   const grade = req.query.grade as string | undefined;
 
@@ -46,8 +47,8 @@ router.get("/summaries", async (req, res): Promise<void> => {
   })));
 });
 
-router.get("/summaries/:id", async (req, res): Promise<void> => {
-  const id = parseInt(req.params.id);
+router.get("/summaries/:id", requireAuth, async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id as string);
   const [row] = await db
     .select({
       summary: summariesTable,

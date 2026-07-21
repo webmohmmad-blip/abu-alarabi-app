@@ -21,8 +21,8 @@ const router: IRouter = Router();
 
 router.get("/workspace/annotations/:dossierId/:page", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const dossierId = parseInt(req.params.dossierId, 10);
-  const pageNumber = parseInt(req.params.page, 10);
+  const dossierId = parseInt(req.params.dossierId as string, 10);
+  const pageNumber = parseInt(req.params.page as string, 10);
 
   const [row] = await db
     .select()
@@ -40,8 +40,8 @@ router.get("/workspace/annotations/:dossierId/:page", requireAuth, async (req, r
 
 router.put("/workspace/annotations/:dossierId/:page", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const dossierId = parseInt(req.params.dossierId, 10);
-  const pageNumber = parseInt(req.params.page, 10);
+  const dossierId = parseInt(req.params.dossierId as string, 10);
+  const pageNumber = parseInt(req.params.page as string, 10);
   const { strokes } = req.body as { strokes: unknown[] };
   const strokesJson = JSON.stringify(strokes ?? []);
 
@@ -69,7 +69,7 @@ router.put("/workspace/annotations/:dossierId/:page", requireAuth, async (req, r
 
 router.get("/workspace/bookmarks/:dossierId", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const dossierId = parseInt(req.params.dossierId, 10);
+  const dossierId = parseInt(req.params.dossierId as string, 10);
 
   const bookmarks = await db
     .select()
@@ -81,7 +81,7 @@ router.get("/workspace/bookmarks/:dossierId", requireAuth, async (req, res): Pro
 
 router.post("/workspace/bookmarks/:dossierId", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const dossierId = parseInt(req.params.dossierId, 10);
+  const dossierId = parseInt(req.params.dossierId as string, 10);
   const { pageNumber, title } = req.body as { pageNumber: number; title?: string };
 
   const [bookmark] = await db
@@ -94,7 +94,7 @@ router.post("/workspace/bookmarks/:dossierId", requireAuth, async (req, res): Pr
 
 router.delete("/workspace/bookmarks/:id", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id as string, 10);
   await db.delete(dossierBookmarksTable).where(and(eq(dossierBookmarksTable.id, id), eq(dossierBookmarksTable.userId, aReq.userId)));
   res.json({ ok: true });
 });
@@ -103,7 +103,7 @@ router.delete("/workspace/bookmarks/:id", requireAuth, async (req, res): Promise
 
 router.get("/workspace/progress/:dossierId", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const dossierId = parseInt(req.params.dossierId, 10);
+  const dossierId = parseInt(req.params.dossierId as string, 10);
 
   const [row] = await db
     .select()
@@ -115,7 +115,7 @@ router.get("/workspace/progress/:dossierId", requireAuth, async (req, res): Prom
 
 router.put("/workspace/progress/:dossierId", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const dossierId = parseInt(req.params.dossierId, 10);
+  const dossierId = parseInt(req.params.dossierId as string, 10);
   const { lastPage } = req.body as { lastPage: number };
 
   const [existing] = await db
@@ -136,8 +136,8 @@ router.put("/workspace/progress/:dossierId", requireAuth, async (req, res): Prom
 
 router.get("/workspace/worksheet-annotations/:worksheetId/:page", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const worksheetId = parseInt(req.params.worksheetId, 10);
-  const pageNumber = parseInt(req.params.page, 10);
+  const worksheetId = parseInt(req.params.worksheetId as string, 10);
+  const pageNumber = parseInt(req.params.page as string, 10);
 
   const [row] = await db
     .select()
@@ -155,8 +155,8 @@ router.get("/workspace/worksheet-annotations/:worksheetId/:page", requireAuth, a
 
 router.put("/workspace/worksheet-annotations/:worksheetId/:page", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const worksheetId = parseInt(req.params.worksheetId, 10);
-  const pageNumber = parseInt(req.params.page, 10);
+  const worksheetId = parseInt(req.params.worksheetId as string, 10);
+  const pageNumber = parseInt(req.params.page as string, 10);
   const { strokes } = req.body as { strokes: unknown[] };
   const strokesJson = JSON.stringify(strokes ?? []);
 
@@ -184,7 +184,7 @@ router.put("/workspace/worksheet-annotations/:worksheetId/:page", requireAuth, a
 
 router.get("/workspace/worksheet-bookmarks/:worksheetId", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const worksheetId = parseInt(req.params.worksheetId, 10);
+  const worksheetId = parseInt(req.params.worksheetId as string, 10);
 
   const bookmarks = await db
     .select()
@@ -196,7 +196,7 @@ router.get("/workspace/worksheet-bookmarks/:worksheetId", requireAuth, async (re
 
 router.post("/workspace/worksheet-bookmarks/:worksheetId", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const worksheetId = parseInt(req.params.worksheetId, 10);
+  const worksheetId = parseInt(req.params.worksheetId as string, 10);
   const { pageNumber, title } = req.body as { pageNumber: number; title?: string };
 
   const [bookmark] = await db
@@ -209,7 +209,7 @@ router.post("/workspace/worksheet-bookmarks/:worksheetId", requireAuth, async (r
 
 router.delete("/workspace/worksheet-bookmarks/:id", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id as string, 10);
   await db.delete(worksheetBookmarksTable).where(and(eq(worksheetBookmarksTable.id, id), eq(worksheetBookmarksTable.userId, aReq.userId)));
   res.json({ ok: true });
 });
@@ -218,7 +218,7 @@ router.delete("/workspace/worksheet-bookmarks/:id", requireAuth, async (req, res
 
 router.get("/workspace/worksheet-progress/:worksheetId", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const worksheetId = parseInt(req.params.worksheetId, 10);
+  const worksheetId = parseInt(req.params.worksheetId as string, 10);
 
   const [row] = await db
     .select()
@@ -230,7 +230,7 @@ router.get("/workspace/worksheet-progress/:worksheetId", requireAuth, async (req
 
 router.put("/workspace/worksheet-progress/:worksheetId", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const worksheetId = parseInt(req.params.worksheetId, 10);
+  const worksheetId = parseInt(req.params.worksheetId as string, 10);
   const { lastPage } = req.body as { lastPage: number };
 
   const [existing] = await db

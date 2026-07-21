@@ -14,7 +14,7 @@ import { requireAuth, type AuthRequest } from "../lib/auth";
 
 const router: IRouter = Router();
 
-router.get("/exams", async (req, res): Promise<void> => {
+router.get("/exams", requireAuth, async (req, res): Promise<void> => {
   const { subjectId, type } = req.query as Record<string, string>;
 
   let rows = await db
@@ -92,7 +92,7 @@ router.get("/exams/results", requireAuth, async (req, res): Promise<void> => {
   res.json(results);
 });
 
-router.get("/exams/:id", async (req, res): Promise<void> => {
+router.get("/exams/:id", requireAuth, async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.id)
     ? req.params.id[0]
     : req.params.id;
@@ -398,7 +398,10 @@ router.get(
   requireAuth,
   async (req, res): Promise<void> => {
     const aReq = req as AuthRequest;
-    const attemptId = parseInt(req.params.attemptId, 10);
+    const rawAttemptId = Array.isArray(req.params.attemptId)
+      ? req.params.attemptId[0]
+      : req.params.attemptId;
+    const attemptId = parseInt(rawAttemptId, 10);
     if (isNaN(attemptId)) { res.status(400).json({ error: "معرف غير صالح" }); return; }
 
     const [attempt] = await db
@@ -447,7 +450,7 @@ router.get(
 // ─── WEEKLY QUIZ ────────────────────────────────────────
 // NOTE: Weekly quizzes are stored in examsTable with type="weekly".
 // The old weeklyQuizzesTable is a separate legacy table — do not use it here.
-router.get("/quiz/current", async (_req, res): Promise<void> => {
+router.get("/quiz/current", requireAuth, async (_req, res): Promise<void> => {
   const now = new Date();
 
   // Find published, available weekly quizzes from examsTable
@@ -540,7 +543,7 @@ router.post(
   }
 );
 
-router.get("/quiz/leaderboard", async (_req, res): Promise<void> => {
+router.get("/quiz/leaderboard", requireAuth, async (_req, res): Promise<void> => {
   res.json([
     {
       rank: 1,

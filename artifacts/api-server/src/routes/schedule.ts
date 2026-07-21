@@ -117,7 +117,7 @@ router.post("/schedule/personal-subjects", requireAuth, async (req, res): Promis
 // ─── DELETE /api/schedule/personal-subjects/:id ───────────────────────────
 router.delete("/schedule/personal-subjects/:id", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id as string, 10);
   // Cascades to slots via FK
   await db
     .delete(personalScheduleSubjectsTable)
@@ -245,7 +245,7 @@ router.delete("/schedule/slots/:id", requireAuth, async (req, res): Promise<void
     .delete(weeklyScheduleSlotsTable)
     .where(
       and(
-        eq(weeklyScheduleSlotsTable.id, parseInt(req.params.id, 10)),
+        eq(weeklyScheduleSlotsTable.id, parseInt(req.params.id as string, 10)),
         eq(weeklyScheduleSlotsTable.userId, aReq.userId),
       ),
     );
@@ -337,7 +337,7 @@ router.post("/schedule/daily-tasks", requireAuth, async (req, res): Promise<void
 // ─── PATCH /api/schedule/daily-tasks/:id/toggle ───────────────────────────
 router.patch("/schedule/daily-tasks/:id/toggle", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id as string, 10);
   const [current] = await db
     .select()
     .from(dailyCustomTasksTable)
@@ -358,7 +358,7 @@ router.delete("/schedule/daily-tasks/:id", requireAuth, async (req, res): Promis
     .delete(dailyCustomTasksTable)
     .where(
       and(
-        eq(dailyCustomTasksTable.id, parseInt(req.params.id, 10)),
+        eq(dailyCustomTasksTable.id, parseInt(req.params.id as string, 10)),
         eq(dailyCustomTasksTable.userId, aReq.userId),
       ),
     );
