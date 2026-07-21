@@ -63,6 +63,22 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (id.includes('pdfjs-dist'))           return 'pdf-vendor';
+          if (id.includes('react-dom'))             return 'react-vendor';
+          if (id.includes('@tanstack/react-query')) return 'query-vendor';
+          if (id.includes('framer-motion'))         return 'motion-vendor';
+          if (id.includes('recharts') || id.includes('d3-')) return 'chart-vendor';
+          if (id.includes('@radix-ui'))             return 'radix-vendor';
+          if (id.includes('lucide-react'))          return 'icons-vendor';
+          if (id.includes('wouter'))                return 'router-vendor';
+        },
+      },
+    },
   },
   server: {
     port,

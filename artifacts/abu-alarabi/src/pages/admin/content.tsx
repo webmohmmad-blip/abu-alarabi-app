@@ -51,12 +51,12 @@ const useSubjects = () =>
 
 const useDossiers = (subjectId: number) =>
   useQuery({
-    queryKey: ["/api/dossiers", subjectId],
+    queryKey: ["/api/admin/dossiers", subjectId],
     queryFn: () =>
-      customFetch<{ items: Dossier[]; total: number }>(
-        `/api/dossiers?subjectId=${subjectId}&limit=100`,
+      customFetch<{ ok: boolean; items: Dossier[]; pagination: { total: number } }>(
+        `/api/admin/dossiers?subjectId=${subjectId}&pageSize=100`,
         { method: "GET" }
-      ),
+      ).then((r) => ({ items: r.items ?? [], total: r.pagination?.total ?? 0 })),
     enabled: subjectId > 0,
   });
 
@@ -256,7 +256,7 @@ export default function AdminContent() {
           onSuccess={() => {
             const sid = addDossierForSubject;
             setAddDossierForSubject(null);
-            qc.invalidateQueries({ queryKey: ["/api/dossiers", sid] });
+            qc.invalidateQueries({ queryKey: ["/api/admin/dossiers", sid] });
             showToast("تمت إضافة الدوسية بنجاح");
           }}
         />
@@ -271,7 +271,7 @@ export default function AdminContent() {
           onSuccess={() => {
             const sid = editingDossier.subjectId;
             setEditingDossier(null);
-            qc.invalidateQueries({ queryKey: ["/api/dossiers", sid] });
+            qc.invalidateQueries({ queryKey: ["/api/admin/dossiers", sid] });
             showToast("تم تحديث الدوسية بنجاح");
           }}
         />
@@ -342,7 +342,7 @@ function DossiersPanel({
         { method: "DELETE" }
       ),
     onSuccess: (resp) => {
-      qc.invalidateQueries({ queryKey: ["/api/dossiers", subjectId] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/dossiers", subjectId] });
       setConfirmDelete(null);
       onToast(resp?.message ?? "تم حذف الدوسية بنجاح");
     },
@@ -356,7 +356,7 @@ function DossiersPanel({
         body: JSON.stringify({ status }),
       }),
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: ["/api/dossiers", subjectId] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/dossiers", subjectId] });
       onToast(
         vars.status === "published" ? "تم نشر الدوسية" : "تم إلغاء نشر الدوسية"
       );

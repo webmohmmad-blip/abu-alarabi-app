@@ -531,6 +531,57 @@ router.delete("/units/:id", async (req, res): Promise<void> => {
 });
 
 // ─── DOSSIERS (admin CRUD) ───────────────────────────────────────────────────
+router.get("/dossiers", async (req, res): Promise<void> => {
+  const page = Math.max(1, parseInt((req.query.page as string) || "1", 10));
+  const pageSize = Math.min(100, Math.max(1, parseInt((req.query.pageSize as string) || "20", 10)));
+  const search = ((req.query.search as string) || "").trim();
+  const status = req.query.status as string | undefined;
+  const subjectId = req.query.subjectId ? parseInt(req.query.subjectId as string, 10) : undefined;
+
+  if (req.query.pageSize && isNaN(pageSize)) { res.status(400).json({ ok: false, message: "pageSize غير صالح" }); return; }
+  if (req.query.subjectId && isNaN(subjectId!)) { res.status(400).json({ ok: false, message: "subjectId غير صالح" }); return; }
+
+  const conditions: ReturnType<typeof isNull>[] = [isNull(dossiersTable.deletedAt as any)];
+  if (search) conditions.push(like(dossiersTable.title, `%${search}%`) as any);
+  if (status) conditions.push(eq(dossiersTable.status as any, status) as any);
+  if (subjectId && !isNaN(subjectId)) conditions.push(eq(dossiersTable.subjectId, subjectId) as any);
+  const where = and(...conditions);
+
+  const [countResult, items] = await Promise.all([
+    db.select({ total: count() }).from(dossiersTable).where(where),
+    db
+      .select({
+        id: dossiersTable.id,
+        title: dossiersTable.title,
+        description: dossiersTable.description,
+        subjectId: dossiersTable.subjectId,
+        subjectName: subjectsTable.name,
+        grade: dossiersTable.grade,
+        pageCount: dossiersTable.pageCount,
+        fileSize: dossiersTable.fileSize,
+        status: dossiersTable.status,
+        downloads: dossiersTable.downloads,
+        views: dossiersTable.views,
+        createdAt: dossiersTable.createdAt,
+        hasFile: sql<boolean>`(${dossiersTable.fileUrl} IS NOT NULL)`,
+        hasCover: sql<boolean>`(${dossiersTable.coverUrl} IS NOT NULL)`,
+      })
+      .from(dossiersTable)
+      .leftJoin(subjectsTable, eq(dossiersTable.subjectId, subjectsTable.id))
+      .where(where)
+      .orderBy(desc(dossiersTable.createdAt))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize),
+  ]);
+
+  const total = Number(countResult[0]?.total ?? 0);
+  res.json({
+    ok: true,
+    items,
+    pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+  });
+});
+
 router.post("/dossiers", async (req, res) => {
   const { title, description, subjectId, grade, pageCount, fileSize, fileUrl, coverUrl } = req.body;
   const [d] = await db
@@ -614,10 +665,19 @@ router.get("/exams", async (req, res) => {
   res.json({ items: exams });
 });
 
-router.post("/exams", async (req, res) => {
+router.post("/exams", async (req, res): Promise<void> => {
   const { title, subjectId, type, durationMinutes, maxAttempts, passingScore, totalScore, instructions, status, isAvailable } = req.body;
+
+  const parsedSubjectId = parseInt(subjectId as string, 10);
+  if (!subjectId || isNaN(parsedSubjectId)) {
+    res.status(400).json({ ok: false, message: "المادة مطلوبة" }); return;
+  }
+  const [subjectRow] = await db.select({ id: subjectsTable.id }).from(subjectsTable)
+    .where(eq(subjectsTable.id, parsedSubjectId)).limit(1);
+  if (!subjectRow) { res.status(404).json({ ok: false, message: "المادة غير موجودة" }); return; }
+
   const [exam] = await db.insert(examsTable).values({
-    title, subjectId: parseInt(subjectId), type: type ?? "full",
+    title, subjectId: parsedSubjectId, type: type ?? "full",
     durationMinutes: durationMinutes ?? 60, maxAttempts: maxAttempts ?? 3,
     passingScore: passingScore ?? "50", totalScore: totalScore ?? "100",
     instructions: instructions ?? null,
@@ -656,11 +716,18 @@ router.get("/quiz", async (req, res) => {
   res.json({ items: quizzes });
 });
 
-router.post("/quiz", async (req, res) => {
+router.post("/quiz", async (req, res): Promise<void> => {
   const { title, subjectId, durationMinutes, maxAttempts, passingScore, totalScore, instructions, status, isAvailable } = req.body;
+  const parsedSubjectId = parseInt(subjectId as string, 10);
+  if (!subjectId || isNaN(parsedSubjectId)) {
+    res.status(400).json({ ok: false, message: "المادة مطلوبة" }); return;
+  }
+  const [subjectRow] = await db.select({ id: subjectsTable.id }).from(subjectsTable)
+    .where(eq(subjectsTable.id, parsedSubjectId)).limit(1);
+  if (!subjectRow) { res.status(404).json({ ok: false, message: "المادة غير موجودة" }); return; }
   const [quiz] = await db.insert(examsTable).values({
     title,
-    subjectId: parseInt(subjectId),
+    subjectId: parsedSubjectId,
     type: "weekly",
     durationMinutes: durationMinutes ?? 20,
     maxAttempts: maxAttempts ?? 1,

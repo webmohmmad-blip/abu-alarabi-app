@@ -7,4 +7,4 @@
 - [Dossier File Pipeline](dossier-file-pipeline.md) — storage objects must be auth-free; PDF.js requires range requests (206); download/view are separate endpoints; fileUrl stored as /api/storage/objects/uploads/<uuid>.
 - [Worksheet PDF Refactor](worksheet-pdf-refactor.md) — worksheets are now PDF study materials; sourceType state in Study Room routes annotations to separate DB tables; dossierId var reused as generic sourceId.
 - [Weekly Quiz Table Split](weekly-quiz-split.md) — weekly quizzes live in examsTable (type="weekly"), not weeklyQuizzesTable; useStartExam expects {id: number}, not {data:{examId}}.
-- [QA Audit & Route Chain Fix 2026-07-21](qa-audit-2026-07-21.md) — 15 bugs fixed; health, exam/quiz route chains, ExamResult real data, nav labels, videos/flashcards removed.
+- [QA Audit & Route Chain Fix 2026-07-21](qa-audit-2026-07-21.md) — 38/38 regression tests pass; full 14-part remediation complete; auth-rate-limiter max=500 in dev, 15 in prod.

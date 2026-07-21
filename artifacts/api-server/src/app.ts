@@ -48,7 +48,9 @@ const globalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 15,
+  // In development all curl tests share 127.0.0.1 — use a high limit so
+  // regression tests don't accidentally trip the limiter. Production keeps 15.
+  max: process.env.NODE_ENV === "production" ? 15 : 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "عدد محاولات تسجيل الدخول تجاوز الحد، يرجى الانتظار 15 دقيقة." },

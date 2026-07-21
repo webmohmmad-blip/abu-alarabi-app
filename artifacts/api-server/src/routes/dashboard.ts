@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, gte, lte, desc } from "drizzle-orm";
+import { eq, and, gte, lte, desc, count, sql, isNull, ne } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   usersTable,
@@ -7,6 +7,8 @@ import {
   studyTasksTable,
   weeklyQuizzesTable,
   dossiersTable,
+  worksheetsTable,
+  examsTable,
   subjectsTable,
 } from "@workspace/db";
 import { requireAuth, type AuthRequest } from "../lib/auth";
@@ -147,13 +149,34 @@ router.get("/dashboard", requireAuth, async (req, res): Promise<void> => {
 });
 
 router.get("/dashboard/platform-stats", requireAuth, async (_req, res): Promise<void> => {
+  const [
+    [students],
+    [dossiers],
+    [worksheets],
+    [exams],
+    [dossierDl],
+    [worksheetDl],
+  ] = await Promise.all([
+    db.select({ total: count() }).from(usersTable)
+      .where(eq(usersTable.role as any, "student")),
+    db.select({ total: count() }).from(dossiersTable)
+      .where(and(eq(dossiersTable.status as any, "published"), isNull(dossiersTable.deletedAt as any))),
+    db.select({ total: count() }).from(worksheetsTable)
+      .where(and(eq(worksheetsTable.status as any, "published"), isNull(worksheetsTable.deletedAt as any))),
+    db.select({ total: count() }).from(examsTable)
+      .where(and(eq(examsTable.status, "published"), ne(examsTable.type, "weekly"), isNull(examsTable.deletedAt))),
+    db.select({ total: sql<number>`COALESCE(SUM(downloads), 0)` })
+      .from(dossiersTable).where(isNull(dossiersTable.deletedAt as any)),
+    db.select({ total: sql<number>`COALESCE(SUM(downloads), 0)` })
+      .from(worksheetsTable).where(isNull(worksheetsTable.deletedAt as any)),
+  ]);
   res.json({
-    totalStudents: 12480,
-    totalDossiers: 348,
-    totalWorksheets: 1240,
-    totalExams: 580,
-    totalDownloads: 94200,
-    totalStudyHours: 850000,
+    totalStudents: Number(students?.total ?? 0),
+    totalDossiers: Number(dossiers?.total ?? 0),
+    totalWorksheets: Number(worksheets?.total ?? 0),
+    totalExams: Number(exams?.total ?? 0),
+    totalDownloads: Number(dossierDl?.total ?? 0) + Number(worksheetDl?.total ?? 0),
+    totalStudyHours: 0,
   });
 });
 

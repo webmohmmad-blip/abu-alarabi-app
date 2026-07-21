@@ -1,0 +1,910 @@
+# FINAL PRE-LAUNCH REMEDIATION
+
+# Abu Al-Arabi Platform
+
+# Production Domain: https://malsahori.com
+
+The previous QA report returned:
+
+NO-GO — FIX REQUIRED BEFORE LAUNCH
+
+Your task is to fix every remaining blocker and high-priority issue, deploy the corrected build, test the real production domain, and issue a new final launch verdict.
+
+Do not only write a report.
+
+Modify the code, database, APIs, frontend, deployment configuration, and tests as required.
+
+==================================================
+
+CURRENT REMAINING ISSUES
+
+==================================================
+
+1. The application must be deployed and tested on:
+https://malsahori.com
+
+2. The full PDF pipeline for dossiers and worksheets is not verified.
+
+3. The Study Room PDF flow is not verified.
+
+4. The admin dossiers listing endpoint is missing or inconsistent:
+
+GET /api/admin/dossiers
+
+5. Creating an exam without subjectId returns HTTP 500 instead of HTTP 400.
+
+6. Admin dashboard platform statistics use fake or hardcoded data.
+
+7. The frontend JavaScript bundle is approximately 1.75 MB and needs optimization.
+
+8. Mobile and tablet critical workflows are not fully verified.
+
+==================================================
+
+PART 1: FIX ADMIN DOSSIERS API
+
+==================================================
+
+Inspect the admin dossiers page and determine which endpoint it currently calls.
+
+Choose one canonical solution.
+
+Preferred solution:
+
+GET /api/admin/dossiers
+
+Requirements:
+
+- Require authentication.
+
+- Require Admin or Super Admin role.
+
+- Support pagination.
+
+- Support search.
+
+- Support status filtering.
+
+- Support sorting.
+
+- Return dossier records only.
+
+- Include stable file metadata.
+
+- Return correct counters when requested.
+
+- Return HTTP 200 on success.
+
+- Return 401 for unauthenticated requests.
+
+- Return 403 for unauthorized students.
+
+- Return 400 for invalid query parameters.
+
+- Never return internal storage paths.
+
+Example response:
+
+{
+
+  "ok": true,
+
+  "items": [],
+
+  "pagination": {
+
+    "page": 1,
+
+    "pageSize": 20,
+
+    "total": 0,
+
+    "totalPages": 0
+
+  }
+
+}
+
+If the project already uses:
+
+GET /api/dossiers
+
+for both student and admin views, do not duplicate logic unnecessarily.
+
+Instead:
+
+- create a shared service
+
+- preserve student-safe filtering
+
+- add an admin route with admin-only fields
+
+- update the frontend to call the correct canonical endpoint
+
+Add tests for:
+
+- admin success
+
+- student receives 403
+
+- guest receives 401
+
+- empty list
+
+- search
+
+- status filter
+
+- pagination
+
+==================================================
+
+PART 2: FIX EXAM VALIDATION
+
+==================================================
+
+The exam creation endpoint currently returns HTTP 500 when subjectId is missing.
+
+This is a validation error, not a server error.
+
+Fix the request schema and controller.
+
+Requirements:
+
+- Validate subjectId before database access.
+
+- Validate that the subject exists if required.
+
+- Return HTTP 400 for missing or malformed subjectId.
+
+- Return HTTP 404 if a referenced subject does not exist.
+
+- Return Arabic validation messages.
+
+- Do not leak stack traces.
+
+Expected missing-field response:
+
+HTTP 400
+
+{
+
+  "ok": false,
+
+  "message": "المادة مطلوبة"
+
+}
+
+Apply validation consistently to:
+
+- create exam
+
+- update exam
+
+- duplicate exam
+
+- create weekly quiz if subjectId is required there
+
+- all admin assessment forms
+
+Frontend:
+
+- prevent submission when subjectId is missing
+
+- display:
+
+  "يرجى اختيار المادة"
+
+- focus or scroll to the invalid field
+
+- do not send the API request until valid
+
+Add regression tests confirming:
+
+- missing subjectId → 400
+
+- invalid subjectId format → 400
+
+- non-existing subjectId → 404
+
+- valid subjectId → successful creation
+
+- no valid request returns 500
+
+==================================================
+
+PART 3: REPLACE FAKE ADMIN STATISTICS
+
+==================================================
+
+The platform-stats endpoint or admin dashboard currently returns hardcoded or fake values.
+
+Remove all mock, static, placeholder, and hardcoded statistics.
+
+Create real database-backed statistics.
+
+At minimum calculate:
+
+- total users
+
+- total students
+
+- total admins
+
+- published dossiers
+
+- draft dossiers
+
+- published worksheets
+
+- draft worksheets
+
+- published exams
+
+- active weekly quizzes
+
+- completed exam attempts
+
+- completed quiz attempts
+
+- recent registrations
+
+- recent admin activity if supported
+
+Requirements:
+
+- Use efficient aggregate queries.
+
+- Avoid loading full tables into memory.
+
+- Add required indexes.
+
+- Use one consistent date range for “recent” statistics.
+
+- Return zeros when no records exist.
+
+- Do not return random numbers.
+
+- Do not use frontend mock data.
+
+- Ensure only authorized admins can access detailed admin statistics.
+
+Verify:
+
+GET /api/dashboard/platform-stats
+
+or the canonical admin equivalent.
+
+Student access must return 403.
+
+Guest access must return 401.
+
+The frontend cards must use real API results.
+
+Add loading, empty, and error states.
+
+==================================================
+
+PART 4: VERIFY AND FIX PERSISTENT FILE STORAGE
+
+==================================================
+
+The PDF pipeline must be tested with real files.
+
+Inspect the complete upload architecture for:
+
+- dossier PDFs
+
+- worksheet PDFs
+
+- dossier cover images
+
+- worksheet cover images
+
+Files must use persistent production storage.
+
+Reject any production use of:
+
+- blob:
+
+- file:
+
+- localhost
+
+- temporary filesystem paths
+
+- Replit preview-domain URLs
+
+- expiring signed URLs stored permanently
+
+The database must store stable storage keys and metadata.
+
+Recommended fields:
+
+- storageKey
+
+- originalFileName
+
+- mimeType
+
+- sizeBytes
+
+- coverStorageKey
+
+- createdAt
+
+- updatedAt
+
+Use fresh signed URLs on demand if the storage is private.
+
+==================================================
+
+PART 5: DOSSIER PDF END-TO-END FLOW
+
+==================================================
+
+Using a real valid PDF and real cover image, test:
+
+1. Admin opens dossier creation.
+
+2. Admin uploads cover image.
+
+3. Admin uploads PDF.
+
+4. Upload completes successfully.
+
+5. Dossier is saved.
+
+6. Admin publishes the dossier.
+
+7. Student sees the dossier.
+
+8. Cover image request returns HTTP 200.
+
+9. Student downloads the PDF.
+
+10. The downloaded PDF opens correctly.
+
+11. Student clicks:
+
+   "ادرس الآن في غرفة الدراسة"
+
+12. The correct PDF opens in Study Room.
+
+13. Student refreshes Study Room.
+
+14. The same PDF still opens.
+
+15. Last page is restored.
+
+16. Annotation is created.
+
+17. Annotation is saved.
+
+18. Student leaves and returns.
+
+19. Annotation is restored.
+
+Fix every failure discovered.
+
+Required endpoints may include:
+
+GET /api/dossiers/:id
+
+GET /api/dossiers/:id/download
+
+GET /api/dossiers/:id/view
+
+Download response:
+
+Content-Type: application/pdf
+
+Content-Disposition: attachment
+
+View response:
+
+Content-Type: application/pdf
+
+Content-Disposition: inline
+
+or a valid fresh signed URL.
+
+Support HTTP Range requests where the PDF reader requires them.
+
+==================================================
+
+PART 6: WORKSHEET PDF END-TO-END FLOW
+
+==================================================
+
+Worksheets must use the same file architecture as dossiers.
+
+Using a real PDF, test:
+
+1. Admin creates worksheet.
+
+2. Admin uploads PDF.
+
+3. Admin optionally uploads cover.
+
+4. Admin publishes worksheet.
+
+5. Student sees it.
+
+6. Student clicks:
+
+   "تحميل PDF"
+
+7. File downloads and opens.
+
+8. Student clicks:
+
+   "حلّ في غرفتي الدراسية"
+
+9. Correct worksheet opens automatically.
+
+10. Student writes on the PDF.
+
+11. Annotation auto-saves.
+
+12. Student returns and sees saved work.
+
+Do not reintroduce electronic-attempt behavior for worksheets.
+
+==================================================
+
+PART 7: FIX STUDY ROOM FILE LOADING
+
+==================================================
+
+Study Room must support a generic source:
+
+DOSSIER
+
+WORKSHEET
+
+Use one shared reader.
+
+Recommended route patterns:
+
+/study-room?sourceType=DOSSIER&sourceId=:id
+
+/study-room?sourceType=WORKSHEET&sourceId=:id
+
+or equivalent typed routes.
+
+Requirements:
+
+- validate sourceType
+
+- validate sourceId
+
+- verify user access
+
+- fetch source metadata from backend
+
+- obtain valid PDF viewing URL
+
+- load the correct title
+
+- load the PDF automatically
+
+- do not require manual upload
+
+- do not pass blob URLs in navigation state
+
+- preserve refresh behavior
+
+- handle invalid or missing file safely
+
+Arabic errors:
+
+"ملف الدوسية غير متوفر"
+
+"ملف ورقة العمل غير متوفر"
+
+"تعذر فتح الملف في غرفة الدراسة"
+
+==================================================
+
+PART 8: DATABASE AND ANNOTATION VERIFICATION
+
+==================================================
+
+Verify annotation persistence.
+
+Each annotation must be linked to:
+
+- userId
+
+- sourceType
+
+- sourceId
+
+- pageNumber
+
+- annotationData
+
+- createdAt
+
+- updatedAt
+
+Test:
+
+- one user cannot read another user's annotations
+
+- dossier annotations do not appear on worksheet files
+
+- worksheet annotations do not appear on dossiers
+
+- deleting a source follows a safe retention policy
+
+- no orphan annotations remain unintentionally
+
+==================================================
+
+PART 9: OPTIMIZE THE FRONTEND BUNDLE
+
+==================================================
+
+The frontend JavaScript bundle is approximately 1.75 MB.
+
+Analyze the bundle using the existing build tooling or add a bundle analyzer temporarily.
+
+Identify the largest contributors.
+
+Apply safe optimizations:
+
+- route-level code splitting
+
+- lazy-load admin pages
+
+- lazy-load Study Room
+
+- lazy-load PDF libraries
+
+- lazy-load chart libraries
+
+- lazy-load rich editors
+
+- remove unused dependencies
+
+- remove duplicated packages
+
+- use tree-shakable imports
+
+- avoid importing entire icon libraries
+
+- split vendor chunks
+
+- load PDF.js worker correctly
+
+- compress and optimize images
+
+- remove dead code
+
+- remove source maps from public production output if not required
+
+Do not break functionality to reduce bundle size.
+
+Set practical goals:
+
+- initial student dashboard bundle significantly smaller
+
+- admin-only code not included in student initial bundle
+
+- Study Room libraries loaded only when opened
+
+- PDF libraries not loaded on login/home pages
+
+Record before and after bundle sizes.
+
+==================================================
+
+PART 10: MOBILE AND TABLET QA
+
+==================================================
+
+Test the published production site on:
+
+- 320px mobile
+
+- 375px mobile
+
+- 430px mobile
+
+- iPad portrait
+
+- iPad landscape
+
+- 1024px tablet
+
+- desktop
+
+Test critical workflows:
+
+Authentication:
+
+- register
+
+- login
+
+- refresh
+
+- logout
+
+Student:
+
+- horizontal navigation
+
+- dossiers list
+
+- dossier details
+
+- download PDF
+
+- open Study Room
+
+- worksheets list
+
+- worksheet download
+
+- worksheet Study Room
+
+- exams list
+
+- start exam
+
+- submit exam
+
+- weekly quiz appears
+
+- start and submit quiz
+
+- study schedule
+
+- notes
+
+Admin:
+
+- login
+
+- create dossier
+
+- upload files
+
+- publish
+
+- create worksheet
+
+- create exam
+
+- create weekly quiz
+
+- delete/archive content
+
+Verify:
+
+- no horizontal page overflow
+
+- no clipped dialogs
+
+- touch targets are usable
+
+- Arabic labels do not overlap
+
+- PDF tools remain usable on iPad
+
+- Safari downloads work
+
+- session cookies persist on Safari
+
+- Apple Pencil is tested where possible
+
+==================================================
+
+PART 11: DEPLOY TO PRODUCTION
+
+==================================================
+
+After fixes:
+
+- run typecheck
+
+- run tests
+
+- run database migrations
+
+- build production assets
+
+- deploy the corrected build
+
+- verify the production version is the latest version
+
+- clear stale caches/service workers if present
+
+Test:
+https://malsahori.com
+
+Do not mark production verification complete using localhost only.
+
+==================================================
+
+PART 12: PRODUCTION SMOKE TEST
+
+==================================================
+
+Run a real production smoke test on malsahori.com.
+
+At minimum verify:
+
+- homepage returns 200
+
+- /api/health returns 200
+
+- registration works
+
+- login works
+
+- /api/auth/me returns 200 after login
+
+- dashboard opens
+
+- admin dashboard opens for admin
+
+- student is blocked from admin
+
+- admin dossiers endpoint works
+
+- real dossier upload works
+
+- cover displays
+
+- PDF downloads
+
+- dossier opens in Study Room
+
+- worksheet downloads
+
+- worksheet opens in Study Room
+
+- exam starts
+
+- weekly quiz appears and starts
+
+- no valid critical request returns 500
+
+Use dedicated test accounts and disposable test content.
+
+Do not damage real production data.
+
+==================================================
+
+PART 13: REGRESSION TESTS
+
+==================================================
+
+Add automated regression tests for every fixed issue:
+
+- admin dossier listing
+
+- exam missing subjectId
+
+- real platform statistics
+
+- dossier upload/download/view
+
+- worksheet upload/download/view
+
+- Study Room dossier source
+
+- Study Room worksheet source
+
+- annotation persistence
+
+- mobile route navigation
+
+- production health check
+
+==================================================
+
+PART 14: FINAL REPORT
+
+==================================================
+
+Create:
+
+FINAL_PRELAUNCH_REMEDIATION_REPORT.md
+
+Include:
+
+- root cause of every issue
+
+- files changed
+
+- APIs added or changed
+
+- database migrations
+
+- storage provider used
+
+- real PDF test results
+
+- Study Room test results
+
+- admin dossiers API results
+
+- exam validation results
+
+- real statistics verification
+
+- before/after bundle size
+
+- mobile and tablet test results
+
+- production deployment confirmation
+
+- production smoke-test results
+
+- remaining issues
+
+==================================================
+
+MANDATORY FINAL VERDICT
+
+==================================================
+
+At the top of the report display:
+
+FINAL LAUNCH VERDICT:
+
+[PRODUCTION READY / READY WITH MINOR ISSUES / NOT READY FOR PRODUCTION]
+
+READINESS SCORE:
+
+[0–100]%
+
+BLOCKERS:
+
+[number]
+
+CRITICAL:
+
+[number]
+
+HIGH:
+
+[number]
+
+MEDIUM:
+
+[number]
+
+LOW:
+
+[number]
+
+Use PRODUCTION READY only if:
+
+- all issues in this prompt are fixed
+
+- production deployment succeeds
+
+- real PDF and Study Room flows pass
+
+- no blocker or critical issue remains
+
+- the production domain passes smoke testing
+
+- mobile and tablet critical workflows pass
+
+End with exactly one:
+
+GO FOR LAUNCH
+
+or:
+
+NO-GO — FIX REQUIRED BEFORE LAUNCH
+أبو العربي — منصة محمد الساحوري للغة العربية
+دوسيات عربي، أوراق عمل، امتحانات محلولة. توجيهي الأردن جيل 2010 مع الأستاذ محمد الساحوري.
+ 

@@ -1,114 +1,128 @@
+import { lazy, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { AuthProvider } from '@/contexts/auth-context';
 
-import NotFound from '@/pages/not-found';
+// ── Public pages (loaded eagerly — needed immediately on first visit) ──────────
 import Home from '@/pages/home';
 import Login from '@/pages/login';
 import Register from '@/pages/register';
-import Dashboard from '@/pages/dashboard';
-import Dossiers from '@/pages/dossiers';
-import DossierDetail from '@/pages/dossier-detail';
-import Worksheets from '@/pages/worksheets';
-import WorksheetDetail from '@/pages/worksheet-detail';
-import Exams from '@/pages/exams';
-import ExamInstructions from '@/pages/exam-instructions';
-import ExamTake from '@/pages/exam-take';
-import ExamResult from '@/pages/exam-result';
-import Quiz from '@/pages/quiz';
-import StudyPlan from '@/pages/study-plan';
-import StudyRoom from '@/pages/study-room';
-import Notes from '@/pages/notes';
-import Statistics from '@/pages/statistics';
-import Profile from '@/pages/profile';
-import Settings from '@/pages/settings';
-import Summaries from '@/pages/summaries';
-import SessionsHistory from '@/pages/sessions-history';
-import Schedule from '@/pages/schedule';
+import NotFound from '@/pages/not-found';
 
-// Admin pages
-import AdminDashboard from '@/pages/admin/index';
-import AdminUsers from '@/pages/admin/users';
-import AdminGroups from '@/pages/admin/groups';
-import AdminContent from '@/pages/admin/content';
-import AdminExams from '@/pages/admin/exams';
-import AdminSummaries from '@/pages/admin/summaries';
-import AdminRoles from '@/pages/admin/roles';
-import AdminSettings from '@/pages/admin/settings';
-import AdminAudit from '@/pages/admin/audit';
-import AdminReports from '@/pages/admin/reports';
-import AdminAnnouncements from '@/pages/admin/announcements';
-import AdminWorksheets from '@/pages/admin/worksheets';
-import AdminQuiz from '@/pages/admin/quiz';
+// ── Student pages (lazy — only needed after login) ────────────────────────────
+const Dashboard       = lazy(() => import('@/pages/dashboard'));
+const Dossiers        = lazy(() => import('@/pages/dossiers'));
+const DossierDetail   = lazy(() => import('@/pages/dossier-detail'));
+const Worksheets      = lazy(() => import('@/pages/worksheets'));
+const WorksheetDetail = lazy(() => import('@/pages/worksheet-detail'));
+const Exams           = lazy(() => import('@/pages/exams'));
+const ExamInstructions= lazy(() => import('@/pages/exam-instructions'));
+const ExamTake        = lazy(() => import('@/pages/exam-take'));
+const ExamResult      = lazy(() => import('@/pages/exam-result'));
+const Quiz            = lazy(() => import('@/pages/quiz'));
+const StudyPlan       = lazy(() => import('@/pages/study-plan'));
+const StudyRoom       = lazy(() => import('@/pages/study-room'));
+const Notes           = lazy(() => import('@/pages/notes'));
+const Statistics      = lazy(() => import('@/pages/statistics'));
+const Profile         = lazy(() => import('@/pages/profile'));
+const Settings        = lazy(() => import('@/pages/settings'));
+const Summaries       = lazy(() => import('@/pages/summaries'));
+const SessionsHistory = lazy(() => import('@/pages/sessions-history'));
+const Schedule        = lazy(() => import('@/pages/schedule'));
+
+// ── Admin pages (lazy — never needed by students) ─────────────────────────────
+const AdminDashboard    = lazy(() => import('@/pages/admin/index'));
+const AdminUsers        = lazy(() => import('@/pages/admin/users'));
+const AdminGroups       = lazy(() => import('@/pages/admin/groups'));
+const AdminContent      = lazy(() => import('@/pages/admin/content'));
+const AdminExams        = lazy(() => import('@/pages/admin/exams'));
+const AdminSummaries    = lazy(() => import('@/pages/admin/summaries'));
+const AdminRoles        = lazy(() => import('@/pages/admin/roles'));
+const AdminSettings     = lazy(() => import('@/pages/admin/settings'));
+const AdminAudit        = lazy(() => import('@/pages/admin/audit'));
+const AdminReports      = lazy(() => import('@/pages/admin/reports'));
+const AdminAnnouncements= lazy(() => import('@/pages/admin/announcements'));
+const AdminWorksheets   = lazy(() => import('@/pages/admin/worksheets'));
+const AdminQuiz         = lazy(() => import('@/pages/admin/quiz'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 0,          // no retries — prevents cascading refetches on 401
+      retry: 0,
       staleTime: 30_000,
     },
   },
 });
 
+// Shared full-screen spinner used while lazy chunks are loading
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+    </div>
+  );
+}
+
 function Router() {
   return (
-    <Switch>
-      {/* Public */}
-      <Route path="/" component={Home} />
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        {/* Public */}
+        <Route path="/" component={Home} />
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
 
-      {/* Student */}
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/dossiers" component={Dossiers} />
-      <Route path="/dossiers/:id" component={DossierDetail} />
-      <Route path="/worksheets" component={Worksheets} />
-      <Route path="/worksheets/:id" component={WorksheetDetail} />
+        {/* Student */}
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/dossiers" component={Dossiers} />
+        <Route path="/dossiers/:id" component={DossierDetail} />
+        <Route path="/worksheets" component={Worksheets} />
+        <Route path="/worksheets/:id" component={WorksheetDetail} />
 
-      {/* Exam routes — spec-required chain */}
-      <Route path="/exams" component={Exams} />
-      <Route path="/exams/:examId/instructions" component={ExamInstructions} />
-      <Route path="/exams/:examId/attempt/:attemptId" component={ExamTake} />
-      <Route path="/exams/:examId/result/:attemptId" component={ExamResult} />
-      {/* Legacy alias — keeps old bookmarks working */}
-      <Route path="/exams/:id" component={ExamInstructions} />
+        {/* Exam routes */}
+        <Route path="/exams" component={Exams} />
+        <Route path="/exams/:examId/instructions" component={ExamInstructions} />
+        <Route path="/exams/:examId/attempt/:attemptId" component={ExamTake} />
+        <Route path="/exams/:examId/result/:attemptId" component={ExamResult} />
+        <Route path="/exams/:id" component={ExamInstructions} />
 
-      {/* Weekly quiz routes — spec-required chain */}
-      <Route path="/quiz" component={Quiz} />
-      <Route path="/weekly-quiz" component={Quiz} />
-      <Route path="/weekly-quiz/:quizId/instructions" component={ExamInstructions} />
-      <Route path="/weekly-quiz/:quizId/attempt/:attemptId" component={ExamTake} />
-      <Route path="/weekly-quiz/:quizId/result/:attemptId" component={ExamResult} />
+        {/* Weekly quiz routes */}
+        <Route path="/quiz" component={Quiz} />
+        <Route path="/weekly-quiz" component={Quiz} />
+        <Route path="/weekly-quiz/:quizId/instructions" component={ExamInstructions} />
+        <Route path="/weekly-quiz/:quizId/attempt/:attemptId" component={ExamTake} />
+        <Route path="/weekly-quiz/:quizId/result/:attemptId" component={ExamResult} />
 
-      {/* Other student pages */}
-      <Route path="/study-plan" component={StudyPlan} />
-      <Route path="/study-room" component={StudyRoom} />
-      <Route path="/notes" component={Notes} />
-      <Route path="/summaries" component={Summaries} />
-      <Route path="/statistics" component={Statistics} />
-      <Route path="/history" component={SessionsHistory} />
-      <Route path="/schedule" component={Schedule} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/settings" component={Settings} />
+        {/* Other student pages */}
+        <Route path="/study-plan" component={StudyPlan} />
+        <Route path="/study-room" component={StudyRoom} />
+        <Route path="/notes" component={Notes} />
+        <Route path="/summaries" component={Summaries} />
+        <Route path="/statistics" component={Statistics} />
+        <Route path="/history" component={SessionsHistory} />
+        <Route path="/schedule" component={Schedule} />
+        <Route path="/profile" component={Profile} />
+        <Route path="/settings" component={Settings} />
 
-      {/* Admin */}
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/users" component={AdminUsers} />
-      <Route path="/admin/groups" component={AdminGroups} />
-      <Route path="/admin/content" component={AdminContent} />
-      <Route path="/admin/exams" component={AdminExams} />
-      <Route path="/admin/summaries" component={AdminSummaries} />
-      <Route path="/admin/roles" component={AdminRoles} />
-      <Route path="/admin/settings" component={AdminSettings} />
-      <Route path="/admin/audit" component={AdminAudit} />
-      <Route path="/admin/reports" component={AdminReports} />
-      <Route path="/admin/announcements" component={AdminAnnouncements} />
-      <Route path="/admin/worksheets" component={AdminWorksheets} />
-      <Route path="/admin/quiz" component={AdminQuiz} />
+        {/* Admin */}
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/users" component={AdminUsers} />
+        <Route path="/admin/groups" component={AdminGroups} />
+        <Route path="/admin/content" component={AdminContent} />
+        <Route path="/admin/exams" component={AdminExams} />
+        <Route path="/admin/summaries" component={AdminSummaries} />
+        <Route path="/admin/roles" component={AdminRoles} />
+        <Route path="/admin/settings" component={AdminSettings} />
+        <Route path="/admin/audit" component={AdminAudit} />
+        <Route path="/admin/reports" component={AdminReports} />
+        <Route path="/admin/announcements" component={AdminAnnouncements} />
+        <Route path="/admin/worksheets" component={AdminWorksheets} />
+        <Route path="/admin/quiz" component={AdminQuiz} />
 
-      <Route component={NotFound} />
-    </Switch>
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
