@@ -24,8 +24,8 @@ function deferNonCriticalCss(): Plugin {
     apply: 'build',
     enforce: 'post',
     transformIndexHtml: {
-      enforce: 'post',
-      transform(html: string) {
+      order: 'post',
+      handler(html: string) {
         return html.replace(
           /<link rel="stylesheet" crossorigin href="([^"]+)">/g,
           (_, href) =>
