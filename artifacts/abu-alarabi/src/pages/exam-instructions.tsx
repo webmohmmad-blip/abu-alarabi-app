@@ -27,7 +27,8 @@ export default function ExamInstructions() {
   const [, setLocation] = useLocation();
   
   const { data: exam, isLoading } = useGetExam(examId, {
-    query: { enabled: !!examId }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    query: { enabled: !!examId } as any,
   });
 
   const startExam = useStartExam();

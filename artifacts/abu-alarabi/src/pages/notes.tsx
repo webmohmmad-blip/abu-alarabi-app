@@ -54,7 +54,7 @@ function FloatingTimer() {
   const [size, setSize] = useState<"sm" | "md" | "lg">("md");
   const dragRef = useRef<{ startX: number; startY: number; initX: number; initY: number } | null>(null);
   const widgetRef = useRef<HTMLDivElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Initialise position
   useEffect(() => {
@@ -541,7 +541,7 @@ export default function StudyNotebook() {
   const createNote = useCreateNote();
   const updateNote = useUpdateNote();
   const deleteNote = useDeleteNote();
-  const autoSaveTimeout = useRef<NodeJS.Timeout>();
+  const autoSaveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Auto-save
   useEffect(() => {

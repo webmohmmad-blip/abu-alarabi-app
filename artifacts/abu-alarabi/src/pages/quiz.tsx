@@ -108,14 +108,14 @@ export default function Quiz() {
             )}
 
             {/* Prizes Card — shown only when a quiz is active and has prizes defined */}
-            {currentQuiz?.prizes && currentQuiz.prizes.length > 0 && (
+            {currentQuiz?.prizes && (currentQuiz.prizes as unknown as unknown[]).length > 0 && (
               <Card className="bg-white/60 backdrop-blur-xl border-white/80 shadow-md">
                 <CardContent className="p-6">
                   <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                     <Gift className="w-5 h-5 text-pink-500" /> جوائز هذا الأسبوع
                   </h3>
                   <div className="grid gap-3">
-                    {currentQuiz.prizes.map((prize: { rank: number; description: string }, i: number) => (
+                    {(currentQuiz.prizes as unknown as { rank: number; description: string }[]).map((prize, i: number) => (
                       <div key={i} className={`p-4 rounded-xl text-center border ${
                         prize.rank === 1 ? "bg-gradient-to-b from-yellow-100 to-yellow-50 border-yellow-200" :
                         prize.rank === 2 ? "bg-gradient-to-b from-gray-200 to-gray-100 border-gray-300" :

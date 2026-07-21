@@ -1,0 +1,333 @@
+The production blank white screen has now been diagnosed from the browser console.
+
+Exact production error:
+
+Uncaught TypeError:
+
+Cannot read properties of undefined (reading 'forwardRef')
+
+The exception originates from the generated production bundle:
+
+radix-vendor-*.js
+
+This started after frontend bundle optimization and manual chunk splitting.
+
+This is a production-blocking JavaScript bundling error.
+
+Do not only explain it. Fix the code and verify the published domain.
+
+==================================================
+
+LIKELY ROOT CAUSE
+
+==================================================
+
+The Radix UI vendor chunk is loading with an undefined React dependency.
+
+Likely causes include:
+
+- incorrect Vite manualChunks configuration
+
+- React and Radix split into circular or invalid chunks
+
+- React loaded after radix-vendor
+
+- duplicate React installations
+
+- React bundled into multiple chunks
+
+- incompatible React / React DOM versions
+
+- incorrect dependency optimization
+
+- aggressive vendor chunk splitting
+
+==================================================
+
+STEP 1: INSPECT VITE CONFIGURATION
+
+==================================================
+
+Inspect:
+
+- vite.config.ts
+
+- vite.config.js
+
+- rollupOptions.output.manualChunks
+
+- splitVendorChunkPlugin
+
+- custom chunk rules
+
+- React plugin configuration
+
+Find any configuration that manually separates:
+
+- react
+
+- react-dom
+
+- @radix-ui/*
+
+- lucide-react
+
+- charts
+
+- PDF libraries
+
+Temporarily remove the custom Radix vendor chunk and rebuild.
+
+Do not keep a separate `radix-vendor` chunk unless its dependency order is proven safe.
+
+Preferred safe first fix:
+
+- let Vite/Rollup perform automatic chunking
+
+- keep route-level React.lazy imports
+
+- remove aggressive node_modules manual chunk logic
+
+Example safe build configuration:
+
+build: {
+
+  sourcemap: false,
+
+  chunkSizeWarningLimit: 1000
+
+}
+
+Do not optimize bundle size at the expense of runtime correctness.
+
+==================================================
+
+STEP 2: CHECK FOR DUPLICATE REACT
+
+==================================================
+
+Run:
+
+npm ls react react-dom
+
+or the equivalent package-manager command.
+
+Verify:
+
+- only one React version is installed
+
+- only one React DOM version is installed
+
+- React and React DOM versions match
+
+- Radix UI packages resolve to the same React installation
+
+Run:
+
+npm dedupe
+
+when safe.
+
+Check package-lock.json or lockfile for duplicate React installations.
+
+Do not use React aliases unless necessary.
+
+If needed, add safe Vite deduplication:
+
+resolve: {
+
+  dedupe: ["react", "react-dom"]
+
+}
+
+==================================================
+
+STEP 3: VERIFY IMPORTS
+
+==================================================
+
+Search the project for invalid React imports.
+
+Valid patterns include:
+
+import React from "react";
+
+or:
+
+import { forwardRef } from "react";
+
+Check for:
+
+- importing React from generated vendor paths
+
+- importing from react/cjs internals
+
+- shadowing the variable name React
+
+- custom aliases pointing react to the wrong file
+
+- incompatible CommonJS/ESM interop
+
+Radix components must resolve React normally.
+
+==================================================
+
+STEP 4: REBUILD FROM A CLEAN STATE
+
+==================================================
+
+Delete stale build and cache output:
+
+- dist
+
+- node_modules/.vite
+
+- temporary Vite cache
+
+- obsolete generated assets
+
+Then run a clean installation if needed and execute:
+
+npm run typecheck
+
+npm run build
+
+Start the production build locally.
+
+Verify the generated index.html references only existing current assets.
+
+Confirm:
+
+- main JavaScript returns HTTP 200
+
+- Radix-related chunks return HTTP 200
+
+- no chunk contains broken React interop
+
+- no `forwardRef` error occurs
+
+==================================================
+
+STEP 5: PRESERVE SAFE PERFORMANCE IMPROVEMENTS
+
+==================================================
+
+Keep route-level lazy loading for:
+
+- admin pages
+
+- Study Room
+
+- PDF libraries
+
+- charts
+
+However, do not manually isolate Radix UI from React.
+
+A safe approach is:
+
+- automatic Vite vendor chunking
+
+- route-level dynamic imports
+
+- PDF.js lazy-loaded inside Study Room
+
+- chart libraries lazy-loaded inside admin dashboards
+
+Do not create fragile chunks named:
+
+- radix-vendor
+
+- react-vendor
+
+unless tested in the actual production build.
+
+==================================================
+
+STEP 6: ADD AN ERROR BOUNDARY
+
+==================================================
+
+Add a top-level React Error Boundary.
+
+Instead of a completely white page, unexpected runtime failures should display an Arabic fallback such as:
+
+"حدث خطأ أثناء تشغيل الموقع"
+
+with a button:
+
+"إعادة تحميل الصفحة"
+
+The Error Boundary is not a replacement for fixing the root cause.
+
+==================================================
+
+STEP 7: REPUBLISH AND VERIFY PRODUCTION
+
+==================================================
+
+Publish a new deployment.
+
+Verify the real domain:
+https://malsahori.com
+
+Test in:
+
+- normal Chrome window
+
+- incognito window
+
+- mobile browser
+
+- direct route refresh
+
+Clear or invalidate stale cached HTML and hashed assets.
+
+Confirm:
+
+- visible page renders
+
+- no white screen
+
+- no uncaught console errors
+
+- no `forwardRef` error
+
+- current JavaScript assets return 200
+
+- login page loads
+
+- registration page loads
+
+- dashboard loads after authentication
+
+==================================================
+
+REQUIRED FINAL REPORT
+
+==================================================
+
+Report:
+
+1. Exact root cause.
+
+2. The problematic Vite/manualChunks configuration.
+
+3. Files changed.
+
+4. React and React DOM versions.
+
+5. Whether duplicate React was found.
+
+6. Before and after chunk configuration.
+
+7. Local production-build result.
+
+8. Published-domain verification.
+
+9. Browser-console result after deployment.
+
+Do not mark this fixed until the real published domain renders successfully without the `forwardRef` exception.
+أبو العربي — منصة محمد الساحوري للغة العربية
+دوسيات عربي، أوراق عمل، امتحانات محلولة. توجيهي الأردن جيل 2010 مع الأستاذ محمد الساحوري.
+ 

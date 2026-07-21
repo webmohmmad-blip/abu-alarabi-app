@@ -55,8 +55,8 @@ const FEATURES = [
 ];
 
 export default function Home() {
-  const { data: stats } = useGetPlatformStats({ query: { enabled: true } });
-  const { data: dossiersList } = useListDossiers({ limit: 3 }, { query: { enabled: true } });
+  const { data: stats } = useGetPlatformStats();
+  const { data: dossiersList } = useListDossiers({ limit: 3 });
 
   return (
     <MainLayout>

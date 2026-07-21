@@ -22,7 +22,7 @@ import {
 import { motion } from "framer-motion";
 
 export default function Dashboard() {
-  const { data: dashboard, isLoading } = useGetDashboard({ query: { enabled: true } });
+  const { data: dashboard, isLoading } = useGetDashboard();
   const { user } = useAuth();
 
   if (isLoading || !dashboard) {

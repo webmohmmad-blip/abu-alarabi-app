@@ -63,19 +63,17 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
-    chunkSizeWarningLimit: 600,
+    // Raise limit to avoid spurious warnings — route-level lazy imports keep
+    // per-route chunks small; we let Rollup pick optimal split boundaries.
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
+        // Only split pdfjs-dist: it is enormous (~700 KB) and has zero React
+        // dependency, so there is no initialisation-order risk. All other
+        // vendor splitting is left to Rollup's automatic algorithm to avoid
+        // the "radix-vendor loads before react-vendor" forwardRef crash.
         manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (id.includes('pdfjs-dist'))           return 'pdf-vendor';
-          if (id.includes('react-dom'))             return 'react-vendor';
-          if (id.includes('@tanstack/react-query')) return 'query-vendor';
-          if (id.includes('framer-motion'))         return 'motion-vendor';
-          if (id.includes('recharts') || id.includes('d3-')) return 'chart-vendor';
-          if (id.includes('@radix-ui'))             return 'radix-vendor';
-          if (id.includes('lucide-react'))          return 'icons-vendor';
-          if (id.includes('wouter'))                return 'router-vendor';
+          if (id.includes('pdfjs-dist')) return 'pdf-vendor';
         },
       },
     },

@@ -38,7 +38,8 @@ export default function DossierDetail() {
   const [downloadError, setDownloadError] = useState(false);
   
   const { data: dossier, isLoading } = useGetDossier(dossierId, {
-    query: { enabled: !!dossierId }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    query: { enabled: !!dossierId } as any,
   });
 
   const toggleFavorite = useToggleDossierFavorite();
