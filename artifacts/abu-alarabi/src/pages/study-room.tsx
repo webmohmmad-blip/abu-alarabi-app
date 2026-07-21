@@ -9,6 +9,7 @@ import { useLocation, Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as pdfjsLib from "pdfjs-dist";
 import { customFetch } from "@workspace/api-client-react";
+import { SEO } from "@/components/SEO";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import {
   Pencil, Highlighter, Eraser, Hand, Square, Circle as CircleIcon,
@@ -654,6 +655,7 @@ export default function StudyRoom() {
   if (!dossierId) {
     return (
       <DashboardLayout>
+        <SEO title="غرفتي الدراسية" description="غرفة الدراسة الذكية في منصة أبو العربي — قراءة الدوسيات مع ملاحظات وإشارات مرجعية." noindex />
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Page header */}
           <div>

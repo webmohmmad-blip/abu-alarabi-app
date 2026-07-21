@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useListNotes, useCreateNote, useUpdateNote, useDeleteNote, useListSubjects } from "@workspace/api-client-react";
 import { useQuery } from "@tanstack/react-query";
@@ -598,6 +599,7 @@ export default function StudyNotebook() {
 
   return (
     <DashboardLayout>
+      <SEO title="ملاحظاتي" description="ملاحظات المستخدم في منصة أبو العربي." noindex />
       <div className="h-[calc(100vh-6rem)] flex flex-col gap-3" dir="rtl">
 
         {/* ── Top toolbar ── */}

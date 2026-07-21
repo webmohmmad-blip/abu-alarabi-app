@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from "@/components/SEO";
 import { useQuery } from "@tanstack/react-query";
 import { customFetch, useListSubjects } from "@workspace/api-client-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -89,6 +90,12 @@ export default function Summaries() {
 
   return (
     <DashboardLayout>
+      <SEO
+        title="الملخصات"
+        description="ملخصات اللغة العربية للتوجيهي الأردن — مراجعة شاملة وسريعة لأهم قواعد النحو والصرف والبلاغة والأدب مع الأستاذ محمد الساحوري."
+        canonical="/summaries"
+        breadcrumbs={[{ name: "الرئيسية", url: "/" }, { name: "الملخصات", url: "/summaries" }]}
+      />
       <div className="space-y-6" dir="rtl">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">

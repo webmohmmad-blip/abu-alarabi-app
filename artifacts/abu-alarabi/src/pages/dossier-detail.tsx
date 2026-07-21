@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { useState, useRef, useCallback } from "react";
 import { useParams, Link } from "wouter";
 import { 
@@ -158,6 +159,16 @@ export default function DossierDetail() {
 
   return (
     <DashboardLayout>
+      <SEO
+        title={dossier.title}
+        description={`${dossier.title} — دوسية إعداد الأستاذ محمد الساحوري في اللغة العربية للتوجيهي الأردن. محتوى تعليمي شامل ومنظم.`}
+        canonical={`/dossiers/${dossierId}`}
+        breadcrumbs={[
+          { name: "الرئيسية", url: "/" },
+          { name: "الدوسيات", url: "/dossiers" },
+          { name: dossier.title, url: `/dossiers/${dossierId}` },
+        ]}
+      />
       <div className="max-w-5xl mx-auto space-y-8">
         <Button variant="ghost" asChild className="mb-4 -ml-4 hover:bg-transparent">
           <Link href="/dossiers" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">

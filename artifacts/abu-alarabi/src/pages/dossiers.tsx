@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { SEO } from "@/components/SEO";
 import { useListDossiers, useListSubjects } from "@workspace/api-client-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +24,12 @@ export default function Dossiers() {
 
   return (
     <DashboardLayout>
+      <SEO
+        title="الدوسيات"
+        description="جميع دوسيات اللغة العربية للتوجيهي الأردن — إعداد الأستاذ محمد الساحوري. ملازم شاملة للنحو والصرف والبلاغة والأدب لطلاب جيل 2010."
+        canonical="/dossiers"
+        breadcrumbs={[{ name: "الرئيسية", url: "/" }, { name: "الدوسيات", url: "/dossiers" }]}
+      />
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>

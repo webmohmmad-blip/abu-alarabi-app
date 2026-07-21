@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { customFetch, useListSubjects } from "@workspace/api-client-react";
@@ -167,6 +168,12 @@ export default function Videos() {
 
   return (
     <DashboardLayout>
+      <SEO
+        title="الفيديوهات التعليمية"
+        description="فيديوهات الأستاذ محمد الساحوري في اللغة العربية — شرح مفصل للنحو والصرف والبلاغة لطلاب التوجيهي الأردن جيل 2010."
+        canonical="/videos"
+        breadcrumbs={[{ name: "الرئيسية", url: "/" }, { name: "الفيديوهات", url: "/videos" }]}
+      />
       <div className="space-y-6" dir="rtl">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">

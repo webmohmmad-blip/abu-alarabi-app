@@ -1,2 +1,19 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /register
+Disallow: /onboarding
+Disallow: /profile
+Disallow: /settings
+Disallow: /api/
+Disallow: /study-room
+Disallow: /notes
+Disallow: /study-plan
+Disallow: /sessions-history
+
+# Sitemap location
+Sitemap: https://abu-alarabi.replit.app/sitemap.xml

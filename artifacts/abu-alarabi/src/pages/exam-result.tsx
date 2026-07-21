@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";

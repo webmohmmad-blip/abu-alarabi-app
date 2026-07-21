@@ -11,3 +11,4 @@
 - [Homepage Advertisements System](advertisements-system.md) — homepage_ads table, 7 endpoints, admin CRUD page, AdCarousel, button contrast fixes; no requireAdmin — use requireRole.
 - [Hero Content CMS](hero-cms.md) — Hero text stored as JSON in system_settings key='hero_content'; public GET /api/homepage-settings returns defaults if no row; admin page at /admin/homepage-settings; primary CTA routes to /schedule (not /register).
 - [Users Excel Export](users-excel-export.md) — GET /api/admin/users/export; ExcelJS; route registered before adminRouter to prevent /users/:id shadowing; phone cells numFmt "@" prevents scientific notation.
+- [SEO Implementation](seo-implementation.md) — react-helmet-async; per-page SEO component; dynamic sitemap at /api/sitemap.xml; robots.txt; analytics stubs in index.html.

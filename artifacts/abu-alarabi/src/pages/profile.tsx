@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useGetProfile, useUpdateProfile, useGetAchievements } from "@workspace/api-client-react";
@@ -70,6 +71,7 @@ export default function Profile() {
 
   return (
     <DashboardLayout>
+      <SEO title="ملفي الشخصي" description="ملف المستخدم الشخصي في منصة أبو العربي." noindex />
       <div className="space-y-8">
         
         {/* Profile Hero */}

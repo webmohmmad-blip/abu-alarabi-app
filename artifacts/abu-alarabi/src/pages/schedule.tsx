@@ -2,6 +2,7 @@
  * صفحة الجدول الدراسي الأسبوعي
  * الطالب يبني جدوله: يختار المواد الشخصية + أيام متعددة + الأوقات
  */
+import { SEO } from "@/components/SEO";
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";
@@ -231,6 +232,7 @@ export default function Schedule() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <DashboardLayout>
+      <SEO title="جدولي الدراسي" description="الجدول الدراسي الأسبوعي في منصة أبو العربي." noindex />
       <div className="max-w-5xl mx-auto space-y-6">
 
         {/* Header */}

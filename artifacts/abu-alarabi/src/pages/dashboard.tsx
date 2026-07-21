@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
+      <SEO title="لوحة المتابعة" description="لوحة متابعة المستخدم في منصة أبو العربي." noindex />
       <div className="space-y-8">
         
         {/* Today's Tasks */}

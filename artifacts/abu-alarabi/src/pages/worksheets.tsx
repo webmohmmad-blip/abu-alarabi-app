@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { SEO } from "@/components/SEO";
 import { useListWorksheets, useListSubjects } from "@workspace/api-client-react";
 import { customFetch } from "@workspace/api-client-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -25,6 +26,12 @@ export default function Worksheets() {
 
   return (
     <DashboardLayout>
+      <SEO
+        title="أوراق العمل"
+        description="أوراق عمل اللغة العربية للتوجيهي — تدريبات مستهدفة على النحو والصرف والبلاغة. إعداد الأستاذ محمد الساحوري — أبو العربي."
+        canonical="/worksheets"
+        breadcrumbs={[{ name: "الرئيسية", url: "/" }, { name: "أوراق العمل", url: "/worksheets" }]}
+      />
       <div className="space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

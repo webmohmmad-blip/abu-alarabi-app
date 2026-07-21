@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { useState } from "react";
 import { useGetStudyPlan, useCompleteStudyTask, useRebuildStudyPlan } from "@workspace/api-client-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -62,6 +63,7 @@ export default function StudyPlan() {
 
   return (
     <DashboardLayout>
+      <SEO title="خطتي الدراسية" description="الخطة الدراسية المخصصة في منصة أبو العربي." noindex />
       <div className="space-y-8">
         
         {/* Header/Hero */}

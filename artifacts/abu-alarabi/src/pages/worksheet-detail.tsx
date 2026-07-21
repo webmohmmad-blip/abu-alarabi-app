@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { useState } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -135,6 +136,16 @@ export default function WorksheetDetail() {
 
   return (
     <DashboardLayout>
+      <SEO
+        title={worksheet.title}
+        description={`${worksheet.title} — ورقة عمل في اللغة العربية إعداد الأستاذ محمد الساحوري. تدريبات مستهدفة لطلاب التوجيهي الأردن.`}
+        canonical={`/worksheets/${worksheetId}`}
+        breadcrumbs={[
+          { name: "الرئيسية", url: "/" },
+          { name: "أوراق العمل", url: "/worksheets" },
+          { name: worksheet.title, url: `/worksheets/${worksheetId}` },
+        ]}
+      />
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
         <Link href="/worksheets" className="hover:text-foreground transition-colors">

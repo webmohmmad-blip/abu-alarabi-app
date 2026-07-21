@@ -1,0 +1,14 @@
+{
+  "name": "أبو العربي — منصة محمد الساحوري",
+  "short_name": "أبو العربي",
+  "description": "منصة أبو العربي لتعلم اللغة العربية — توجيهي الأردن جيل 2010",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a0a2e",
+  "theme_color": "#5A2D82",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

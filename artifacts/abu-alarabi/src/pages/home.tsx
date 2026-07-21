@@ -1,4 +1,5 @@
 import React from "react";
+import { SEO, SITE_URL, WEBSITE_SCHEMA, ORGANIZATION_SCHEMA } from "@/components/SEO";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
@@ -118,6 +119,12 @@ export default function Home() {
 
   return (
     <MainLayout>
+      <SEO
+        title="الرئيسية"
+        description="منصة أبو العربي — رفيقك الدراسي الأول لتوجيهي الأردن جيل 2010. دوسيات عربي، أوراق عمل، امتحانات إلكترونية، وشرح الأستاذ محمد الساحوري في اللغة العربية."
+        canonical="/"
+        schema={[WEBSITE_SCHEMA, ORGANIZATION_SCHEMA]}
+      />
 
       {/* ═══════════════════════════════════════════════
           HERO — dark, premium, Arabic-language focused

@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { useParams, Link, useLocation } from "wouter";
 import { useGetExam, useStartExam } from "@workspace/api-client-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -76,6 +77,7 @@ export default function ExamInstructions() {
 
   return (
     <DashboardLayout>
+      <SEO title="تعليمات الامتحان" description="تعليمات الامتحان الإلكتروني في منصة أبو العربي." noindex />
       <div className="max-w-4xl mx-auto space-y-6">
         <Button variant="ghost" asChild className="mb-2 -ml-4 hover:bg-transparent">
           <Link href="/exams" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">

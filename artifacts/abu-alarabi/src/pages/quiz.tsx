@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { useGetCurrentQuiz, useGetQuizLeaderboard } from "@workspace/api-client-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +23,12 @@ export default function Quiz() {
 
   return (
     <DashboardLayout>
+      <SEO
+        title="الكويز الأسبوعي"
+        description="الكويز الأسبوعي للغة العربية — اختبر معلوماتك وتنافس مع زملائك في أسئلة متجددة كل أسبوع من الأستاذ محمد الساحوري."
+        canonical="/quiz"
+        breadcrumbs={[{ name: "الرئيسية", url: "/" }, { name: "الكويز الأسبوعي", url: "/quiz" }]}
+      />
       <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Header */}

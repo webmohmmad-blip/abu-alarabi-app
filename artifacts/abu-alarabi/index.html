@@ -2,67 +2,143 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
 
-    <!-- ═══ Primary SEO ═══ -->
+    <!-- ═══ Primary SEO (static fallback — react-helmet-async overrides per page) ═══ -->
     <title>أبو العربي — منصة الأستاذ محمد الساحوري للغة العربية | توجيهي الأردن</title>
     <meta name="description" content="منصة أبو العربي — رفيقك الدراسي الأول لتوجيهي الأردن جيل 2010. دوسيات عربي، أوراق عمل، امتحانات، وشرح الأستاذ محمد الساحوري في اللغة العربية. أفضل مصدر لمادة العربي في الأردن." />
-    <meta name="keywords" content="أبو العربي, محمد الساحوري, الأستاذ محمد الساحوري, لغة عربية توجيهي, دوسيات عربي, أوراق عمل عربي, توجيهي الأردن, جيل 2010, جو اكاديمي عربي, منصة أبو العربي, نحو وصرف توجيهي, بلاغة توجيهي, عربي توجيهي أردن, abu alarabi, Mohammad Alsahori, Arabic language Jordan, Tawjihi Arabic, Jo Academy Arabic" />
+    <meta name="keywords" content="أبو العربي, محمد الساحوري, الأستاذ محمد الساحوري, لغة عربية توجيهي, دوسيات عربي, أوراق عمل عربي, توجيهي الأردن, جيل 2010, منصة أبو العربي, نحو وصرف توجيهي, بلاغة توجيهي, عربي توجيهي أردن, abu alarabi, Mohammad Alsahori, Arabic language Jordan, Tawjihi Arabic" />
     <meta name="author" content="الأستاذ محمد الساحوري — أبو العربي" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://abu-alarabi.replit.app/" />
 
     <!-- ═══ Open Graph (Facebook / WhatsApp) ═══ -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="أبو العربي" />
-    <meta property="og:locale" content="ar_JO" />
-    <meta property="og:locale:alternate" content="en_US" />
-    <meta property="og:url" content="https://abu-alarabi.replit.app/" />
-    <meta property="og:title" content="أبو العربي — منصة الأستاذ محمد الساحوري للغة العربية" />
-    <meta property="og:description" content="دوسيات عربي، أوراق عمل، امتحانات محلولة، وغرفة دراسة ذكية. رفيقك في توجيهي الأردن — مع الأستاذ محمد الساحوري." />
+    <meta property="og:type"              content="website" />
+    <meta property="og:site_name"         content="أبو العربي" />
+    <meta property="og:locale"            content="ar_JO" />
+    <meta property="og:locale:alternate"  content="en_US" />
+    <meta property="og:url"              content="https://abu-alarabi.replit.app/" />
+    <meta property="og:title"            content="أبو العربي — منصة الأستاذ محمد الساحوري للغة العربية" />
+    <meta property="og:description"      content="دوسيات عربي، أوراق عمل، امتحانات محلولة، وغرفة دراسة ذكية. رفيقك في توجيهي الأردن — مع الأستاذ محمد الساحوري." />
+    <meta property="og:image"            content="https://abu-alarabi.replit.app/teacher-sahouri.jpg" />
+    <meta property="og:image:width"      content="1200" />
+    <meta property="og:image:height"     content="630" />
+    <meta property="og:image:alt"        content="الأستاذ محمد الساحوري — أبو العربي" />
 
     <!-- ═══ Twitter / X ═══ -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="أبو العربي — منصة محمد الساحوري للغة العربية" />
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="أبو العربي — منصة محمد الساحوري للغة العربية" />
     <meta name="twitter:description" content="دوسيات عربي، أوراق عمل، امتحانات محلولة. توجيهي الأردن جيل 2010 مع الأستاذ محمد الساحوري." />
-    <meta name="twitter:creator" content="@mohammad.alsahori" />
+    <meta name="twitter:image"       content="https://abu-alarabi.replit.app/teacher-sahouri.jpg" />
+    <meta name="twitter:creator"     content="@mohammad.alsahori" />
 
-    <!-- ═══ Structured Data (JSON-LD) ═══ -->
+    <!-- ═══ Webmaster Verification (fill in when available) ═══ -->
+    <!-- <meta name="google-site-verification" content="REPLACE_WITH_GOOGLE_VERIFICATION_TOKEN" /> -->
+    <!-- <meta name="msvalidate.01" content="REPLACE_WITH_BING_VERIFICATION_TOKEN" /> -->
+
+    <!-- ═══ Performance — preconnect & preload ═══ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Tajawal RTL font (Arabic-optimized) -->
+    <link rel="preload" as="style"
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap"
+      onload="this.rel='stylesheet'" />
+    <noscript>
+      <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" />
+    </noscript>
+
+    <!-- ═══ Favicon ═══ -->
+    <link rel="icon"             type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest"         href="/manifest.json" />
+    <meta name="theme-color" content="#5A2D82" />
+
+    <!-- ═══ Structured Data (static fallback) ═══ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "EducationalOrganization",
-      "name": "منصة أبو العربي",
-      "alternateName": ["Abu Al-Arabi", "أبو العربي", "منصة محمد الساحوري"],
-      "description": "منصة تعليمية متخصصة في اللغة العربية لطلاب التوجيهي في الأردن، بإشراف الأستاذ محمد الساحوري.",
-      "url": "https://abu-alarabi.replit.app/",
-      "founder": {
-        "@type": "Person",
-        "name": "محمد الساحوري",
-        "alternateName": "Mohammad Alsahori",
-        "jobTitle": "أستاذ اللغة العربية",
-        "sameAs": [
-          "https://www.facebook.com/alsahori.arabic",
-          "https://www.instagram.com/mohammad.alsahori",
-          "https://wa.me/962798638622"
-        ]
-      },
-      "teaches": "اللغة العربية",
-      "audience": {
-        "@type": "EducationalAudience",
-        "educationalRole": "student",
-        "audienceType": "طلاب التوجيهي الأردن جيل 2010"
-      },
-      "inLanguage": ["ar", "en"],
-      "keywords": "لغة عربية, توجيهي, دوسيات عربي, أوراق عمل, محمد الساحوري, أبو العربي, جو اكاديمي"
+      "@graph": [
+        {
+          "@type": "EducationalOrganization",
+          "@id": "https://abu-alarabi.replit.app/#organization",
+          "name": "منصة أبو العربي",
+          "alternateName": ["Abu Al-Arabi", "أبو العربي", "منصة محمد الساحوري"],
+          "description": "منصة تعليمية متخصصة في اللغة العربية لطلاب التوجيهي في الأردن، بإشراف الأستاذ محمد الساحوري.",
+          "url": "https://abu-alarabi.replit.app/",
+          "logo": "https://abu-alarabi.replit.app/favicon.svg",
+          "image": "https://abu-alarabi.replit.app/teacher-sahouri.jpg",
+          "founder": {
+            "@type": "Person",
+            "name": "محمد الساحوري",
+            "alternateName": "Mohammad Alsahori",
+            "jobTitle": "أستاذ اللغة العربية",
+            "sameAs": [
+              "https://www.facebook.com/alsahori.arabic",
+              "https://www.instagram.com/mohammad.alsahori"
+            ]
+          },
+          "teaches": "اللغة العربية",
+          "audience": {
+            "@type": "EducationalAudience",
+            "educationalRole": "student",
+            "audienceType": "طلاب التوجيهي الأردن جيل 2010"
+          },
+          "inLanguage": ["ar"]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://abu-alarabi.replit.app/#website",
+          "name": "أبو العربي",
+          "url": "https://abu-alarabi.replit.app/",
+          "description": "منصة أبو العربي للغة العربية — توجيهي الأردن",
+          "inLanguage": "ar",
+          "publisher": { "@id": "https://abu-alarabi.replit.app/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://abu-alarabi.replit.app/dossiers?search={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
     }
     </script>
 
-    <!-- ═══ Favicon ═══ -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <!-- ═══ Analytics (uncomment and replace IDs when ready) ═══ -->
+    <!--
+    Google Tag Manager — paste between <head> tags:
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-XXXXXXX');</script>
+
+    Google Analytics 4 (standalone, without GTM):
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+
+    Microsoft Clarity:
+    <script type="text/javascript">
+      (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", "XXXXXXXXXX");
+    </script>
+    -->
   </head>
   <body>
+    <!-- Google Tag Manager (noscript) — uncomment when GTM is configured:
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

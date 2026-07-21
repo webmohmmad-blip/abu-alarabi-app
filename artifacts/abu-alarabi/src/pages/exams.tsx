@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { SEO } from "@/components/SEO";
 import { useListExams, useListSubjects } from "@workspace/api-client-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,6 +54,12 @@ export default function Exams() {
 
   return (
     <DashboardLayout>
+      <SEO
+        title="الامتحانات الإلكترونية"
+        description="امتحانات اللغة العربية الوزارية الإلكترونية — محاكاة دقيقة مع تصليح فوري وتحليل شامل للأداء. لطلاب التوجيهي الأردن جيل 2010."
+        canonical="/exams"
+        breadcrumbs={[{ name: "الرئيسية", url: "/" }, { name: "الامتحانات", url: "/exams" }]}
+      />
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>

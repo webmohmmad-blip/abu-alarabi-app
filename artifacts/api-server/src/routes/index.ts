@@ -23,6 +23,7 @@ import scheduleRouter from "./schedule";
 import advertisementsRouter from "./advertisements";
 import homepageSettingsRouter from "./homepage-settings";
 import adminUsersExportRouter from "./admin-users-export";
+import sitemapRouter from "./sitemap";
 
 const router: IRouter = Router();
 
@@ -42,6 +43,7 @@ router.use(notificationsRouter);
 router.use("/comments", commentsRouter);
 router.use(summariesRouter);
 router.use("/admin", adminUsersExportRouter);
+router.use(sitemapRouter);
 router.use("/admin", adminRouter);
 router.use("/admin", adminQuestionsRouter);
 router.use("/admin", adminSummariesRouter);

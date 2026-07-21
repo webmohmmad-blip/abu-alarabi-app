@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -65,6 +66,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+      <SEO title="تسجيل الدخول" description="سجّل دخولك إلى منصة أبو العربي للوصول إلى الدوسيات والامتحانات وأوراق العمل." canonical="/login" noindex />
       <div className="absolute top-0 left-0 w-full h-1/2 bg-primary/5 -skew-y-6 transform origin-top-left -z-10" />
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -z-10" />
 

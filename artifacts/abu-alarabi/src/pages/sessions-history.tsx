@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";
@@ -84,6 +85,7 @@ export default function SessionsHistory() {
 
   return (
     <DashboardLayout>
+      <SEO title="سجل الجلسات" description="سجل جلسات الدراسة في منصة أبو العربي." noindex />
       <div className="space-y-6">
         {/* Header */}
         <div>
