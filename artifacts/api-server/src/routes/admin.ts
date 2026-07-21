@@ -572,18 +572,20 @@ router.get("/worksheets", async (req, res) => {
 });
 
 router.post("/worksheets", async (req, res) => {
-  const { title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl, status } = req.body;
+  const { title, description, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl, coverUrl, status } = req.body;
   const [w] = await db
     .insert(worksheetsTable)
-    .values({ title, subjectId, grade, difficulty, questionCount: Number(questionCount) || 0, estimatedMinutes: Number(estimatedMinutes) || 30, fileUrl, status: status ?? "draft" } as any)
+    .values({ title, description: description ?? null, subjectId, grade, difficulty, questionCount: Number(questionCount) || 0, estimatedMinutes: Number(estimatedMinutes) || 30, fileUrl, coverUrl: coverUrl ?? null, status: status ?? "draft" } as any)
     .returning();
   res.status(201).json(w);
 });
 
 router.patch("/worksheets/:id", async (req, res) => {
   const id = parseInt(req.params.id);
-  const { title, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl, status } = req.body;
+  const { title, description, subjectId, grade, difficulty, questionCount, estimatedMinutes, fileUrl, coverUrl, status } = req.body;
   const patch: Record<string, any> = { title, subjectId, grade, difficulty, fileUrl };
+  if (description !== undefined) patch.description = description;
+  if (coverUrl !== undefined) patch.coverUrl = coverUrl;
   if (questionCount !== undefined) patch.questionCount = Number(questionCount);
   if (estimatedMinutes !== undefined) patch.estimatedMinutes = Number(estimatedMinutes);
   if (status !== undefined) { patch.status = status; if (status === "published") patch.publishedAt = new Date(); }

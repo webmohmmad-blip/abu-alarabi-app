@@ -95,6 +95,7 @@ export type DossierProgress = typeof dossierProgressTable.$inferSelect;
 export const worksheetsTable = pgTable("worksheets", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
+  description: text("description"),
   subjectId: integer("subject_id")
     .notNull()
     .references(() => subjectsTable.id, { onDelete: "cascade" }),
@@ -103,6 +104,7 @@ export const worksheetsTable = pgTable("worksheets", {
   questionCount: integer("question_count").notNull().default(0),
   estimatedMinutes: integer("estimated_minutes").notNull().default(30),
   fileUrl: text("file_url"),
+  coverUrl: text("cover_url"),
   downloads: integer("downloads").notNull().default(0),
   solvers: integer("solvers").notNull().default(0),
   status: contentStatusEnum("status").notNull().default("published"),
@@ -126,6 +128,59 @@ export const insertWorksheetSchema = createInsertSchema(worksheetsTable).omit({
 });
 export type InsertWorksheet = z.infer<typeof insertWorksheetSchema>;
 export type Worksheet = typeof worksheetsTable.$inferSelect;
+
+// ─── WORKSHEET ANNOTATIONS ───────────────────────────────
+// Per-page drawing strokes, separate from dossier annotations
+export const worksheetAnnotationsTable = pgTable("worksheet_annotations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  worksheetId: integer("worksheet_id")
+    .notNull()
+    .references(() => worksheetsTable.id, { onDelete: "cascade" }),
+  pageNumber: integer("page_number").notNull().default(1),
+  strokesJson: text("strokes_json").notNull().default("[]"),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+export type WorksheetAnnotation = typeof worksheetAnnotationsTable.$inferSelect;
+
+// ─── WORKSHEET BOOKMARKS ─────────────────────────────────
+export const worksheetBookmarksTable = pgTable("worksheet_bookmarks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  worksheetId: integer("worksheet_id")
+    .notNull()
+    .references(() => worksheetsTable.id, { onDelete: "cascade" }),
+  pageNumber: integer("page_number").notNull(),
+  title: text("title").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+export type WorksheetBookmark = typeof worksheetBookmarksTable.$inferSelect;
+
+// ─── WORKSHEET READING PROGRESS ──────────────────────────
+export const worksheetProgressTable = pgTable("worksheet_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  worksheetId: integer("worksheet_id")
+    .notNull()
+    .references(() => worksheetsTable.id, { onDelete: "cascade" }),
+  lastPage: integer("last_page").notNull().default(1),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+export type WorksheetProgress = typeof worksheetProgressTable.$inferSelect;
 
 // ─── SUMMARIES ───────────────────────────────────────────────────────────────
 export const summaryTypeEnum = pgEnum("summary_type", ["text", "pdf", "print"]);

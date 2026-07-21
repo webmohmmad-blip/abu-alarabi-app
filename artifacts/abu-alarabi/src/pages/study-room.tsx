@@ -101,10 +101,15 @@ export default function StudyRoom() {
   const [location] = useLocation();
   const params = new URLSearchParams(location.includes("?") ? location.split("?")[1] : "");
   const initialDossierId = params.get("dossierId") ? parseInt(params.get("dossierId")!, 10) : null;
+  const initialWorksheetId = params.get("worksheetId") ? parseInt(params.get("worksheetId")!, 10) : null;
   const qc = useQueryClient();
 
   // ── Workspace state ─────────────────────────────────────────────────────────
-  const [dossierId, setDossierId] = useState<number | null>(initialDossierId);
+  const [dossierId, setDossierId] = useState<number | null>(initialDossierId ?? initialWorksheetId ?? null);
+  // sourceType distinguishes annotations/bookmarks/progress endpoints
+  const [sourceType, setSourceType] = useState<"DOSSIER" | "WORKSHEET">(
+    initialWorksheetId && !initialDossierId ? "WORKSHEET" : "DOSSIER"
+  );
   const [dossierTitle, setDossierTitle] = useState("");
   const [dossierFileUrl, setDossierFileUrl] = useState<string | null>(null);
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
@@ -211,22 +216,47 @@ export default function StudyRoom() {
   // -1 is the sentinel for a locally-opened PDF file (no database persistence)
   const isLocalFile = dossierId === -1;
 
+  // ── Source-type-aware API base URLs ───────────────────────────────────────────
+  const annotationBase = dossierId
+    ? (sourceType === "WORKSHEET"
+        ? `/api/workspace/worksheet-annotations/${dossierId}`
+        : `/api/workspace/annotations/${dossierId}`)
+    : null;
+  const bookmarkBase = dossierId
+    ? (sourceType === "WORKSHEET"
+        ? `/api/workspace/worksheet-bookmarks/${dossierId}`
+        : `/api/workspace/bookmarks/${dossierId}`)
+    : null;
+  const progressBase = dossierId
+    ? (sourceType === "WORKSHEET"
+        ? `/api/workspace/worksheet-progress/${dossierId}`
+        : `/api/workspace/progress/${dossierId}`)
+    : null;
+  const bookmarkQueryKey = [
+    sourceType === "WORKSHEET" ? "/api/workspace/worksheet-bookmarks" : "/api/workspace/bookmarks",
+    dossierId,
+  ] as const;
+
   // ── API queries ───────────────────────────────────────────────────────────────
   const { data: dossiers } = useQuery<{ id: number; title: string; fileUrl?: string; subjectName?: string }[]>({
     queryKey: ["/api/dossiers"],
     queryFn: () => customFetch<{ items: { id: number; title: string; fileUrl?: string; subjectName?: string }[] }>("/api/dossiers").then((r) => r.items ?? []),
   });
+  const { data: worksheets } = useQuery<{ id: number; title: string; fileUrl?: string; subjectName?: string }[]>({
+    queryKey: ["/api/worksheets"],
+    queryFn: () => customFetch<{ items: { id: number; title: string; fileUrl?: string; subjectName?: string }[] }>("/api/worksheets").then((r) => r.items ?? []),
+  });
   const { data: remoteNotes } = useQuery<NoteItem[]>({
     queryKey: ["/api/notes", dossierId],
     queryFn: () => customFetch(`/api/notes?dossierId=${dossierId}`),
-    enabled: (dossierId ?? 0) > 0,
+    enabled: (dossierId ?? 0) > 0 && sourceType === "DOSSIER",
   });
   const notes = isLocalFile ? localNotes : remoteNotes;
 
   const { data: remoteBookmarks } = useQuery<Bookmark[]>({
-    queryKey: ["/api/workspace/bookmarks", dossierId],
-    queryFn: () => customFetch(`/api/workspace/bookmarks/${dossierId}`),
-    enabled: (dossierId ?? 0) > 0,
+    queryKey: [...bookmarkQueryKey],
+    queryFn: () => customFetch(`${bookmarkBase}`),
+    enabled: !!(dossierId && dossierId > 0 && bookmarkBase && !isLocalFile),
   });
   const bookmarks = isLocalFile ? localBookmarks : remoteBookmarks;
 
@@ -239,10 +269,23 @@ export default function StudyRoom() {
   const openDossier = useCallback((d: { id: number; title: string; fileUrl?: string; subjectName?: string }) => {
     pushRecent({ id: d.id, title: d.title, subjectName: d.subjectName, fileUrl: d.fileUrl });
     setDossierId(d.id);
+    setSourceType("DOSSIER");
     setDossierTitle(d.title);
-    // Always use the secure view endpoint — ensures range-request support for PDF.js
-    // and avoids stale/relative fileUrl strings from the dossier list cache.
     setDossierFileUrl(`/api/dossiers/${d.id}/view`);
+    setCurrentPage(1);
+    setStrokes(new Map());
+    setPdfDoc(null);
+    setPdfError(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Open worksheet ──────────────────────────────────────────────────────────────
+  const openWorksheet = useCallback((w: { id: number; title: string; fileUrl?: string; subjectName?: string }) => {
+    pushRecent({ id: w.id, title: w.title, subjectName: w.subjectName, fileUrl: w.fileUrl, sourceType: "WORKSHEET" });
+    setDossierId(w.id);
+    setSourceType("WORKSHEET");
+    setDossierTitle(w.title);
+    setDossierFileUrl(`/api/worksheets/${w.id}/view`);
     setCurrentPage(1);
     setStrokes(new Map());
     setPdfDoc(null);
@@ -257,6 +300,21 @@ export default function StudyRoom() {
       if (d) openDossier(d);
     }
   }, [initialDossierId, dossiers, openDossier]);
+
+  // Auto-open worksheet from URL param
+  useEffect(() => {
+    if (!initialWorksheetId || initialDossierId) return;
+    // Set file URL immediately so PDF starts loading even before worksheet list arrives
+    setDossierId(initialWorksheetId);
+    setSourceType("WORKSHEET");
+    setDossierFileUrl(`/api/worksheets/${initialWorksheetId}/view`);
+    // Update title when worksheet list is available
+    if (worksheets) {
+      const w = worksheets.find((x) => x.id === initialWorksheetId);
+      if (w) setDossierTitle(w.title);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialWorksheetId, worksheets]);
 
   // ── Load PDF ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -288,8 +346,8 @@ export default function StudyRoom() {
   // ── Load annotations from DB on page change ────────────────────────────────────
   useEffect(() => {
     // Skip for local files — annotations are stored in memory only
-    if (!dossierId || !pdfDoc || isLocalFile) return;
-    customFetch<{ strokes: Stroke[] }>(`/api/workspace/annotations/${dossierId}/${currentPage}`)
+    if (!dossierId || !pdfDoc || isLocalFile || !annotationBase) return;
+    customFetch<{ strokes: Stroke[] }>(`${annotationBase}/${currentPage}`)
       .then(({ strokes: saved }) => {
         setStrokes((prev) => {
           const next = new Map(prev);
@@ -335,15 +393,15 @@ export default function StudyRoom() {
 
   // ── Auto-save annotations ──────────────────────────────────────────────────────
   const scheduleSave = useCallback(() => {
-    if (!dossierId || isLocalFile) { setSaveStatus("saved"); return; }
+    if (!dossierId || isLocalFile || !annotationBase) { setSaveStatus("saved"); return; }
     setSaveStatus("unsaved");
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(async () => {
-      if (!dossierId) return;
+      if (!dossierId || !annotationBase) return;
       setSaveStatus("saving");
       const pageStrokes = strokes.get(currentPage) ?? [];
       try {
-        await customFetch(`/api/workspace/annotations/${dossierId}/${currentPage}`, {
+        await customFetch(`${annotationBase}/${currentPage}`, {
           method: "PUT",
           body: JSON.stringify({ strokes: pageStrokes }),
           headers: { "Content-Type": "application/json" },
@@ -351,16 +409,16 @@ export default function StudyRoom() {
         setSaveStatus("saved");
       } catch { setSaveStatus("unsaved"); }
     }, SAVE_DEBOUNCE_MS);
-  }, [dossierId, strokes, currentPage]);
+  }, [dossierId, strokes, currentPage, annotationBase]);
 
   // ── Save progress when page changes ───────────────────────────────────────────
   useEffect(() => {
-    if (!dossierId || currentPage < 1 || isLocalFile) return;
-    customFetch(`/api/workspace/progress/${dossierId}`, {
+    if (!dossierId || currentPage < 1 || isLocalFile || !progressBase) return;
+    customFetch(`${progressBase}`, {
       method: "PUT", body: JSON.stringify({ lastPage: currentPage }),
       headers: { "Content-Type": "application/json" },
     }).catch(() => {});
-  }, [dossierId, currentPage]);
+  }, [dossierId, currentPage, progressBase]);
 
   // ── Canvas drawing helpers ─────────────────────────────────────────────────────
   const getCanvasPoint = (e: React.PointerEvent<HTMLCanvasElement>): Point => {
@@ -472,7 +530,6 @@ export default function StudyRoom() {
   const addBookmark = async () => {
     if (!dossierId) return;
     if (isLocalFile) {
-      // Local-only: store in component state
       const already = localBookmarks.some((b) => b.pageNumber === currentPage);
       if (!already) {
         setLocalBookmarks((prev) => [
@@ -482,12 +539,13 @@ export default function StudyRoom() {
       }
       return;
     }
-    await customFetch(`/api/workspace/bookmarks/${dossierId}`, {
+    if (!bookmarkBase) return;
+    await customFetch(`${bookmarkBase}`, {
       method: "POST",
       body: JSON.stringify({ pageNumber: currentPage, title: `صفحة ${currentPage}` }),
       headers: { "Content-Type": "application/json" },
     });
-    qc.invalidateQueries({ queryKey: ["/api/workspace/bookmarks", dossierId] });
+    qc.invalidateQueries({ queryKey: [...bookmarkQueryKey] });
   };
 
   const deleteBookmark = async (id: number) => {
@@ -495,8 +553,11 @@ export default function StudyRoom() {
       setLocalBookmarks((prev) => prev.filter((b) => b.id !== id));
       return;
     }
-    await customFetch(`/api/workspace/bookmarks/${id}`, { method: "DELETE" });
-    qc.invalidateQueries({ queryKey: ["/api/workspace/bookmarks", dossierId] });
+    const deleteBase = sourceType === "WORKSHEET"
+      ? `/api/workspace/worksheet-bookmarks/${id}`
+      : `/api/workspace/bookmarks/${id}`;
+    await customFetch(deleteBase, { method: "DELETE" });
+    qc.invalidateQueries({ queryKey: [...bookmarkQueryKey] });
   };
 
   // ── Add note ───────────────────────────────────────────────────────────────────
@@ -558,7 +619,7 @@ export default function StudyRoom() {
 
   // ── Recent sessions (localStorage) ───────────────────────────────────────────
   const RECENT_KEY = "study-room-recent";
-  interface RecentEntry { id: number; title: string; subjectName?: string; fileUrl?: string; isLocal?: boolean; openedAt: string; }
+  interface RecentEntry { id: number; title: string; subjectName?: string; fileUrl?: string; isLocal?: boolean; sourceType?: "DOSSIER" | "WORKSHEET"; openedAt: string; }
 
   const [recentSessions, setRecentSessions] = useState<RecentEntry[]>(() => {
     try { return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]"); } catch { return []; }
@@ -597,7 +658,7 @@ export default function StudyRoom() {
           {/* Page header */}
           <div>
             <h1 className="text-2xl font-black">غرفة الدراسة</h1>
-            <p className="text-muted-foreground text-sm mt-1">اختر دوسية أو افتح ملف PDF من جهازك</p>
+            <p className="text-muted-foreground text-sm mt-1">اختر دوسية أو ورقة عمل أو افتح ملف PDF من جهازك</p>
           </div>
 
           {/* Open local PDF card */}
@@ -614,7 +675,7 @@ export default function StudyRoom() {
 
           {/* Dossiers from platform */}
           <div>
-            <h2 className="font-bold text-base mb-3">دوسيات المنصة</h2>
+            <h2 className="font-bold text-base mb-3">الدوسيات</h2>
 
             {dossiers?.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border p-10 text-center">
@@ -643,6 +704,31 @@ export default function StudyRoom() {
               </div>
             )}
           </div>
+
+          {/* Worksheets from platform */}
+          {(worksheets?.length ?? 0) > 0 && (
+            <div>
+              <h2 className="font-bold text-base mb-3">أوراق العمل</h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {worksheets?.map((w) => (
+                  <button
+                    key={w.id}
+                    onClick={() => openWorksheet(w)}
+                    className="text-right px-4 py-4 rounded-2xl border border-border/60 hover:border-secondary/40 hover:bg-secondary/5 transition-all flex items-center gap-3 group bg-white shadow-sm"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                      <FileText className="w-5 h-5 text-secondary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm truncate">{w.title}</div>
+                      {w.subjectName && <div className="text-xs text-muted-foreground mt-0.5">{w.subjectName}</div>}
+                    </div>
+                    <ChevronLeft className="w-4 h-4 text-muted-foreground/40 group-hover:text-secondary transition-colors shrink-0" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Recent sessions */}
           {recentSessions.length > 0 && (
@@ -686,7 +772,11 @@ export default function StudyRoom() {
                           setPdfDoc(null);
                           setPdfError(null);
                         } else if (!r.isLocal) {
-                          openDossier({ id: r.id, title: r.title, subjectName: r.subjectName, fileUrl: r.fileUrl });
+                          if (r.sourceType === "WORKSHEET") {
+                            openWorksheet({ id: r.id, title: r.title, subjectName: r.subjectName, fileUrl: r.fileUrl });
+                          } else {
+                            openDossier({ id: r.id, title: r.title, subjectName: r.subjectName, fileUrl: r.fileUrl });
+                          }
                         }
                       }}
                       className="w-full text-right px-4 py-3 rounded-2xl border border-border/40 hover:border-primary/30 hover:bg-primary/4 transition-all flex items-center gap-3 group bg-white/60"
@@ -1012,7 +1102,11 @@ export default function StudyRoom() {
               </div>
               <div>
                 <h2 className="font-bold text-gray-700 mb-1">لا يوجد ملف PDF</h2>
-                <p className="text-sm text-gray-400">هذه الدوسية لا تحتوي على ملف PDF. يمكن للمشرف رفع الملف من لوحة التحكم.</p>
+                <p className="text-sm text-gray-400">
+                  {sourceType === "WORKSHEET"
+                    ? "ورقة العمل لا تحتوي على ملف PDF. يمكن للمشرف رفع الملف من لوحة التحكم."
+                    : "هذه الدوسية لا تحتوي على ملف PDF. يمكن للمشرف رفع الملف من لوحة التحكم."}
+                </p>
               </div>
             </div>
           )}

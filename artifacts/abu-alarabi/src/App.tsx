@@ -12,6 +12,7 @@ import Dashboard from '@/pages/dashboard';
 import Dossiers from '@/pages/dossiers';
 import DossierDetail from '@/pages/dossier-detail';
 import Worksheets from '@/pages/worksheets';
+import WorksheetDetail from '@/pages/worksheet-detail';
 import Exams from '@/pages/exams';
 import ExamInstructions from '@/pages/exam-instructions';
 import ExamTake from '@/pages/exam-take';
@@ -66,6 +67,7 @@ function Router() {
       <Route path="/dossiers" component={Dossiers} />
       <Route path="/dossiers/:id" component={DossierDetail} />
       <Route path="/worksheets" component={Worksheets} />
+      <Route path="/worksheets/:id" component={WorksheetDetail} />
       <Route path="/exams" component={Exams} />
       <Route path="/exams/:id" component={ExamInstructions} />
       <Route path="/exams/:id/take" component={ExamTake} />

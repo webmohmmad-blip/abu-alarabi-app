@@ -1,0 +1,1993 @@
+# FINAL FULL-SITE QA, AUDIT, AND REMEDIATION
+
+# Abu Al-Arabi Platform
+
+# Production Domain: https://malsahori.com
+
+You are acting as:
+
+- Principal QA Engineer
+
+- Senior Full-Stack Engineer
+
+- API Test Engineer
+
+- Security Auditor
+
+- Database Auditor
+
+- UI/UX Reviewer
+
+- Accessibility Specialist
+
+- Performance Engineer
+
+- Production Release Manager
+
+Your task is to perform a complete production-grade QA audit of the entire Abu Al-Arabi platform.
+
+Do not only inspect the obvious pages.
+
+Do not only write a report.
+
+You must:
+
+1. Discover the complete application.
+
+2. Build a full inventory of all pages, routes, APIs, database models, roles, permissions, and workflows.
+
+3. Test every reachable feature.
+
+4. Identify missing, broken, partial, duplicated, stale, insecure, or inconsistent behavior.
+
+5. Fix all confirmed issues directly in the codebase.
+
+6. Rebuild and retest the application.
+
+7. Produce a final production-readiness report.
+
+Do not claim that something works unless it has been tested.
+
+==================================================
+
+SECTION 1: FINAL PRODUCT RULES
+
+==================================================
+
+Treat the following decisions as final:
+
+1. The platform is an Arabic educational platform called:
+
+أبو العربي
+
+2. All user-facing interfaces must be Arabic and RTL.
+
+3. Official platform content is for Arabic language only.
+
+4. There is no payment system.
+
+The project must not contain active:
+
+- checkout
+
+- subscriptions
+
+- invoices
+
+- payment gateways
+
+- Stripe
+
+- PayPal
+
+- Moyasar
+
+- HyperPay
+
+- shopping cart
+
+- purchase flows
+
+5. There is no private messaging system.
+
+Allowed communication is limited to academic comments and replies where implemented.
+
+6. There is no video system.
+
+Remove or mark out of scope:
+
+- video pages
+
+- video upload
+
+- video player
+
+- streaming
+
+- video analytics
+
+- watch history
+
+- video database tables
+
+- YouTube/Vimeo integrations
+
+7. There is no onboarding flow.
+
+After authentication:
+
+- Student → /dashboard
+
+- Admin → /admin
+
+8. Authentication is phone-based and passwordless.
+
+Registration requires:
+
+- full name
+
+- phone number
+
+Login requires:
+
+- phone number
+
+9. Jordanian phone numbers must:
+
+- contain exactly 10 digits
+
+- contain digits only
+
+- start with 077, 078, or 079
+
+Validation rule:
+
+/^(077|078|079)\d{7}$/
+
+10. Student primary navigation contains only:
+
+- لوحتي
+
+- الدوسيات
+
+- أوراق العمل
+
+- الامتحانات الإلكترونية
+
+- الكويز الأسبوعي
+
+- غرفتي الدراسية
+
+Settings and logout may exist inside the account menu.
+
+11. Student navigation is horizontal above the hero/banner, not a desktop student sidebar.
+
+12. The platform has two shared internal systems:
+
+Educational Files:
+
+- DOSSIER
+
+- WORKSHEET
+
+Electronic Assessments:
+
+- EXAM
+
+- WEEKLY_QUIZ
+
+Keep four separate user-facing sections.
+
+13. Dossiers and worksheets are PDF-based files.
+
+Both support:
+
+- PDF download
+
+- opening inside Study Room
+
+- personal annotations
+
+- persistent last page
+
+14. Exams and weekly quizzes are electronic assessments.
+
+Both support:
+
+- questions
+
+- attempts
+
+- answers
+
+- scores
+
+- results
+
+==================================================
+
+SECTION 2: DISCOVERY BEFORE TESTING
+
+==================================================
+
+Before modifying code, inspect the entire project.
+
+Create inventories for:
+
+- frontend routes
+
+- backend routes
+
+- public pages
+
+- student pages
+
+- admin pages
+
+- layouts
+
+- components
+
+- hooks
+
+- API clients
+
+- middleware
+
+- authentication guards
+
+- database tables
+
+- schemas
+
+- migrations
+
+- storage integrations
+
+- background jobs
+
+- environment variables
+
+- tests
+
+- build scripts
+
+- deployment files
+
+Produce a route map showing:
+
+- HTTP method
+
+- path
+
+- access level
+
+- responsible file
+
+- expected behavior
+
+- current behavior
+
+Do not assume the route list from documentation is accurate.
+
+Derive it from the actual code.
+
+==================================================
+
+SECTION 3: TEST ENVIRONMENTS
+
+==================================================
+
+Test both:
+
+1. Local production-style environment
+
+2. Published production environment:
+https://malsahori.com
+
+Use production-like configuration for:
+
+- secure cookies
+
+- reverse proxy
+
+- persistent sessions
+
+- database
+
+- file storage
+
+- static assets
+
+- CORS
+
+- HTTPS
+
+Do not expose secrets while testing.
+
+==================================================
+
+SECTION 4: HEALTH AND DEPLOYMENT
+
+==================================================
+
+Verify:
+
+GET /api
+
+GET /api/health
+
+must return HTTP 200.
+
+Expected response:
+
+{
+
+  "ok": true,
+
+  "service": "abu-alarabi-api",
+
+  "status": "healthy"
+
+}
+
+Verify:
+
+- server starts successfully
+
+- no crash loop
+
+- no repeated health-check 500
+
+- graceful SIGTERM shutdown
+
+- correct port binding
+
+- static frontend is served
+
+- direct-route refresh does not produce 404
+
+- frontend fallback routing works
+
+- SSL/HTTPS works
+
+- no mixed-content requests
+
+- no production request points to localhost or preview domains
+
+Create a separate readiness check if needed:
+
+GET /api/readiness
+
+This may validate database availability and return 503 when dependencies are unavailable.
+
+==================================================
+
+SECTION 5: AUTHENTICATION QA
+
+==================================================
+
+Test registration, login, session persistence, logout, and route protection.
+
+Registration flow:
+
+1. Enter full name.
+
+2. Enter valid phone.
+
+3. Create user.
+
+4. Save session.
+
+5. Redirect once to /dashboard.
+
+6. Refresh dashboard.
+
+7. User remains authenticated.
+
+Login flow:
+
+1. Enter existing phone.
+
+2. Authenticate without password.
+
+3. Save session before responding.
+
+4. Redirect once.
+
+5. No redirect loop.
+
+Test valid numbers:
+
+- 0771234567
+
+- 0781234567
+
+- 0791234567
+
+Test invalid numbers:
+
+- fewer than 10 digits
+
+- more than 10 digits
+
+- 076 prefix
+
+- letters
+
+- spaces
+
+- punctuation
+
+- +962 format
+
+Expected invalid response:
+
+HTTP 400
+
+{
+
+  "ok": false,
+
+  "message": "رقم الهاتف غير صالح"
+
+}
+
+Verify:
+
+- frontend prevents invalid submissions
+
+- backend repeats validation
+
+- phone is normalized consistently
+
+- unique phone constraint exists
+
+- duplicate registration behavior matches product decision
+
+- password fields and password APIs are gone
+
+- forgot/reset/change password are gone
+
+- onboarding redirects are gone
+
+- no auth retry loops
+
+- /api/auth/me returns 200 when logged in
+
+- /api/auth/me returns 401 when logged out
+
+- 401 is not treated as a fatal application error
+
+- cookie survives refresh
+
+- logout destroys session
+
+- cookie is cleared using matching options
+
+- production does not use MemoryStore
+
+- trust proxy is configured correctly
+
+- credentials are included in frontend requests
+
+==================================================
+
+SECTION 6: ROLE AND PERMISSION QA
+
+==================================================
+
+Test at least these roles:
+
+- Guest
+
+- Student
+
+- Admin
+
+- Super Admin
+
+Guest:
+
+- can access public pages
+
+- cannot access student protected pages
+
+- cannot access admin pages
+
+- receives safe 401/redirect behavior
+
+Student:
+
+- can access student pages
+
+- cannot access admin routes
+
+- cannot call admin APIs
+
+Admin:
+
+- can manage permitted content
+
+- cannot perform super-admin-only actions unless authorized
+
+Super Admin:
+
+- can access all administrative functions
+
+Verify every backend write endpoint independently.
+
+Frontend route hiding is not sufficient security.
+
+Expected behavior:
+
+- unauthenticated → 401
+
+- authenticated but unauthorized → 403
+
+- missing resource → 404
+
+- validation failure → 400
+
+- conflict → 409
+
+- server error → 500 without leaking stack traces
+
+==================================================
+
+SECTION 7: GLOBAL ROUTE QA
+
+==================================================
+
+Test every frontend route.
+
+For each route:
+
+- open through navigation
+
+- open directly by URL
+
+- refresh the page
+
+- use browser back
+
+- use browser forward
+
+- test authenticated and unauthenticated access
+
+- test invalid IDs
+
+- test loading state
+
+- test empty state
+
+- test error state
+
+Detect:
+
+- broken links
+
+- dead routes
+
+- redirect loops
+
+- route mismatches
+
+- inconsistent singular/plural paths
+
+- routes pointing to removed pages
+
+- old onboarding routes
+
+- old video routes
+
+- duplicated route definitions
+
+- pages unreachable from navigation
+
+- navigation items without pages
+
+- pages without access protection
+
+==================================================
+
+SECTION 8: GLOBAL API QA
+
+==================================================
+
+Build an API test inventory for every endpoint.
+
+For each endpoint test:
+
+- correct method
+
+- success response
+
+- authentication
+
+- authorization
+
+- validation
+
+- malformed payload
+
+- missing field
+
+- invalid ID
+
+- non-existing resource
+
+- duplicate data
+
+- database failure behavior
+
+- response schema
+
+- content type
+
+- status code
+
+- pagination
+
+- sorting
+
+- filtering
+
+- rate limits where necessary
+
+Detect:
+
+- endpoints returning HTML instead of JSON
+
+- endpoints returning 200 on errors
+
+- generic 500 for user errors
+
+- private fields exposed
+
+- internal storage paths exposed
+
+- secrets exposed
+
+- inconsistent property names
+
+- N+1 database behavior
+
+- unbounded list endpoints
+
+- stale API routes
+
+- unused endpoints
+
+- APIs for removed video/payment/onboarding systems
+
+==================================================
+
+SECTION 9: DATABASE QA
+
+==================================================
+
+Audit:
+
+- tables
+
+- columns
+
+- enums
+
+- indexes
+
+- unique constraints
+
+- foreign keys
+
+- cascade behavior
+
+- nullability
+
+- timestamps
+
+- soft-delete fields
+
+- migration status
+
+- production schema consistency
+
+Verify:
+
+- unique normalized phone
+
+- valid phone constraints
+
+- session store table exists
+
+- no orphan assessment questions
+
+- no orphan assessment answers
+
+- no orphan file records
+
+- deletion rules preserve student results
+
+- published assessments have valid questions
+
+- educational file type is DOSSIER or WORKSHEET
+
+- assessment type is EXAM or WEEKLY_QUIZ
+
+- no inconsistent variants such as QUIZ or weeklyQuiz
+
+- migrations run safely without deleting production data
+
+Run integrity checks for orphan records.
+
+==================================================
+
+SECTION 10: FILE STORAGE AND PDF PIPELINE QA
+
+==================================================
+
+Test the complete file pipeline for both dossiers and worksheets:
+
+Admin upload
+
+→ persistent storage
+
+→ database reference
+
+→ API response
+
+→ student page
+
+→ cover image
+
+→ PDF download
+
+→ Study Room view
+
+Reject production use of:
+
+- blob:
+
+- file:
+
+- localhost
+
+- preview-domain links
+
+- temporary filesystem paths
+
+- expired signed URLs stored permanently
+
+Verify:
+
+- JPG/JPEG/PNG/WebP cover upload
+
+- PDF upload
+
+- file-type validation
+
+- size validation
+
+- upload progress
+
+- replace file
+
+- remove file
+
+- persistent storage
+
+- stable storage key
+
+- correct MIME type
+
+- correct public/view URL
+
+- cleanup of replaced files
+
+- no orphan storage objects
+
+Cover image request must return 200.
+
+PDF download must:
+
+- return 200 or a valid redirect
+
+- use application/pdf
+
+- use Content-Disposition: attachment
+
+- download with a safe file name
+
+PDF Study Room view must:
+
+- return 200 or 206
+
+- support inline viewing
+
+- support range requests when required
+
+- use valid CORS rules
+
+- not expose private storage secrets
+
+==================================================
+
+SECTION 11: DOSSIERS QA
+
+==================================================
+
+Admin tests:
+
+- create dossier
+
+- add title
+
+- add description
+
+- upload cover
+
+- upload PDF
+
+- select target audience
+
+- save as draft
+
+- publish
+
+- unpublish
+
+- archive
+
+- duplicate
+
+- edit
+
+- replace PDF
+
+- replace cover
+
+- delete a safe draft
+
+- verify deletion behavior
+
+Student tests:
+
+- list published dossiers
+
+- filter/search
+
+- open dossier details
+
+- cover displays
+
+- description displays
+
+- PDF metadata is correct
+
+- download PDF
+
+- open in Study Room
+
+- refresh details page
+
+- unpublished dossier is hidden
+
+- archived dossier is hidden
+
+- invalid dossier ID gives safe error
+
+- unauthorized dossier access is blocked
+
+Verify the dossiers admin page contains dossier management only.
+
+It must not include:
+
+- unit tabs
+
+- worksheet tabs
+
+- exam tabs
+
+==================================================
+
+SECTION 12: WORKSHEETS QA
+
+==================================================
+
+Worksheets must follow the same file-based architecture as dossiers.
+
+Admin tests:
+
+- create worksheet
+
+- upload PDF
+
+- optional cover
+
+- description
+
+- target group
+
+- estimated time
+
+- draft/publish/archive
+
+- edit
+
+- duplicate
+
+- delete
+
+- file replacement
+
+Student tests:
+
+- published worksheet appears
+
+- worksheet card is correct
+
+- no electronic-attempt behavior
+
+- no score
+
+- no question attempt
+
+- no "ابدأ الحل" electronic flow
+
+- actions are:
+
+تحميل PDF
+
+حلّ في غرفتي الدراسية
+
+Verify both actions work.
+
+Verify opening in Study Room automatically loads the selected worksheet.
+
+==================================================
+
+SECTION 13: ELECTRONIC EXAMS QA
+
+==================================================
+
+Admin tests:
+
+- create exam
+
+- configure duration
+
+- configure total marks
+
+- add questions
+
+- edit question
+
+- duplicate question
+
+- reorder questions
+
+- delete question
+
+- publish
+
+- schedule
+
+- unpublish
+
+- archive
+
+- duplicate exam
+
+- delete draft exam
+
+- soft-delete/archive exam with attempts
+
+Test question types currently supported by the product.
+
+Student tests:
+
+- published exam appears
+
+- open instructions
+
+- click "ابدأ الامتحان الآن"
+
+- create/resume attempt
+
+- navigate to attempt route
+
+- questions load
+
+- timer works
+
+- answers save
+
+- refresh preserves attempt
+
+- submit
+
+- score/result appears
+
+- access limits work
+
+- expired exam is blocked
+
+- draft exam is hidden
+
+- duplicate click does not create duplicate attempts
+
+Verify route chain:
+
+/exams
+
+/exams/:examId/instructions
+
+/exams/:examId/attempt/:attemptId
+
+/exams/:examId/result/:attemptId
+
+==================================================
+
+SECTION 14: WEEKLY QUIZ QA
+
+==================================================
+
+Admin tests:
+
+- create weekly quiz
+
+- assessmentType must be WEEKLY_QUIZ
+
+- add questions
+
+- set duration
+
+- set marks
+
+- publish
+
+- schedule
+
+- set close date
+
+- edit
+
+- duplicate
+
+- archive
+
+- delete safely
+
+Student tests:
+
+- published quiz appears immediately
+
+- empty state disappears
+
+- correct quiz is returned by API
+
+- open instructions
+
+- start quiz
+
+- attempt is created
+
+- questions load
+
+- submit
+
+- result appears
+
+Verify filters:
+
+- type = WEEKLY_QUIZ
+
+- status = PUBLISHED
+
+- publishAt <= now or null
+
+- closeAt > now or null
+
+- not archived
+
+- not deleted
+
+- student matches target audience
+
+Verify no dependency remains on deleted onboarding fields.
+
+Verify route chain:
+
+/weekly-quiz
+
+/weekly-quiz/:quizId/instructions
+
+/weekly-quiz/:quizId/attempt/:attemptId
+
+/weekly-quiz/:quizId/result/:attemptId
+
+==================================================
+
+SECTION 15: STUDY ROOM QA
+
+==================================================
+
+Test Study Room as a shared PDF workspace for:
+
+- dossiers
+
+- worksheets
+
+Entry points:
+
+- dossier → ادرس الآن في غرفة الدراسة
+
+- worksheet → حلّ في غرفتي الدراسية
+
+Verify:
+
+- correct file opens automatically
+
+- correct title appears
+
+- PDF renders
+
+- page navigation
+
+- zoom
+
+- fit width
+
+- fit page
+
+- fullscreen
+
+- search if implemented
+
+- bookmarks if implemented
+
+- last page restoration
+
+- pen
+
+- highlighter
+
+- eraser
+
+- undo
+
+- redo
+
+- text annotation
+
+- auto-save
+
+- annotation restore
+
+- user isolation
+
+- sourceType separation
+
+- no annotations leak between dossier and worksheet
+
+- no annotations leak between users
+
+- large PDF performance
+
+- refresh does not lose work
+
+- iPad compatibility
+
+- Apple Pencil behavior where browser capabilities allow
+
+Verify error messages:
+
+"ملف الدوسية غير متوفر"
+
+"تعذر فتح الدوسية في غرفة الدراسة"
+
+"تعذر فتح ورقة العمل في غرفة الدراسة"
+
+==================================================
+
+SECTION 16: PERSONAL STUDY SCHEDULE QA
+
+==================================================
+
+The student can create personal schedule subjects.
+
+These subjects:
+
+- belong only to that student
+
+- appear only in the Study Schedule
+
+- never appear in official platform content
+
+- never appear in dossiers
+
+- never appear in worksheets
+
+- never appear in exams
+
+- never appear in weekly quizzes
+
+- never appear in public search
+
+Test:
+
+- create subject
+
+- choose color
+
+- choose multiple days
+
+- same subject on multiple days
+
+- same subject at different times
+
+- edit one scheduled day
+
+- delete one scheduled day
+
+- delete all schedule entries
+
+- delete personal subject
+
+- conflict detection
+
+- weekly rendering
+
+- persistence after refresh
+
+Validate one-to-many relationship:
+
+personal subject
+
+→ many schedule entries
+
+==================================================
+
+SECTION 17: NAVIGATION AND LAYOUT QA
+
+==================================================
+
+Student navigation must be horizontal.
+
+Verify it appears above the main hero/banner.
+
+It contains only:
+
+- لوحتي
+
+- الدوسيات
+
+- أوراق العمل
+
+- الامتحانات الإلكترونية
+
+- الكويز الأسبوعي
+
+- غرفتي الدراسية
+
+Verify:
+
+- no student desktop sidebar
+
+- active state
+
+- RTL
+
+- desktop layout
+
+- tablet layout
+
+- mobile behavior
+
+- horizontal overflow handling
+
+- no duplicate navigation
+
+- settings/logout in account menu
+
+- direct links work
+
+- removed pages do not remain in navigation
+
+Admin navigation may retain its sidebar.
+
+==================================================
+
+SECTION 18: ADMIN CRUD QA
+
+==================================================
+
+For every manageable resource, test:
+
+- Create
+
+- Read
+
+- Update
+
+- Delete or archive
+
+- Publish
+
+- Unpublish
+
+- Duplicate
+
+- Search
+
+- Filter
+
+- Sort
+
+- Pagination
+
+- Empty state
+
+- Error state
+
+- Permission handling
+
+Resources include at minimum:
+
+- users
+
+- dossiers
+
+- worksheets
+
+- exams
+
+- weekly quizzes
+
+- announcements
+
+- settings
+
+- reports
+
+- audit logs
+
+- roles and permissions if present
+
+Confirm delete buttons actually work.
+
+Do not leave visible but nonfunctional buttons.
+
+==================================================
+
+SECTION 19: SECURITY QA
+
+==================================================
+
+Test:
+
+- authentication bypass
+
+- admin route access as student
+
+- IDOR
+
+- unauthorized file access
+
+- insecure direct storage URLs
+
+- SQL injection resistance
+
+- XSS in names/descriptions/comments
+
+- CSRF protections appropriate to the session model
+
+- session fixation
+
+- secure cookies
+
+- httpOnly cookies
+
+- SameSite behavior
+
+- brute-force/rate-limit considerations
+
+- sensitive endpoint discovery
+
+- secret leakage
+
+- stack-trace leakage
+
+- unsafe CORS
+
+- unsafe redirects
+
+- file-upload abuse
+
+- path traversal
+
+- MIME spoofing
+
+- oversized payloads
+
+Sensitive paths such as:
+
+/api/.env
+
+/api/env
+
+/.git
+
+/.env
+
+must return 404 without revealing information.
+
+Do not perform destructive or unsafe penetration tests against production data.
+
+Use safe validation techniques and test accounts.
+
+==================================================
+
+SECTION 20: UI/UX QA
+
+==================================================
+
+Review every page for:
+
+- Arabic RTL alignment
+
+- readability
+
+- spacing
+
+- typography
+
+- visual hierarchy
+
+- clear primary action
+
+- loading feedback
+
+- error feedback
+
+- confirmation dialogs
+
+- disabled states
+
+- touch target sizes
+
+- empty states
+
+- long Arabic text
+
+- overflow
+
+- modal placement
+
+- form validation
+
+- consistent terminology
+
+Detect inconsistent labels such as:
+
+- امتحان vs الامتحانات الإلكترونية
+
+- كويز vs الكويز الأسبوعي
+
+- غرفة الدراسة vs غرفتي الدراسية
+
+- ورقة عمل vs أوراق العمل الإلكترونية
+
+Use one approved Arabic terminology system.
+
+==================================================
+
+SECTION 21: RESPONSIVE QA
+
+==================================================
+
+Test at minimum:
+
+- 320px mobile
+
+- 375px mobile
+
+- 430px mobile
+
+- iPad portrait
+
+- iPad landscape
+
+- 1024px
+
+- 1280px
+
+- 1440px
+
+- 1920px
+
+Test:
+
+- no horizontal page overflow
+
+- buttons remain visible
+
+- modals fit screen
+
+- tables remain usable
+
+- navigation works
+
+- PDF workspace remains usable
+
+- admin pages remain accessible
+
+- forms do not clip
+
+- Arabic labels do not overlap
+
+==================================================
+
+SECTION 22: ACCESSIBILITY QA
+
+==================================================
+
+Verify:
+
+- semantic headings
+
+- form labels
+
+- keyboard navigation
+
+- visible focus
+
+- dialog focus trapping
+
+- button names
+
+- icon tooltips
+
+- image alt text
+
+- sufficient contrast
+
+- status not conveyed by color alone
+
+- reduced-motion support
+
+- screen-reader-friendly error messages
+
+- RTL direction declarations
+
+Target WCAG 2.1 AA where practical.
+
+==================================================
+
+SECTION 23: PERFORMANCE QA
+
+==================================================
+
+Measure:
+
+- first page load
+
+- dashboard load
+
+- dossiers list
+
+- worksheets list
+
+- exams list
+
+- weekly quiz page
+
+- Study Room PDF load
+
+- admin lists
+
+Identify:
+
+- large bundles
+
+- duplicate libraries
+
+- unnecessary API calls
+
+- repeated queries
+
+- unbounded database queries
+
+- missing pagination
+
+- N+1 queries
+
+- oversized images
+
+- missing lazy loading
+
+- excessive rerenders
+
+- stale cache
+
+- retry storms on 401
+
+Use:
+
+- code splitting
+
+- lazy loading
+
+- image optimization
+
+- pagination
+
+- query optimization
+
+- sensible caching
+
+- PDF virtualization where needed
+
+==================================================
+
+SECTION 24: BROWSER QA
+
+==================================================
+
+Test:
+
+- Chrome desktop
+
+- Edge desktop
+
+- Firefox desktop
+
+- Safari if available
+
+- Chrome Android
+
+- Safari iPhone/iPad
+
+Special attention:
+
+- secure cookies
+
+- downloads
+
+- PDF viewing
+
+- file input
+
+- Apple Pencil
+
+- navigation overflow
+
+- session persistence
+
+==================================================
+
+SECTION 25: LOGGING AND OBSERVABILITY
+
+==================================================
+
+Verify:
+
+- safe structured logs
+
+- request IDs
+
+- error IDs
+
+- no secrets in logs
+
+- no complete cookies
+
+- no database URLs
+
+- no private answer data
+
+- useful audit logs for admin actions
+
+- production errors can be traced
+
+- health and readiness are observable
+
+Temporarily add targeted diagnostics when needed.
+
+Remove excessive debugging after fixing issues.
+
+==================================================
+
+SECTION 26: AUTOMATED TEST SUITE
+
+==================================================
+
+Create or improve:
+
+- unit tests
+
+- API integration tests
+
+- database tests
+
+- component tests
+
+- end-to-end tests
+
+- production smoke tests
+
+Use the test framework already present in the project.
+
+Automate at minimum:
+
+- health check
+
+- registration
+
+- login
+
+- session persistence
+
+- logout
+
+- phone validation
+
+- student/admin authorization
+
+- dossier CRUD and file access
+
+- worksheet CRUD and file access
+
+- exam creation/start/submit
+
+- weekly quiz creation/visibility/start/submit
+
+- schedule subject multi-day behavior
+
+- Study Room source loading
+
+- critical route refreshes
+
+Do not rely only on screenshots.
+
+==================================================
+
+SECTION 27: REMEDIATION RULES
+
+==================================================
+
+For each discovered issue:
+
+1. Record it.
+
+2. Assign severity:
+
+   - BLOCKER
+
+   - CRITICAL
+
+   - HIGH
+
+   - MEDIUM
+
+   - LOW
+
+3. Identify root cause.
+
+4. Fix the root cause, not only the symptom.
+
+5. Add or update a regression test.
+
+6. Retest the full affected workflow.
+
+7. Check for similar issues elsewhere.
+
+Do not silently ignore failing tests.
+
+Do not reduce test coverage to make the build pass.
+
+Do not use fake data to hide backend failures.
+
+==================================================
+
+SECTION 28: RELEASE GATES
+
+==================================================
+
+The platform is not approved for production until:
+
+- build succeeds
+
+- typecheck succeeds
+
+- migrations succeed
+
+- health check returns 200
+
+- no redirect loops
+
+- no valid-user 500 errors
+
+- critical APIs pass
+
+- critical E2E flows pass
+
+- student cannot access admin
+
+- dossier PDF download works
+
+- dossier Study Room opening works
+
+- worksheet PDF download works
+
+- worksheet Study Room opening works
+
+- exam start works
+
+- weekly quiz appears and starts
+
+- delete actions work safely
+
+- phone authentication works
+
+- no active video/payment/onboarding systems remain
+
+- no blocker or critical issue remains open
+
+==================================================
+
+SECTION 29: REQUIRED OUTPUT FILES
+
+==================================================
+
+Create these reports:
+
+1. FULL_ROUTE_INVENTORY.md
+
+2. FULL_API_INVENTORY.md
+
+3. DATABASE_INTEGRITY_AUDIT.md
+
+4. SECURITY_QA_REPORT.md
+
+5. RESPONSIVE_ACCESSIBILITY_REPORT.md
+
+6. PERFORMANCE_QA_REPORT.md
+
+7. END_TO_END_TEST_RESULTS.md
+
+8. FINAL_BUG_TRACKER.md
+
+9. FINAL_PRODUCTION_QA_REPORT.md
+
+10. PRODUCTION_LAUNCH_CHECKLIST.md
+
+==================================================
+
+SECTION 30: FINAL PRODUCTION QA REPORT
+
+==================================================
+
+The final report must include:
+
+- total pages discovered
+
+- total frontend routes tested
+
+- total APIs discovered
+
+- total APIs tested
+
+- total database tables audited
+
+- total test cases executed
+
+- passed tests
+
+- failed tests
+
+- fixed issues
+
+- remaining issues
+
+- blocker count
+
+- critical count
+
+- high count
+
+- medium count
+
+- low count
+
+- files changed
+
+- migrations added
+
+- routes fixed
+
+- APIs fixed
+
+- UI issues fixed
+
+- security issues fixed
+
+- performance improvements
+
+- final readiness percentage
+
+Use a final verdict:
+
+- NOT READY
+
+- READY WITH BLOCKERS
+
+- READY WITH MINOR ISSUES
+
+- PRODUCTION READY
+
+Do not report 100% readiness unless:
+
+- all critical workflows were tested
+
+- no blocker or critical issues remain
+
+- production smoke tests pass
+
+- the published domain was verified
+
+==================================================
+
+FINAL EXECUTION ORDER
+
+==================================================
+
+Execute in this order:
+
+1. Discover architecture.
+
+2. Create route/API/database inventory.
+
+3. Run typecheck and build.
+
+4. Run existing tests.
+
+5. Test authentication.
+
+6. Test permissions.
+
+7. Test educational files.
+
+8. Test assessments.
+
+9. Test Study Room.
+
+10. Test study schedule.
+
+11. Test admin CRUD.
+
+12. Test responsive and accessibility.
+
+13. Test security.
+
+14. Test performance.
+
+15. Fix issues.
+
+16. Run regression tests.
+
+17. Build production version.
+
+18. Run production smoke tests.
+
+19. Verify https://malsahori.com.
+
+20. Generate final reports.
+
+Do not stop after producing the first audit.
+
+Continue until the project has been repaired and retested.
+أبو العربي — منصة محمد الساحوري للغة العربية
+دوسيات عربي، أوراق عمل، امتحانات محلولة. توجيهي الأردن جيل 2010 مع الأستاذ محمد الساحوري.
+ 

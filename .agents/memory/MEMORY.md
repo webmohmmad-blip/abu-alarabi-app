@@ -5,3 +5,4 @@
 - [Study Room 2.0](study-room-2.md) — GoodNotes-like workspace: pdfjs-dist v6, per-page annotation canvas, DB tables for annotations/bookmarks/progress, object storage for PDF upload.
 - [Two Shared Systems Refactor](two-shared-systems.md) — 5 shared components extracted; ~1,260 lines removed; 4 admin pages preserved; exams+quiz share examsTable via type='weekly'.
 - [Dossier File Pipeline](dossier-file-pipeline.md) — storage objects must be auth-free; PDF.js requires range requests (206); download/view are separate endpoints; fileUrl stored as /api/storage/objects/uploads/<uuid>.
+- [Worksheet PDF Refactor](worksheet-pdf-refactor.md) — worksheets are now PDF study materials; sourceType state in Study Room routes annotations to separate DB tables; dossierId var reused as generic sourceId.

@@ -1,0 +1,226 @@
+==================================================
+
+MANDATORY FINAL LAUNCH DECISION
+
+==================================================
+
+At the end of the QA process, provide one final launch decision.
+
+Do not use vague language.
+
+Choose exactly one of the following verdicts:
+
+1. PRODUCTION READY
+
+2. READY WITH MINOR ISSUES
+
+3. NOT READY FOR PRODUCTION
+
+==================================================
+
+VERDICT RULES
+
+==================================================
+
+Use:
+
+PRODUCTION READY
+
+only if all of the following are true:
+
+- Production build succeeds.
+
+- Type checking succeeds.
+
+- Database migrations succeed.
+
+- GET /api/health returns HTTP 200.
+
+- Registration works.
+
+- Login works.
+
+- Session persists after refresh.
+
+- Logout works.
+
+- No authentication redirect loop exists.
+
+- Student routes are protected.
+
+- Admin routes are protected.
+
+- Students cannot access admin APIs.
+
+- Dossier cover images display correctly.
+
+- Dossier PDF download works.
+
+- Dossiers open correctly in the Study Room.
+
+- Worksheet PDF download works.
+
+- Worksheets open correctly in the Study Room.
+
+- Electronic exams appear and can be started.
+
+- Weekly quizzes appear and can be started.
+
+- Assessment attempts save correctly.
+
+- Results are generated correctly.
+
+- Admin Create, Edit, Publish, Archive and Delete actions work.
+
+- No blocker issues remain.
+
+- No critical issues remain.
+
+- No valid user flow produces HTTP 500.
+
+- Production smoke tests pass on malsahori.com.
+
+- Mobile, tablet and desktop critical workflows pass.
+
+Use:
+
+READY WITH MINOR ISSUES
+
+only if:
+
+- All critical student and admin workflows work.
+
+- No BLOCKER issue remains.
+
+- No CRITICAL issue remains.
+
+- Remaining issues are only LOW or MEDIUM severity.
+
+- Remaining issues do not affect authentication, security, content access, file downloads, Study Room, exams, weekly quizzes, or data integrity.
+
+Use:
+
+NOT READY FOR PRODUCTION
+
+if any of the following remain:
+
+- Build failure.
+
+- Migration failure.
+
+- Health check failure.
+
+- Login or registration failure.
+
+- Redirect loop.
+
+- Session loss.
+
+- Broken permissions.
+
+- Student can access admin functions.
+
+- PDF upload/download/view failure.
+
+- Study Room cannot open dossiers or worksheets.
+
+- Exam cannot start.
+
+- Weekly quiz does not appear or cannot start.
+
+- Delete actions cause errors or data corruption.
+
+- Valid requests return HTTP 500.
+
+- BLOCKER or CRITICAL issues remain.
+
+- Production domain was not successfully tested.
+
+==================================================
+
+FINAL RESPONSE FORMAT
+
+==================================================
+
+At the very top of the final report, display:
+
+FINAL LAUNCH VERDICT:
+
+[PRODUCTION READY / READY WITH MINOR ISSUES / NOT READY FOR PRODUCTION]
+
+READINESS SCORE:
+
+[0–100]%
+
+BLOCKERS:
+
+[number]
+
+CRITICAL ISSUES:
+
+[number]
+
+HIGH ISSUES:
+
+[number]
+
+MEDIUM ISSUES:
+
+[number]
+
+LOW ISSUES:
+
+[number]
+
+==================================================
+
+LAUNCH SUMMARY
+
+==================================================
+
+Provide a short Arabic launch summary containing:
+
+- هل الموقع جاهز للإطلاق؟
+
+- ما أهم الأسباب؟
+
+- ما الأخطاء المتبقية؟
+
+- هل يستطيع الطلاب التسجيل والدخول؟
+
+- هل تعمل الدوسيات وأوراق العمل؟
+
+- هل تعمل الامتحانات والكويزات؟
+
+- هل تعمل غرفة الدراسة؟
+
+- هل لوحة الأدمن جاهزة؟
+
+- هل توجد مخاطر أمنية أو مشاكل في البيانات؟
+
+==================================================
+
+GO / NO-GO DECISION
+
+==================================================
+
+End the report with exactly one of:
+
+GO FOR LAUNCH
+
+or:
+
+NO-GO — FIX REQUIRED BEFORE LAUNCH
+
+Do not output GO FOR LAUNCH if any blocker or critical issue remains.
+
+Do not claim 100% readiness unless every release gate was tested and passed.
+
+If any area was not tested, label it clearly:
+
+NOT VERIFIED
+
+An unverified critical workflow prevents the verdict PRODUCTION READY.
+أبو العربي — منصة محمد الساحوري للغة العربية
+دوسيات عربي، أوراق عمل، امتحانات محلولة. توجيهي الأردن جيل 2010 مع الأستاذ محمد الساحوري.
+ 
