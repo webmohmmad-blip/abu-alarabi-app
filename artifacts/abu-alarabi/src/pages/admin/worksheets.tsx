@@ -385,7 +385,7 @@ function WorksheetRow({
                 href={ws.fileUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors opacity-0 group-hover:opacity-100"
                 title="فتح الملف"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -435,7 +435,7 @@ function WorksheetRow({
             {/* Duplicate */}
             <button
               onClick={onDuplicate}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors opacity-0 group-hover:opacity-100"
               title="نسخ"
             >
               <Copy className="w-4 h-4" />
@@ -444,7 +444,7 @@ function WorksheetRow({
             {/* Edit */}
             <button
               onClick={onEdit}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors"
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
               title="تعديل"
             >
               <Pencil className="w-4 h-4" />

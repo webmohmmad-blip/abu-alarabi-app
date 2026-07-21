@@ -231,13 +231,13 @@ export default function AdminExams() {
                         )}
                         <button
                           onClick={() => duplicateExam.mutate(exam.id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors" title="نسخ"
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors" title="نسخ"
                         >
                           <Copy className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => { setEditingExam(exam); setShowCreate(true); }}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors" title="تعديل"
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors" title="تعديل"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>

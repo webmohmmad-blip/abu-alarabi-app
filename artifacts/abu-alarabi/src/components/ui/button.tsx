@@ -8,25 +8,50 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-lg shadow-destructive/25 hover:bg-destructive/90",
-        outline: "border-2 border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground",
-        secondary: "bg-secondary text-secondary-foreground shadow-lg shadow-secondary/25 hover:bg-secondary/90",
-        // ghost: explicit text-foreground prevents invisible text on white/light surfaces
-        ghost: "text-foreground hover:bg-primary/10 hover:text-primary",
-        link: "text-primary underline-offset-4 hover:underline",
-        // glass: for use on dark/image backgrounds only
-        glass: "bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-xl hover:bg-white/30",
-        // white: for buttons that sit on dark coloured backgrounds
-        white: "bg-white text-primary shadow-lg hover:bg-white/90",
+        // ── Core variants ─────────────────────────────────────────────────
+        default:
+          "bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground shadow-lg shadow-destructive/25 hover:bg-destructive/90",
+        outline:
+          "border-2 border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground shadow-lg shadow-secondary/25 hover:bg-secondary/90",
+        // ghost: explicit text-foreground keeps text readable on any light surface
+        ghost:
+          "text-foreground hover:bg-primary/10 hover:text-primary",
+        link:
+          "text-primary underline-offset-4 hover:underline",
+
+        // ── Semantic variants ─────────────────────────────────────────────
+        // success: green — for تفعيل, confirm, positive actions
+        success:
+          "bg-success text-success-foreground shadow-lg shadow-success/25 hover:bg-success/90",
+        // warning: gold — for أرشفة, إلغاء النشر, caution actions
+        // Uses dark text (#1F2937) because gold (#C79A2D) fails WCAG AA with white
+        warning:
+          "bg-accent text-[#1F2937] shadow-lg shadow-accent/20 hover:bg-accent/85",
+        // neutral: muted surface — for إيقاف, secondary actions on light backgrounds
+        neutral:
+          "bg-muted text-foreground border border-border shadow-sm hover:bg-muted/70",
+
+        // ── Specialised variants ──────────────────────────────────────────
+        // glass: dark/image backgrounds only (Hero overlays, dark drawers)
+        glass:
+          "bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-xl hover:bg-white/30",
+        // white: sits on a dark coloured background — e.g. dark Hero CTA
+        white:
+          "bg-white text-primary shadow-lg hover:bg-white/90",
         // accent: gold CTA
-        accent: "bg-accent text-accent-foreground shadow-lg shadow-accent/25 hover:bg-accent/90",
+        accent:
+          "bg-accent text-accent-foreground shadow-lg shadow-accent/25 hover:bg-accent/90",
       },
       size: {
         default: "h-12 px-6 py-3",
         sm: "h-10 rounded-lg px-4",
         lg: "h-14 rounded-2xl px-10 text-base",
         icon: "h-12 w-12",
+        "icon-sm": "h-9 w-9 rounded-lg",
       },
     },
     defaultVariants: {

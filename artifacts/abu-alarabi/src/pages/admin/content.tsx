@@ -476,7 +476,7 @@ function DossiersPanel({
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="p-1.5 rounded-lg text-muted-foreground hover:text-white opacity-0 group-hover:opacity-100 transition-all"
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 opacity-0 group-hover:opacity-100 transition-all"
                       title="فتح الملف"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -486,7 +486,7 @@ function DossiersPanel({
                   {/* Edit */}
                   <button
                     onClick={() => onEdit(d)}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all"
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 opacity-0 group-hover:opacity-100 transition-all"
                     title="تعديل"
                   >
                     <Pencil className="w-3.5 h-3.5" />

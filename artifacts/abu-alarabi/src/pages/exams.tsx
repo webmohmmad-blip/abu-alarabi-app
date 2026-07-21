@@ -68,28 +68,28 @@ export default function Exams() {
           <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide shrink-0">
             <Button 
               variant={type === undefined ? "default" : "outline"}
-              className="rounded-full bg-white"
+              className={`rounded-full ${type !== undefined ? "bg-white" : ""}`}
               onClick={() => setType(undefined)}
             >
               الكل
             </Button>
             <Button 
               variant={type === 'ministerial' ? "default" : "outline"}
-              className="rounded-full bg-white"
+              className={`rounded-full ${type !== 'ministerial' ? "bg-white" : ""}`}
               onClick={() => setType('ministerial')}
             >
               وزاري
             </Button>
             <Button 
               variant={type === 'full' ? "default" : "outline"}
-              className="rounded-full bg-white"
+              className={`rounded-full ${type !== 'full' ? "bg-white" : ""}`}
               onClick={() => setType('full')}
             >
               شامل
             </Button>
             <Button 
               variant={type === 'unit' ? "default" : "outline"}
-              className="rounded-full bg-white"
+              className={`rounded-full ${type !== 'unit' ? "bg-white" : ""}`}
               onClick={() => setType('unit')}
             >
               وحدة

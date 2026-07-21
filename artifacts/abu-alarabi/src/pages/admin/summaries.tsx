@@ -141,7 +141,7 @@ export default function AdminSummaries() {
                         </button>
                       )}
                       <button onClick={() => { setEditing(s); setShowModal(true); }}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors">
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors">
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button onClick={() => { if (confirm(`حذف "${s.title}"؟`)) del.mutate(s.id); }}
