@@ -1,0 +1,554 @@
+# MOVE HOMEPAGE ADVERTISEMENT INSIDE HERO SECTION
+
+# Abu Al-Arabi Platform
+
+You are a senior frontend engineer and UI/UX specialist.
+
+The advertisement system already exists, but the advertisement is currently displayed in the wrong location.
+
+It is currently rendered as a separate section below the Hero area.
+
+This is incorrect.
+
+The advertisement must be moved inside the main Hero section itself, specifically into the empty dark area beside the main heading and buttons.
+
+Do not create a separate advertisement section below the Hero.
+
+Do not increase the Hero height unnecessarily.
+
+Do not leave any empty reserved space when there is no active advertisement.
+
+==================================================
+
+CURRENT PROBLEM
+
+==================================================
+
+The homepage currently contains:
+
+- Main navigation at the top
+
+- Hero heading and description
+
+- Hero action buttons
+
+- A large empty dark space beside the content
+
+- Advertisement displayed below the Hero in the white section
+
+The advertisement must not appear in the white section.
+
+The advertisement must occupy the empty dark side of the Hero.
+
+==================================================
+
+DESIRED DESKTOP LAYOUT
+
+==================================================
+
+On desktop:
+
+- Keep the main text content on the left side.
+
+- Place the advertisement on the right side.
+
+- Both must remain inside the same Hero container.
+
+- Use a two-column responsive layout.
+
+Recommended proportions:
+
+- Hero text content: 55% to 60%
+
+- Advertisement area: 40% to 45%
+
+The layout must respect RTL visually while preserving the intended composition:
+
+- Text and buttons remain where they currently appear.
+
+- Advertisement appears in the large empty opposite side of the Hero.
+
+Use a layout such as CSS Grid or Flexbox.
+
+Recommended desktop grid:
+
+grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+
+or equivalent.
+
+Do not position the ad using fragile absolute coordinates unless necessary.
+
+==================================================
+
+ADVERTISEMENT CARD DESIGN
+
+==================================================
+
+The advertisement must appear as a premium banner/card.
+
+Design requirements:
+
+- border-radius: 16px to 22px
+
+- subtle shadow
+
+- overflow hidden
+
+- clean spacing
+
+- no visible white box around the image
+
+- no oversized margins
+
+- visually aligned with the Hero text block
+
+- image remains sharp
+
+- no stretching
+
+- preserve the image aspect ratio
+
+Use:
+
+width: 100%
+
+height: auto
+
+object-fit: cover
+
+If a fixed visual frame is needed on desktop:
+
+aspect-ratio: 16 / 9
+
+or an appropriate wide banner ratio.
+
+Do not crop important image content aggressively.
+
+==================================================
+
+FULL IMAGE CLICK BEHAVIOR
+
+==================================================
+
+The entire advertisement image/card must be clickable when a link exists.
+
+Required behavior:
+
+- clicking anywhere on the image opens the saved link
+
+- no separate CTA button is required
+
+- optional overlay text may still exist, but the whole card is the link
+
+- show cursor: pointer
+
+- add a subtle hover effect on desktop
+
+- visible keyboard focus
+
+- Enter key opens the link
+
+For internal routes:
+
+- use the app router where possible
+
+For external URLs:
+
+- use a normal anchor
+
+- respect openInNewTab
+
+- when opening a new tab, use:
+
+  rel="noopener noreferrer"
+
+Do not allow unsafe protocols:
+
+- javascript:
+
+- data:
+
+- file:
+
+==================================================
+
+WHEN NO ADVERTISEMENT EXISTS
+
+==================================================
+
+If there is no active advertisement:
+
+- do not render an empty ad wrapper
+
+- do not reserve width for the ad
+
+- do not leave a blank dark column
+
+- allow the main Hero text content to expand naturally
+
+- preserve the visual balance of the Hero
+
+The layout must automatically switch from two columns to one content column.
+
+==================================================
+
+ACTIVE ADVERTISEMENT RULES
+
+==================================================
+
+Render only advertisements where:
+
+- isActive = true
+
+- startAt is null or startAt <= current time
+
+- endAt is null or endAt > current time
+
+If multiple advertisements are active:
+
+- show them inside the same Hero ad area
+
+- use a carousel/slider
+
+- do not create multiple stacked sections
+
+- keep the total Hero height controlled
+
+Carousel requirements:
+
+- RTL support
+
+- swipe on mobile
+
+- arrows on desktop
+
+- pagination dots
+
+- auto-slide
+
+- pause on hover
+
+- pause on keyboard focus
+
+- respect prefers-reduced-motion
+
+The image of the active slide must open the correct link.
+
+==================================================
+
+TABLET BEHAVIOR
+
+==================================================
+
+On tablet:
+
+- keep the advertisement inside the Hero section
+
+- place it below the text and buttons if the two-column layout becomes cramped
+
+- maintain a moderate width
+
+- center it visually
+
+- avoid excessive empty space
+
+- preserve Hero background continuity
+
+Recommended breakpoint:
+
+below approximately 1024px, switch to a stacked layout if necessary.
+
+Order:
+
+1. Hero text
+
+2. Hero buttons
+
+3. Advertisement
+
+Still inside the same Hero wrapper.
+
+==================================================
+
+MOBILE BEHAVIOR
+
+==================================================
+
+On mobile:
+
+- keep the advertisement inside the Hero
+
+- place it directly below the Hero buttons
+
+- use full available width
+
+- add moderate top spacing
+
+- use the mobile-specific image when available
+
+- do not crop important text in the image
+
+- do not overflow horizontally
+
+- maintain rounded corners
+
+- ensure touch target covers the full image
+
+- carousel swipe must work correctly
+
+Test at:
+
+- 320px
+
+- 375px
+
+- 390px
+
+- 430px
+
+==================================================
+
+HERO HEIGHT
+
+==================================================
+
+The Hero must not become excessively tall.
+
+Requirements:
+
+- avoid large fixed heights
+
+- use min-height rather than rigid height where appropriate
+
+- remove any old placeholder spacing for the advertisement
+
+- prevent duplicated vertical margins
+
+- prevent the ad from pushing the "About the teacher" section too far down
+
+The next section should begin naturally after the Hero ends.
+
+==================================================
+
+REMOVE OLD ADVERTISEMENT LOCATION
+
+==================================================
+
+Remove the advertisement from its current location below the Hero.
+
+Delete or refactor:
+
+- the old homepage advertisement section
+
+- duplicate advertisement rendering
+
+- duplicate API calls
+
+- duplicate carousel instances
+
+- empty spacing left by the removed section
+
+There must be only one homepage advertisement renderer.
+
+==================================================
+
+LOADING AND ERROR STATES
+
+==================================================
+
+While loading advertisements:
+
+- do not show a huge blank skeleton
+
+- use a small contained placeholder inside the Hero ad area
+
+- avoid layout shifts
+
+If advertisement loading fails:
+
+- hide the ad area gracefully
+
+- keep the Hero text visible
+
+- do not crash the homepage
+
+- do not show a blank page
+
+==================================================
+
+ACCESSIBILITY
+
+==================================================
+
+The advertisement link must include:
+
+- descriptive aria-label
+
+- useful image alt text
+
+- visible focus ring
+
+- keyboard activation
+
+- no nested links
+
+- no inaccessible carousel controls
+
+Example label:
+
+"فتح إعلان: [عنوان الإعلان]"
+
+==================================================
+
+RTL AND VISUAL CONSISTENCY
+
+==================================================
+
+Preserve:
+
+- full Arabic RTL layout
+
+- existing brand colors
+
+- existing Hero background
+
+- existing title and paragraph alignment
+
+- existing action buttons
+
+- existing responsive navigation
+
+Do not redesign the full Hero.
+
+Only integrate the advertisement properly into it.
+
+==================================================
+
+BUTTON VISIBILITY CHECK
+
+==================================================
+
+While editing the Hero, verify the existing Hero buttons still have readable contrast.
+
+Do not allow:
+
+- white text on white background
+
+- invisible hover states
+
+- unreadable outline buttons
+
+Ensure all Hero buttons remain visible in desktop, tablet, and mobile layouts.
+
+==================================================
+
+IMPLEMENTATION GUIDANCE
+
+==================================================
+
+Use one shared component such as:
+
+HeroAdvertisement
+
+The Hero component should receive or fetch the active ad data once.
+
+Recommended structure:
+
+HeroSection
+
+  - HeroContent
+
+  - HeroAdvertisement
+
+Avoid duplicate fetching in child components.
+
+If using React Query or another data-fetching library:
+
+- reuse the same active advertisements query
+
+- cache appropriately
+
+- do not trigger duplicate network requests
+
+==================================================
+
+FINAL TESTS
+
+==================================================
+
+Verify all of the following:
+
+1. Advertisement is inside the dark Hero area.
+
+2. Advertisement is not shown below the Hero.
+
+3. Desktop shows text and ad side by side.
+
+4. Tablet keeps ad inside the Hero.
+
+5. Mobile shows ad under the buttons inside the Hero.
+
+6. Clicking the image opens the saved link.
+
+7. Internal links work.
+
+8. External links work.
+
+9. New-tab setting works.
+
+10. Ad without link is not clickable.
+
+11. No active ad leaves no blank reserved area.
+
+12. Multiple ads work in one Hero carousel.
+
+13. No duplicate ad renderer exists.
+
+14. Homepage does not crash if ad API fails.
+
+15. No horizontal overflow.
+
+16. No text clipping.
+
+17. Hero buttons remain readable.
+
+18. The next section begins immediately after the Hero without a large gap.
+
+==================================================
+
+FINAL REPORT
+
+==================================================
+
+Create:
+
+HERO_ADVERTISEMENT_PLACEMENT_FIX_REPORT.md
+
+Include:
+
+- previous wrong placement
+
+- new component location
+
+- files changed
+
+- layout implementation
+
+- responsive behavior
+
+- link behavior
+
+- carousel behavior
+
+- removed duplicate code
+
+- desktop verification
+
+- tablet verification
+
+- mobile verification
+
+- remaining issues
+
+Do not mark the task complete until the advertisement appears inside the dark Hero space on the real homepage.
+ 

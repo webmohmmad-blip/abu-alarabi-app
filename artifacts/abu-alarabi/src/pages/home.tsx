@@ -17,7 +17,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useGetPlatformStats, useListDossiers } from "@workspace/api-client-react";
-import { AdCarousel } from "@/components/AdCarousel";
+import { HeroAdvertisement } from "@/components/HeroAdvertisement";
 
 const TRACKS = [
   { label: "توجيهي", sub: "الصف الثاني عشر", color: "#5A2D82" },
@@ -87,8 +87,8 @@ export default function Home() {
         <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/3 w-64 h-64 bg-secondary/15 rounded-full blur-[100px] pointer-events-none" />
 
-        <div className="relative z-10 container mx-auto px-6 py-24">
-          <div className="max-w-3xl mr-auto">
+        <div className="relative z-10 container mx-auto px-6 py-16 lg:py-24 flex flex-col lg:flex-row lg:items-center gap-10 lg:gap-16">
+          <div className="flex-1 min-w-0">
 
             {/* Badge */}
             <motion.div
@@ -166,16 +166,13 @@ export default function Home() {
             </motion.div>
 
           </div>
+          {/* Advertisement — sits in the empty dark column beside the text */}
+          <HeroAdvertisement />
         </div>
 
         {/* Bottom fade */}
         <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
       </section>
-
-      {/* ═══════════════════════════════════════════════
-          HOMEPAGE ADVERTISEMENTS
-      ═══════════════════════════════════════════════ */}
-      <AdCarousel />
 
       {/* ═══════════════════════════════════════════════
           TEACHER PROFILE — محمد الساحوري

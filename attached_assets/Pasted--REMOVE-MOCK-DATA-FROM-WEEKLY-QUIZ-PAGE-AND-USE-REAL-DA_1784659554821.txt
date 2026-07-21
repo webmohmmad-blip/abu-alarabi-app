@@ -1,0 +1,212 @@
+# REMOVE MOCK DATA FROM WEEKLY QUIZ PAGE AND USE REAL DATA
+
+The Weekly Quiz page still displays placeholder/mock values.
+
+This is not acceptable for production.
+
+Replace every hardcoded value with real dynamic data from the database.
+
+==================================================
+
+CURRENT ISSUES
+
+==================================================
+
+The page currently displays values such as:
+
+- test
+
+- test description
+
+- 0 participants
+
+- 1 question
+
+- 20 minutes
+
+- fixed leaderboard
+
+- fixed scores
+
+- placeholder reward
+
+- fake names
+
+No placeholder or mock data should ever appear in production.
+
+==================================================
+
+CURRENT CHALLENGE CARD
+
+==================================================
+
+Load the current active weekly quiz dynamically.
+
+Display:
+
+- Subject name
+
+- Quiz title
+
+- Quiz description
+
+- Number of questions
+
+- Time limit
+
+- Reward (if configured)
+
+- Number of participants
+
+- Publish date
+
+- Close date (if applicable)
+
+If no quiz is active:
+
+Show a professional empty state:
+
+"لا يوجد كويز أسبوعي متاح حالياً"
+
+with a button:
+
+"العودة للرئيسية"
+
+Do not display placeholder cards.
+
+==================================================
+
+PARTICIPANT COUNT
+
+==================================================
+
+Calculate from real quiz attempts.
+
+Display:
+
+عدد المشاركين الحقيقي
+
+Do not use hardcoded values.
+
+==================================================
+
+QUESTION COUNT
+
+==================================================
+
+Display the real number of questions linked to the quiz.
+
+==================================================
+
+TIME
+
+==================================================
+
+Display the configured quiz duration from the database.
+
+==================================================
+
+REWARD
+
+==================================================
+
+If a reward exists:
+
+Display it.
+
+If not:
+
+Hide the reward section completely.
+
+==================================================
+
+LEADERBOARD
+
+==================================================
+
+Load real leaderboard data.
+
+Ranking should be based on:
+
+1. Highest score
+
+2. Fastest completion time
+
+3. Earliest submission
+
+Display:
+
+- Rank
+
+- Student name
+
+- City (optional)
+
+- Score
+
+- Time
+
+If there are no completed attempts:
+
+Show:
+
+"لا توجد نتائج بعد."
+
+Do not display fake students.
+
+==================================================
+
+BUTTON
+
+==================================================
+
+The button:
+
+"ابدأ التحدي الآن"
+
+must:
+
+- open the current active quiz
+
+- prevent duplicate attempts if the rules do not allow multiple attempts
+
+- show an appropriate message if the quiz has expired
+
+==================================================
+
+API
+
+==================================================
+
+Use real backend endpoints.
+
+Remove every mock object, temporary array, demo data, and placeholder.
+
+==================================================
+
+FINAL CHECK
+
+==================================================
+
+Search the entire project for placeholder values such as:
+
+test
+
+demo
+
+example
+
+mock
+
+placeholder
+
+John Doe
+
+Sample
+
+Lorem Ipsum
+
+Remove or replace every production-visible occurrence.
+
+No fake data should remain anywhere in the platform.
+ 

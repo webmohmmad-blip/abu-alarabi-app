@@ -1,0 +1,298 @@
+# FIX ADVERTISEMENT EDIT FORM + LINK BEHAVIOR + INPUT COLORS
+
+# Abu Al-Arabi Platform
+
+The Advertisement Management form has several UI/UX issues that must be fixed.
+
+Do not patch individual inputs.
+
+Fix the entire advertisement form using the shared design system.
+
+==================================================
+
+ISSUE 1: INPUT TEXT IS INVISIBLE
+
+==================================================
+
+Currently the following fields display white text on a white background:
+
+- عنوان الإعلان
+
+- رابط الإعلان
+
+- وصف الإعلان
+
+- نص زر الدعوة
+
+- Any other text input inside the advertisement form
+
+This makes typing impossible.
+
+Fix every input so that:
+
+Background:
+
+#FFFFFF
+
+Text:
+
+#1F2937
+
+Placeholder:
+
+#9CA3AF
+
+Border:
+
+#D1D5DB
+
+Focus Border:
+
+#5A2D82
+
+Focus Ring:
+
+rgba(90,45,130,.2)
+
+Labels:
+
+#374151
+
+Required indicator:
+
+#EF4444
+
+Never allow:
+
+white text on white background.
+
+Apply the same fix to:
+
+- Inputs
+
+- Textareas
+
+- Selects
+
+- Date Pickers
+
+- URL fields
+
+- Number fields
+
+==================================================
+
+ISSUE 2: LINK FIELD
+
+==================================================
+
+The advertisement link field must support:
+
+Internal links:
+
+/dossiers
+
+/worksheets
+
+/exams
+
+/weekly-quiz
+
+/study-room
+
+External links:
+https://example.com
+
+Validation:
+
+Reject:
+
+javascript:
+
+data:
+
+file:
+
+Accept:
+
+http
+
+https
+
+internal routes
+
+Show Arabic validation:
+
+"الرابط غير صالح"
+
+==================================================
+
+ISSUE 3: CLICKABLE IMAGE
+
+==================================================
+
+The administrator wants the advertisement image itself to act as the link.
+
+Requirements:
+
+If linkUrl exists:
+
+- the whole advertisement image is clickable
+
+- clicking anywhere opens the saved link
+
+No extra button required.
+
+Cursor:
+
+pointer
+
+Desktop hover:
+
+slight scale
+
+slight brightness
+
+Smooth transition.
+
+If link does not exist:
+
+Render image normally.
+
+==================================================
+
+ISSUE 4: LINK OPEN MODE
+
+==================================================
+
+Support:
+
+Open in same tab
+
+Open in new tab
+
+When new tab:
+
+target="_blank"
+
+rel="noopener noreferrer"
+
+==================================================
+
+ISSUE 5: ADMIN PREVIEW
+
+==================================================
+
+Inside the advertisement editor:
+
+Display:
+
+"النقر على الصورة سيفتح الرابط"
+
+Provide:
+
+Preview button
+
+Test Link button
+
+==================================================
+
+ISSUE 6: ACCESSIBILITY
+
+==================================================
+
+Advertisement image:
+
+- keyboard focus
+
+- Enter opens link
+
+- aria-label
+
+- alt text
+
+==================================================
+
+ISSUE 7: GLOBAL INPUT AUDIT
+
+==================================================
+
+Search the entire project for inputs that still have:
+
+text-white
+
+on
+
+bg-white
+
+or
+
+bg-gray-50
+
+Fix every occurrence.
+
+Inspect:
+
+- shared Input component
+
+- shared Textarea
+
+- shared FormField
+
+- Tailwind classes
+
+- CSS variables
+
+- theme colors
+
+==================================================
+
+FINAL TESTS
+
+==================================================
+
+Verify:
+
+✓ Advertisement title text is visible.
+
+✓ Advertisement URL text is visible.
+
+✓ Description text is visible.
+
+✓ Placeholder colors are readable.
+
+✓ Focus styles work.
+
+✓ Saving advertisement works.
+
+✓ Homepage advertisement image opens the saved link.
+
+✓ Internal links work.
+
+✓ External links work.
+
+✓ New tab option works.
+
+✓ Same tab option works.
+
+✓ No white-on-white inputs remain anywhere in the advertisement management pages.
+
+Create:
+
+ADVERTISEMENT_FORM_FIX_REPORT.md
+
+Include:
+
+- Files changed
+
+- Components changed
+
+- Color fixes
+
+- Link behavior
+
+- Validation results
+
+- Screenshots or verification results
+Example Domain
+ 
