@@ -1,0 +1,530 @@
+# EXPORT ALL USERS TO EXCEL
+
+# Abu Al-Arabi Platform
+
+You are a senior full-stack engineer and QA engineer.
+
+Add a complete Excel export feature to the Admin Users Management page.
+
+The admin must be able to export all platform users into a real Excel file.
+
+Do not export only the currently visible page.
+
+Do not export mock data.
+
+Use real database records.
+
+==================================================
+
+FEATURE GOAL
+
+==================================================
+
+Add a button to:
+
+/admin/users
+
+Button label:
+
+"تصدير المستخدمين إلى Excel"
+
+Optional icon:
+
+Download or FileSpreadsheet icon
+
+The button should appear clearly near:
+
+- إضافة مستخدم
+
+- search
+
+- role filters
+
+The button must be visible only to Admin or Super Admin.
+
+==================================================
+
+EXPORT SCOPE
+
+==================================================
+
+By default, export all users from the database.
+
+Do not limit the export to:
+
+- current pagination page
+
+- currently visible table rows
+
+- browser-loaded users only
+
+Support exporting:
+
+1. جميع المستخدمين
+
+2. نتائج البحث الحالية
+
+3. الفلتر الحالي
+
+4. دور محدد
+
+5. مستخدمون نشطون فقط
+
+6. مستخدمون غير نشطين
+
+7. نطاق تاريخ تسجيل اختياري
+
+If implementing all options makes the UI too complex, use this simple behavior:
+
+- no active filters → export all users
+
+- active search/filter → export matching users
+
+Display a clear label before download:
+
+"سيتم تصدير جميع النتائج المطابقة للفلاتر الحالية"
+
+==================================================
+
+EXCEL FILE FORMAT
+
+==================================================
+
+Generate a real .xlsx file.
+
+Do not generate HTML renamed as Excel.
+
+Recommended filename:
+
+users-export-YYYY-MM-DD.xlsx
+
+Arabic filename is optional, but use a filesystem-safe filename.
+
+Recommended worksheet name:
+
+"المستخدمون"
+
+The sheet must use RTL direction if supported.
+
+==================================================
+
+EXPORTED COLUMNS
+
+==================================================
+
+Include at minimum:
+
+1. الرقم
+
+2. الاسم الكامل
+
+3. رقم الهاتف
+
+4. الدور
+
+5. الحالة
+
+6. تاريخ التسجيل
+
+7. آخر تسجيل دخول
+
+8. عدد محاولات الامتحانات
+
+9. عدد محاولات الكويزات
+
+10. عدد الدوسيات المفتوحة if tracked
+
+11. عدد أوراق العمل المفتوحة if tracked
+
+Only include fields that exist and can be queried reliably.
+
+Do not expose:
+
+- password hashes
+
+- session tokens
+
+- authentication cookies
+
+- internal security fields
+
+- reset tokens
+
+- private system secrets
+
+- database IDs unless explicitly needed
+
+- IP addresses unless there is a justified admin requirement
+
+Map role values into Arabic:
+
+student → طالب
+
+admin → مدير
+
+super_admin → مدير عام
+
+Map status values into Arabic:
+
+true → نشط
+
+false → غير نشط
+
+Format dates clearly:
+
+YYYY-MM-DD HH:mm
+
+or an Arabic-readable equivalent.
+
+==================================================
+
+BACKEND ENDPOINT
+
+==================================================
+
+Create or verify an admin-only endpoint such as:
+
+GET /api/admin/users/export
+
+Supported query parameters:
+
+- search
+
+- role
+
+- status
+
+- dateFrom
+
+- dateTo
+
+Requirements:
+
+- authentication required
+
+- admin or super_admin required
+
+- guest → 401
+
+- student → 403
+
+- invalid filters → 400
+
+- successful export → 200
+
+Response headers:
+
+Content-Type:
+
+application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+Content-Disposition:
+
+attachment; filename="users-export-YYYY-MM-DD.xlsx"
+
+Do not expose internal errors or stack traces.
+
+==================================================
+
+DATABASE QUERY
+
+==================================================
+
+Query all matching users efficiently.
+
+Do not reuse a paginated query with a fixed limit.
+
+Use:
+
+- filtered database query
+
+- stable sorting
+
+- createdAt descending or ascending consistently
+
+Avoid:
+
+- loading unrelated tables unnecessarily
+
+- N+1 queries
+
+- one database query per user
+
+For activity counts, use aggregate queries or grouped joins.
+
+If the number of users is large:
+
+- stream the Excel response where practical
+
+- process in batches
+
+- avoid excessive memory consumption
+
+==================================================
+
+EXCEL STYLING
+
+==================================================
+
+Create a clean professional workbook.
+
+Header row:
+
+- bold
+
+- frozen
+
+- visible background
+
+- readable text
+
+- centered where appropriate
+
+Data rows:
+
+- alternate row styling if supported
+
+- proper phone formatting
+
+- dates recognized as dates
+
+- no scientific notation for phone numbers
+
+Important:
+
+Phone numbers must remain exactly like:
+
+0792535437
+
+Excel must not convert them to:
+
+7.92535E+8
+
+Store phone numbers as text.
+
+Recommended column widths:
+
+- الاسم الكامل: 25–35
+
+- رقم الهاتف: 15
+
+- الدور: 15
+
+- الحالة: 12
+
+- تاريخ التسجيل: 20
+
+- آخر تسجيل دخول: 20
+
+Enable:
+
+- autofilter
+
+- frozen header row
+
+- RTL worksheet direction if supported
+
+==================================================
+
+FRONTEND BEHAVIOR
+
+==================================================
+
+When the admin clicks the export button:
+
+1. Show loading state:
+
+   "جاري تجهيز الملف..."
+
+2. Disable repeated clicks.
+
+3. Send current filters to the export endpoint.
+
+4. Download the file automatically.
+
+5. Restore button state.
+
+On success, show:
+
+"تم تصدير المستخدمين بنجاح"
+
+On failure, show:
+
+"تعذر تصدير المستخدمين"
+
+Do not navigate away from the page.
+
+Do not open a blank tab.
+
+==================================================
+
+PERMISSIONS
+
+==================================================
+
+Only Admin and Super Admin can export users.
+
+Verify:
+
+- student cannot see the button
+
+- student calling endpoint receives 403
+
+- logged-out request receives 401
+
+Add an audit log entry:
+
+- action: USERS_EXPORTED
+
+- exportedBy
+
+- filters used
+
+- exportedCount
+
+- timestamp
+
+Do not log the full exported user data.
+
+==================================================
+
+PRIVACY AND DATA SAFETY
+
+==================================================
+
+Export only information necessary for administration.
+
+Do not include sensitive authentication information.
+
+If the platform includes minors, avoid unnecessary personal data.
+
+Do not include:
+
+- passwords
+
+- password_hash
+
+- session IDs
+
+- tokens
+
+- private notes
+
+- device fingerprints
+
+- hidden moderation fields
+
+==================================================
+
+TESTS
+
+==================================================
+
+Add tests for:
+
+1. Admin exports all users.
+
+2. Super Admin exports all users.
+
+3. Student receives 403.
+
+4. Guest receives 401.
+
+5. Search filter exports matching users only.
+
+6. Role filter works.
+
+7. Status filter works.
+
+8. Date filter works.
+
+9. File is valid .xlsx.
+
+10. Workbook opens without corruption.
+
+11. Arabic headers exist.
+
+12. Phone numbers remain exact text.
+
+13. No password or token columns exist.
+
+14. Export includes users beyond the first pagination page.
+
+15. Empty result creates a valid file with headers.
+
+16. Repeated click does not create duplicate requests.
+
+17. Audit log is created.
+
+==================================================
+
+OPTIONAL SECOND BUTTON
+
+==================================================
+
+Optionally add:
+
+"تصدير CSV"
+
+But Excel .xlsx is the primary required format.
+
+Do not replace Excel export with CSV only.
+
+==================================================
+
+FINAL ACCEPTANCE CRITERIA
+
+==================================================
+
+Do not mark complete until:
+
+- the button exists on Admin Users page
+
+- all matching users are exported
+
+- pagination does not limit the export
+
+- Excel file opens correctly
+
+- Arabic columns are readable
+
+- phone numbers are preserved
+
+- current filters are respected
+
+- unauthorized users are blocked
+
+- sensitive fields are excluded
+
+- production build passes
+
+==================================================
+
+FINAL REPORT
+
+==================================================
+
+Create:
+
+USERS_EXCEL_EXPORT_IMPLEMENTATION_REPORT.md
+
+Include:
+
+- endpoint added
+
+- frontend button location
+
+- exported columns
+
+- filtering behavior
+
+- permission checks
+
+- privacy exclusions
+
+- Excel library used
+
+- tests executed
+
+- production verification
+ 

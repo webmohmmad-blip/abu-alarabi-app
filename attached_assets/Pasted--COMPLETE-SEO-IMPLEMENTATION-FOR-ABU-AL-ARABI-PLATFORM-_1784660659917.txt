@@ -1,0 +1,420 @@
+# COMPLETE SEO IMPLEMENTATION FOR ABU AL-ARABI PLATFORM
+
+# Target: Rank on Google for Jordanian Arabic curriculum searches
+
+You are an elite Technical SEO Engineer, Full-Stack Developer, Performance Engineer, and Google Search specialist.
+
+Transform the platform into a production-grade SEO implementation.
+
+Do not stop at meta tags.
+
+Implement a complete SEO architecture.
+
+==================================================
+
+GOALS
+
+==================================================
+
+The website should be optimized to rank for searches such as:
+
+أبو العربي
+
+محمد الساحوري
+
+الأستاذ محمد الساحوري
+
+لغة عربية توجيهي
+
+لغة عربية جيل 2010
+
+دوسيات لغة عربية
+
+ملخصات اللغة العربية
+
+امتحانات لغة عربية
+
+الكويز الأسبوعي لغة عربية
+
+أوراق عمل لغة عربية
+
+شرح اللغة العربية توجيهي
+
+تأسيس اللغة العربية
+
+منصة أبو العربي
+
+==================================================
+
+TECHNICAL SEO
+
+==================================================
+
+Implement:
+
+✓ unique title for every page
+
+✓ unique meta description
+
+✓ canonical URLs
+
+✓ robots.txt
+
+✓ sitemap.xml
+
+✓ sitemap index if needed
+
+✓ Open Graph
+
+✓ Twitter Cards
+
+✓ structured data (JSON-LD)
+
+✓ breadcrumbs schema
+
+✓ Organization schema
+
+✓ WebSite schema
+
+✓ SearchAction schema
+
+✓ Course schema where appropriate
+
+✓ FAQ schema
+
+✓ Article schema for educational content
+
+✓ BreadcrumbList schema
+
+==================================================
+
+DYNAMIC PAGE TITLES
+
+==================================================
+
+Examples:
+
+الرئيسية | أبو العربي
+
+الدوسيات | أبو العربي
+
+أوراق العمل | أبو العربي
+
+الامتحانات الإلكترونية | أبو العربي
+
+الكويز الأسبوعي | أبو العربي
+
+غرفتي الدراسية | أبو العربي
+
+==================================================
+
+META DESCRIPTION
+
+==================================================
+
+Generate unique descriptions for every page.
+
+Length:
+
+120–160 characters.
+
+==================================================
+
+KEYWORDS
+
+==================================================
+
+Optimize naturally for:
+
+محمد الساحوري
+
+أبو العربي
+
+لغة عربية
+
+التوجيهي الأردني
+
+جيل 2010
+
+دوسيات
+
+أوراق عمل
+
+امتحانات إلكترونية
+
+كويز أسبوعي
+
+==================================================
+
+URLS
+
+==================================================
+
+Use clean URLs.
+
+Avoid IDs when slugs are available.
+
+Example:
+
+/dossiers/الفعل-وأنواعه
+
+instead of
+
+/dossiers/17
+
+==================================================
+
+SITEMAP
+
+==================================================
+
+Generate sitemap.xml automatically.
+
+Include:
+
+Homepage
+
+Dossiers
+
+Worksheets
+
+Exams
+
+Weekly Quiz
+
+Published educational pages
+
+Exclude:
+
+Admin
+
+Private dashboard
+
+Authentication
+
+==================================================
+
+ROBOTS
+
+==================================================
+
+Allow Google to crawl public content.
+
+Block:
+
+/admin
+
+/dashboard
+
+/auth
+
+/private
+
+==================================================
+
+PERFORMANCE
+
+==================================================
+
+Target:
+
+LCP < 2.5s
+
+CLS < 0.1
+
+FID excellent
+
+Lazy-load images.
+
+Compress images.
+
+Preload hero image.
+
+Preconnect fonts.
+
+==================================================
+
+IMAGES
+
+==================================================
+
+Every image:
+
+alt text
+
+lazy loading
+
+responsive srcset
+
+descriptive filenames
+
+==================================================
+
+STRUCTURED DATA
+
+==================================================
+
+Organization
+
+Website
+
+Course
+
+Breadcrumb
+
+FAQ
+
+Educational content
+
+==================================================
+
+SOCIAL SHARING
+
+==================================================
+
+Correct Open Graph.
+
+Correct Twitter cards.
+
+Beautiful preview image.
+
+==================================================
+
+SEARCH PAGE
+
+==================================================
+
+Internal search should be crawl-safe.
+
+==================================================
+
+CONTENT
+
+==================================================
+
+Every dossier:
+
+unique title
+
+unique description
+
+structured headings
+
+H1 only once
+
+Proper H2/H3 hierarchy.
+
+==================================================
+
+SEMANTIC HTML
+
+==================================================
+
+Use:
+
+header
+
+main
+
+section
+
+article
+
+nav
+
+footer
+
+Avoid div soup.
+
+==================================================
+
+ACCESSIBILITY
+
+==================================================
+
+ARIA labels
+
+Heading hierarchy
+
+Keyboard navigation
+
+Image alt
+
+==================================================
+
+GOOGLE SEARCH CONSOLE
+
+==================================================
+
+Prepare verification.
+
+Support Bing Webmaster verification.
+
+==================================================
+
+ANALYTICS
+
+==================================================
+
+Prepare integration for:
+
+Google Analytics 4
+
+Google Tag Manager
+
+Google Search Console
+
+Microsoft Clarity
+
+==================================================
+
+SEO AUDIT
+
+==================================================
+
+Search entire project for:
+
+duplicate titles
+
+missing descriptions
+
+missing H1
+
+missing canonical
+
+broken links
+
+redirect chains
+
+missing alt text
+
+==================================================
+
+FINAL REPORT
+
+==================================================
+
+Create:
+
+SEO_IMPLEMENTATION_REPORT.md
+
+Include:
+
+✔ Pages optimized
+
+✔ Meta tags
+
+✔ Structured data
+
+✔ Sitemap
+
+✔ Robots
+
+✔ Performance improvements
+
+✔ Accessibility improvements
+
+✔ Remaining recommendations
+
+Do not mark complete until the platform passes a professional technical SEO audit.
+ 

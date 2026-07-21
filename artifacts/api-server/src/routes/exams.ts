@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, isNotNull, desc, asc, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   examsTable,
@@ -9,6 +9,7 @@ import {
   attemptAnswersTable,
   weeklyQuizzesTable,
   subjectsTable,
+  usersTable,
 } from "@workspace/db";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 
@@ -450,7 +451,8 @@ router.get(
 // ─── WEEKLY QUIZ ────────────────────────────────────────
 // NOTE: Weekly quizzes are stored in examsTable with type="weekly".
 // The old weeklyQuizzesTable is a separate legacy table — do not use it here.
-router.get("/quiz/current", requireAuth, async (_req, res): Promise<void> => {
+router.get("/quiz/current", requireAuth, async (req, res): Promise<void> => {
+  const aReq = req as AuthRequest;
   const now = new Date();
 
   // Find published, available weekly quizzes from examsTable
@@ -482,16 +484,46 @@ router.get("/quiz/current", requireAuth, async (_req, res): Promise<void> => {
       return !expires || new Date(expires) >= now;
     }) ?? rows[0];
 
-  // Actual question count from questionsTable
-  const questionRows = await db
-    .select({ id: questionsTable.id })
-    .from(questionsTable)
-    .where(eq(questionsTable.examId, active.exam.id));
+  const examId = active.exam.id;
+
+  // Run question count, participant count, and user-attempt check in parallel
+  const [questionRows, participantRows, userAttemptRows] = await Promise.all([
+    db
+      .select({ id: questionsTable.id })
+      .from(questionsTable)
+      .where(eq(questionsTable.examId, examId)),
+
+    db
+      .select({ count: sql<string>`count(distinct ${examAttemptsTable.userId})` })
+      .from(examAttemptsTable)
+      .where(
+        and(
+          eq(examAttemptsTable.examId, examId),
+          isNotNull(examAttemptsTable.submittedAt),
+        )
+      ),
+
+    db
+      .select({ id: examAttemptsTable.id, rank: examAttemptsTable.rank })
+      .from(examAttemptsTable)
+      .where(
+        and(
+          eq(examAttemptsTable.examId, examId),
+          eq(examAttemptsTable.userId, aReq.userId),
+          isNotNull(examAttemptsTable.submittedAt),
+        )
+      )
+      .orderBy(desc(examAttemptsTable.score))
+      .limit(1),
+  ]);
 
   const questionCount = questionRows.length || (active.exam as any).questionCount || 0;
+  const participants = parseInt(participantRows[0]?.count ?? "0", 10);
+  const hasParticipated = userAttemptRows.length > 0;
+  const userRank = userAttemptRows[0]?.rank ?? null;
 
   res.json({
-    id: active.exam.id,
+    id: examId,
     title: active.exam.title,
     description: active.exam.instructions ?? null,
     subjectName: active.subjectName ?? "",
@@ -500,10 +532,10 @@ router.get("/quiz/current", requireAuth, async (_req, res): Promise<void> => {
     questionCount,
     durationMinutes: active.exam.durationMinutes,
     totalScore: parseFloat((active.exam as any).totalScore ?? "100"),
-    participants: 0,
+    participants,
     prizes: [],
-    hasParticipated: false,
-    userRank: null,
+    hasParticipated,
+    userRank,
   });
 });
 
@@ -517,85 +549,137 @@ router.post(
       : req.params.id;
     const quizId = parseInt(rawId, 10);
 
+    // ID is the examsTable PK (type="weekly") — not the legacy weeklyQuizzesTable
     const [quiz] = await db
       .select()
-      .from(weeklyQuizzesTable)
-      .where(eq(weeklyQuizzesTable.id, quizId));
+      .from(examsTable)
+      .where(
+        and(
+          eq(examsTable.id, quizId),
+          eq(examsTable.type, "weekly"),
+          isNull(examsTable.deletedAt),
+        )
+      );
 
-    if (!quiz || !quiz.examId) {
+    if (!quiz) {
       res.status(404).json({ error: "الكويز غير موجود" });
       return;
     }
 
+    // Check expiry
+    if (quiz.expiresAt && new Date(quiz.expiresAt) < new Date()) {
+      res.status(410).json({ error: "انتهت مدة هذا الكويز" });
+      return;
+    }
+
+    // Prevent duplicate submission if maxAttempts = 1
+    if (quiz.maxAttempts === 1) {
+      const [existing] = await db
+        .select({ id: examAttemptsTable.id })
+        .from(examAttemptsTable)
+        .where(
+          and(
+            eq(examAttemptsTable.examId, quiz.id),
+            eq(examAttemptsTable.userId, aReq.userId),
+            isNotNull(examAttemptsTable.submittedAt),
+          )
+        )
+        .limit(1);
+
+      if (existing) {
+        res.status(409).json({ error: "لقد شاركت في هذا الكويز من قبل" });
+        return;
+      }
+    }
+
     const [attempt] = await db
       .insert(examAttemptsTable)
-      .values({ examId: quiz.examId, userId: aReq.userId })
+      .values({ examId: quiz.id, userId: aReq.userId })
       .returning();
 
     res.status(201).json({
       id: attempt.id,
       examId: attempt.examId,
       startedAt: attempt.startedAt,
-      durationMinutes: 15,
+      durationMinutes: quiz.durationMinutes,
       questions: [],
       savedAnswers: {},
     });
   }
 );
 
-router.get("/quiz/leaderboard", requireAuth, async (_req, res): Promise<void> => {
-  res.json([
-    {
-      rank: 1,
-      displayName: "أ. سارة محمد",
-      avatarUrl: null,
-      score: 100,
-      timeTakenSeconds: 423,
-      governorate: "عمّان",
-      badgeIcon: "Trophy",
-      isCurrentUser: false,
-    },
-    {
-      rank: 2,
-      displayName: "أ. خالد العمري",
-      avatarUrl: null,
-      score: 95,
-      timeTakenSeconds: 487,
-      governorate: "الزرقاء",
-      badgeIcon: "Medal",
-      isCurrentUser: false,
-    },
-    {
-      rank: 3,
-      displayName: "أ. نور الرشيد",
-      avatarUrl: null,
-      score: 90,
-      timeTakenSeconds: 512,
-      governorate: "إربد",
-      badgeIcon: "Award",
-      isCurrentUser: false,
-    },
-    {
-      rank: 4,
-      displayName: "أ. فيصل الخطيب",
-      avatarUrl: null,
-      score: 88,
-      timeTakenSeconds: 598,
-      governorate: "عمّان",
-      badgeIcon: null,
-      isCurrentUser: false,
-    },
-    {
-      rank: 5,
-      displayName: "أ. ريم السالم",
-      avatarUrl: null,
-      score: 85,
-      timeTakenSeconds: 634,
-      governorate: "العقبة",
-      badgeIcon: null,
-      isCurrentUser: false,
-    },
-  ]);
+router.get("/quiz/leaderboard", requireAuth, async (req, res): Promise<void> => {
+  const aReq = req as AuthRequest;
+  const now = new Date();
+
+  // Find the current active weekly quiz (same logic as /quiz/current)
+  const quizRows = await db
+    .select({ exam: examsTable })
+    .from(examsTable)
+    .where(
+      and(
+        eq(examsTable.type, "weekly"),
+        eq((examsTable as any).status, "published"),
+        eq(examsTable.isAvailable, true),
+        isNull(examsTable.deletedAt),
+      )
+    );
+
+  if (!quizRows.length) {
+    res.json([]);
+    return;
+  }
+
+  const active =
+    quizRows.find((r) => {
+      const expires = r.exam.expiresAt;
+      return !expires || new Date(expires) >= now;
+    }) ?? quizRows[0];
+
+  // Fetch all submitted attempts for this quiz with user info
+  const attempts = await db
+    .select({
+      userId: examAttemptsTable.userId,
+      score: examAttemptsTable.score,
+      timeTakenMinutes: examAttemptsTable.timeTakenMinutes,
+      submittedAt: examAttemptsTable.submittedAt,
+      fullName: usersTable.fullName,
+    })
+    .from(examAttemptsTable)
+    .innerJoin(usersTable, eq(examAttemptsTable.userId, usersTable.id))
+    .where(
+      and(
+        eq(examAttemptsTable.examId, active.exam.id),
+        isNotNull(examAttemptsTable.submittedAt),
+      )
+    )
+    .orderBy(
+      desc(examAttemptsTable.score),
+      asc(examAttemptsTable.timeTakenMinutes),
+      asc(examAttemptsTable.submittedAt),
+    );
+
+  // Keep only each user's best attempt (already sorted best-first)
+  const bestByUser = new Map<number, typeof attempts[0]>();
+  for (const a of attempts) {
+    if (!bestByUser.has(a.userId)) {
+      bestByUser.set(a.userId, a);
+    }
+  }
+
+  const ranked = [...bestByUser.values()].map((a, idx) => ({
+    rank: idx + 1,
+    displayName: a.fullName ?? "طالب",
+    avatarUrl: null,
+    score: parseFloat(a.score ?? "0"),
+    timeTakenSeconds: (a.timeTakenMinutes ?? 0) * 60,
+    governorate: null,
+    badgeIcon:
+      idx === 0 ? "Trophy" : idx === 1 ? "Medal" : idx === 2 ? "Award" : null,
+    isCurrentUser: a.userId === aReq.userId,
+  }));
+
+  res.json(ranked);
 });
 
 export default router;

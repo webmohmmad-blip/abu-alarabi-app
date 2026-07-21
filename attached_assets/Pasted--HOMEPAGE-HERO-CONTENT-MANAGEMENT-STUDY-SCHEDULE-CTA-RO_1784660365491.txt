@@ -1,0 +1,634 @@
+# HOMEPAGE HERO CONTENT MANAGEMENT + STUDY SCHEDULE CTA ROUTE FIX
+
+# Abu Al-Arabi Platform
+
+You are a senior full-stack engineer and UI/UX specialist.
+
+The homepage Hero section currently contains fixed text and buttons.
+
+The admin must be able to edit all Hero text and button content from the Admin Dashboard without changing code.
+
+There is also a routing bug:
+
+The button currently labeled:
+
+"صمّم جدولك الدراسي"
+
+must be changed to:
+
+"أنشئ جدولك الدراسي"
+
+and must navigate to the actual study schedule creation page, not to the registration page.
+
+Do not only change static frontend text.
+
+Implement a complete editable Hero content system with correct routing and authentication behavior.
+
+==================================================
+
+PART 1: HERO CONTENT THAT MUST BE EDITABLE
+
+==================================================
+
+Allow the admin to control all text currently shown in the homepage Hero.
+
+Editable fields should include:
+
+1. Small badge text
+
+   Example:
+
+   "المنصة المتخصصة في اللغة العربية"
+
+2. Main heading line 1
+
+   Example:
+
+   "أتقن العربية."
+
+3. Main heading line 2
+
+   Example:
+
+   "افهمها. تفوق."
+
+4. Main paragraph
+
+   Example:
+
+   "مع الأستاذ محمد الساحوري – أبو العربي – طريقك لإتقان اللغة العربية والتفوق في التوجيهي أصبح أوضح وأسهل من أي وقت مضى."
+
+5. Primary button text
+
+   Required default:
+
+   "أنشئ جدولك الدراسي"
+
+6. Primary button destination
+
+7. Secondary button text
+
+   Example:
+
+   "تصفح الدوسيات"
+
+8. Secondary button destination
+
+9. Badge visibility
+
+10. Main paragraph visibility
+
+11. Primary button visibility
+
+12. Secondary button visibility
+
+Optional editable settings:
+
+- text alignment
+
+- title size preset
+
+- subtitle size preset
+
+- button order
+
+- highlight color
+
+- hero text maximum width
+
+Do not allow admin changes to break the RTL layout.
+
+==================================================
+
+PART 2: DATABASE MODEL
+
+==================================================
+
+Create or reuse a settings table for homepage content.
+
+Preferred approach:
+
+homepage_settings
+
+Fields may include:
+
+- id
+
+- heroBadgeText
+
+- heroTitleLine1
+
+- heroTitleLine2
+
+- heroDescription
+
+- primaryButtonText
+
+- primaryButtonLink
+
+- primaryButtonEnabled
+
+- secondaryButtonText
+
+- secondaryButtonLink
+
+- secondaryButtonEnabled
+
+- badgeEnabled
+
+- descriptionEnabled
+
+- updatedBy
+
+- createdAt
+
+- updatedAt
+
+If a general site_settings table already exists, reuse it instead of creating duplicate infrastructure.
+
+There should normally be one active homepage Hero configuration.
+
+==================================================
+
+PART 3: ADMIN MANAGEMENT PAGE
+
+==================================================
+
+Add a section in the Admin Dashboard:
+
+"إعدادات الصفحة الرئيسية"
+
+Recommended route:
+
+/admin/homepage-settings
+
+Inside it, add a section:
+
+"محتوى الواجهة الرئيسية"
+
+Fields:
+
+- النص الصغير أعلى العنوان
+
+- السطر الأول من العنوان
+
+- السطر الثاني من العنوان
+
+- الوصف
+
+- نص الزر الأساسي
+
+- رابط الزر الأساسي
+
+- تفعيل الزر الأساسي
+
+- نص الزر الثانوي
+
+- رابط الزر الثانوي
+
+- تفعيل الزر الثانوي
+
+- إظهار النص الصغير
+
+- إظهار الوصف
+
+Buttons:
+
+- حفظ التغييرات
+
+- معاينة
+
+- استعادة القيم الافتراضية
+
+Use clear Arabic form labels.
+
+All input text must be dark and readable.
+
+Do not allow white text on white inputs.
+
+==================================================
+
+PART 4: HOMEPAGE API
+
+==================================================
+
+Add or verify APIs such as:
+
+Public:
+
+GET /api/homepage-settings
+
+Admin:
+
+GET /api/admin/homepage-settings
+
+PATCH /api/admin/homepage-settings
+
+Requirements:
+
+- public endpoint returns only safe display fields
+
+- admin endpoint requires admin or super_admin
+
+- student access returns 403
+
+- guest access returns 401
+
+- invalid payload returns 400
+
+- no stack traces
+
+- no mock values
+
+- homepage uses real database values
+
+If settings do not exist yet, return sensible defaults.
+
+==================================================
+
+PART 5: PRIMARY BUTTON TEXT
+
+==================================================
+
+Change the default button text from:
+
+"صمّم جدولك الدراسي"
+
+to:
+
+"أنشئ جدولك الدراسي"
+
+Update all visible occurrences across the project.
+
+Search for:
+
+- صمّم جدولك الدراسي
+
+- صمم جدولك الدراسي
+
+- أنشئ جدولك
+
+- any duplicate CTA text
+
+Use one approved value:
+
+"أنشئ جدولك الدراسي"
+
+==================================================
+
+PART 6: PRIMARY BUTTON ROUTE FIX
+
+==================================================
+
+The current button incorrectly redirects to account registration.
+
+This must be fixed.
+
+Desired behavior:
+
+If the user is authenticated:
+
+- navigate directly to the study schedule creation page
+
+Preferred route:
+
+/study-room/schedule
+
+or the actual existing route for creating the study schedule.
+
+If the project has a dedicated route such as:
+
+/study-schedule
+
+/dashboard/schedule
+
+/study-room/planner
+
+use the actual canonical route already present in the codebase.
+
+Do not invent duplicate schedule pages.
+
+The button must lead to the exact page where the student can create or edit their study schedule.
+
+==================================================
+
+PART 7: AUTHENTICATION BEHAVIOR
+
+==================================================
+
+For logged-in users:
+
+- clicking "أنشئ جدولك الدراسي" must open the schedule creation page directly
+
+For logged-out visitors:
+
+Use one of these acceptable flows:
+
+Preferred:
+
+- redirect to login
+
+- preserve the intended destination using a safe return URL
+
+- after login, redirect automatically to the study schedule page
+
+Example:
+
+/login?redirect=/study-room/schedule
+
+Do not redirect to registration unless the user explicitly chooses to create an account.
+
+Do not lose the intended destination.
+
+Do not create a redirect loop.
+
+If the platform supports phone-only login, keep the current authentication model.
+
+==================================================
+
+PART 8: ROUTE GUARD FIX
+
+==================================================
+
+Inspect why the button currently goes to account creation.
+
+Possible causes:
+
+- hardcoded /register link
+
+- route guard redirects guests to /register
+
+- authentication middleware uses the wrong fallback
+
+- CTA uses old onboarding logic
+
+- destination route does not exist
+
+- button points to an obsolete route
+
+Fix the root cause.
+
+Recommended unauthenticated fallback:
+
+/login
+
+not:
+
+/register
+
+unless the route is explicitly a registration action.
+
+==================================================
+
+PART 9: SECONDARY BUTTON
+
+==================================================
+
+Keep the secondary button editable.
+
+Default:
+
+Text:
+
+"تصفح الدوسيات"
+
+Destination:
+
+/dossiers
+
+Verify it opens the dossiers page correctly.
+
+==================================================
+
+PART 10: LIVE PREVIEW
+
+==================================================
+
+Inside the admin homepage settings page, provide a Hero preview.
+
+The preview should display:
+
+- badge
+
+- two heading lines
+
+- description
+
+- buttons
+
+- current advertisement placement
+
+Admin edits should be previewable before saving.
+
+Do not save automatically unless the current product uses autosave.
+
+==================================================
+
+PART 11: HOMEPAGE RENDERING
+
+==================================================
+
+The homepage Hero must load editable content dynamically.
+
+Requirements:
+
+- use defaults while loading
+
+- avoid layout shift
+
+- do not show empty labels
+
+- hide disabled fields cleanly
+
+- preserve advertisement placement beside the text
+
+- keep desktop, tablet, and mobile layout intact
+
+Do not duplicate the Hero content source.
+
+==================================================
+
+PART 12: RESPONSIVE QA
+
+==================================================
+
+Test:
+
+Desktop:
+
+- editable text remains balanced beside advertisement
+
+- heading does not overflow
+
+- buttons remain aligned
+
+Tablet:
+
+- content remains readable
+
+- ad remains inside Hero
+
+Mobile:
+
+- text wraps correctly
+
+- buttons remain full-width or stacked if needed
+
+- schedule button remains visible
+
+- advertisement appears below buttons inside Hero
+
+Test at:
+
+- 320px
+
+- 375px
+
+- 430px
+
+- 768px
+
+- 1024px
+
+- 1280px
+
+- 1440px
+
+==================================================
+
+PART 13: VALIDATION
+
+==================================================
+
+Validate:
+
+- title fields cannot be excessively long
+
+- button text cannot be empty when enabled
+
+- internal links must begin with /
+
+- external links must use http or https
+
+- unsafe protocols must be rejected
+
+- no script injection
+
+- no raw HTML unless explicitly sanitized
+
+Arabic errors:
+
+- "عنوان الزر مطلوب"
+
+- "الرابط غير صالح"
+
+- "العنوان طويل جدًا"
+
+- "تعذر حفظ إعدادات الصفحة الرئيسية"
+
+==================================================
+
+PART 14: TESTING
+
+==================================================
+
+Add tests for:
+
+1. Admin opens homepage settings.
+
+2. Admin edits badge text.
+
+3. Admin edits heading line 1.
+
+4. Admin edits heading line 2.
+
+5. Admin edits description.
+
+6. Admin changes primary button text.
+
+7. Admin changes primary button link.
+
+8. Admin disables a button.
+
+9. Homepage reflects saved changes.
+
+10. Student clicks "أنشئ جدولك الدراسي".
+
+11. Logged-in student reaches the schedule page.
+
+12. Logged-out visitor reaches login, not registration.
+
+13. After login, visitor returns to schedule page.
+
+14. No redirect loop.
+
+15. Secondary button opens dossiers.
+
+16. Mobile layout remains correct.
+
+17. No white-on-white input text.
+
+==================================================
+
+PART 15: FINAL ACCEPTANCE CRITERIA
+
+==================================================
+
+Do not mark complete until:
+
+- all Hero text is editable from admin
+
+- homepage uses saved database values
+
+- button text is exactly:
+
+  "أنشئ جدولك الدراسي"
+
+- logged-in users go directly to the schedule creation page
+
+- logged-out visitors go to login with return URL
+
+- users are not incorrectly sent to registration
+
+- the existing advertisement layout remains correct
+
+- no hardcoded Hero text remains unless used as fallback defaults
+
+- desktop, tablet, and mobile pass
+
+==================================================
+
+FINAL REPORT
+
+==================================================
+
+Create:
+
+HOMEPAGE_HERO_CONTENT_AND_CTA_FIX_REPORT.md
+
+Include:
+
+- database changes
+
+- API changes
+
+- admin page changes
+
+- homepage component changes
+
+- old incorrect route
+
+- new correct route
+
+- authentication redirect behavior
+
+- responsive results
+
+- tests executed
+
+- remaining issues
+
+Do not claim completion based only on build success.
+
+Verify the real published website.
+ 

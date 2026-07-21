@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Clock, Users, Gift, Medal, ArrowLeft, FileQuestion, Target } from "lucide-react";
+import { Trophy, Clock, Users, Gift, Medal, ArrowLeft, CheckCircle2, Home } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 
@@ -77,10 +77,12 @@ export default function Quiz() {
                       <Users className="w-5 h-5 mx-auto mb-1 text-secondary" />
                       <div className="text-xl font-bold">{currentQuiz.participants}</div>
                     </div>
+                    {currentQuiz.prizes && (currentQuiz.prizes as unknown as unknown[]).length > 0 && (
                     <div className="bg-white/10 rounded-xl p-3 border border-white/10 text-center">
                       <Gift className="w-5 h-5 mx-auto mb-1 text-pink-400" />
-                      <div className="text-sm font-bold mt-1">جوائز قيمة</div>
+                      <div className="text-sm font-bold mt-1">جوائز</div>
                     </div>
+                  )}
                   </div>
                   
                   {currentQuiz.hasParticipated ? (
@@ -102,8 +104,12 @@ export default function Quiz() {
             ) : (
               <Card className="p-10 text-center border-dashed">
                 <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                <h3 className="font-bold text-lg mb-1">لا يوجد تحدي حالياً</h3>
-                <p className="text-muted-foreground text-sm">انتظر التحدي القادم يوم الجمعة الساعة 8:00 مساءً.</p>
+                <h3 className="font-bold text-lg mb-1">لا يوجد كويز أسبوعي متاح حالياً</h3>
+                <p className="text-muted-foreground text-sm mb-5">ترقب الكويز القادم قريباً!</p>
+                <Button variant="outline" className="gap-2" onClick={() => setLocation("/")}>
+                  <Home className="w-4 h-4" />
+                  العودة للرئيسية
+                </Button>
               </Card>
             )}
 
@@ -173,7 +179,7 @@ export default function Quiz() {
                         
                         <div className="flex-1 min-w-0">
                           <div className="font-bold truncate text-sm">{entry.displayName}</div>
-                          <div className="text-xs text-muted-foreground truncate">{entry.governorate || 'الأردن'}</div>
+                          {entry.governorate && <div className="text-xs text-muted-foreground truncate">{entry.governorate}</div>}
                         </div>
                         
                         <div className="text-center shrink-0">
@@ -197,5 +203,3 @@ export default function Quiz() {
   );
 }
 
-// Quick missing import fix
-import { CheckCircle2 } from "lucide-react";

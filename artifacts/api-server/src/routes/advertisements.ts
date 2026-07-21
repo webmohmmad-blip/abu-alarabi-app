@@ -202,7 +202,7 @@ router.patch(
   requireAuth,
   requireRole(["admin", "super_admin"]),
   async (req, res): Promise<void> => {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id));
     const { isActive } = req.body;
     if (isNaN(id)) {
       res.status(400).json({ ok: false, error: "معرّف غير صالح" });
@@ -230,7 +230,7 @@ router.patch(
   requireAuth,
   requireRole(["admin", "super_admin"]),
   async (req, res): Promise<void> => {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id));
     if (isNaN(id)) {
       res.status(400).json({ ok: false, error: "معرّف غير صالح" });
       return;
@@ -295,7 +295,7 @@ router.delete(
   requireAuth,
   requireRole(["admin", "super_admin"]),
   async (req, res): Promise<void> => {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id));
     if (isNaN(id)) {
       res.status(400).json({ ok: false, error: "معرّف غير صالح" });
       return;

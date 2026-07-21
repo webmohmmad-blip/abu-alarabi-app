@@ -6,6 +6,6 @@
 - [Two Shared Systems Refactor](two-shared-systems.md) — 5 shared components extracted; ~1,260 lines removed; 4 admin pages preserved; exams+quiz share examsTable via type='weekly'.
 - [Dossier File Pipeline](dossier-file-pipeline.md) — storage objects must be auth-free; PDF.js requires range requests (206); download/view are separate endpoints; fileUrl stored as /api/storage/objects/uploads/<uuid>.
 - [Worksheet PDF Refactor](worksheet-pdf-refactor.md) — worksheets are now PDF study materials; sourceType state in Study Room routes annotations to separate DB tables; dossierId var reused as generic sourceId.
-- [Weekly Quiz Table Split](weekly-quiz-split.md) — weekly quizzes live in examsTable (type="weekly"), not weeklyQuizzesTable; useStartExam expects {id: number}, not {data:{examId}}.
+- [Weekly Quiz Table Split](weekly-quiz-split.md) — weekly quizzes live in examsTable (type="weekly"), not weeklyQuizzesTable; /quiz/:id/start now uses examsTable directly; lib/db dist must be rebuilt after schema changes.
 - [QA Audit & Route Chain Fix 2026-07-21](qa-audit-2026-07-21.md) — 38/38 regression tests pass; full 14-part remediation complete; auth-rate-limiter max=500 in dev, 15 in prod.
 - [Homepage Advertisements System](advertisements-system.md) — homepage_ads table, 7 endpoints, admin CRUD page, AdCarousel, button contrast fixes; no requireAdmin — use requireRole.
