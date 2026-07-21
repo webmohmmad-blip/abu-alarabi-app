@@ -542,8 +542,8 @@ export default function AdminAdvertisements() {
 
               {/* Title */}
               <div>
-                <label className="block text-sm font-bold text-foreground mb-1">
-                  عنوان الإعلان <span className="text-destructive">*</span>
+                <label className="block text-sm font-bold text-[#374151] mb-1">
+                  عنوان الإعلان <span className="text-[#EF4444]">*</span>
                 </label>
                 <Input
                   value={form.title}
@@ -555,14 +555,14 @@ export default function AdminAdvertisements() {
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-bold text-foreground mb-1">وصف اختياري</label>
+                <label className="block text-sm font-bold text-[#374151] mb-1">وصف اختياري</label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="وصف مختصر للإعلان (اختياري)"
                   rows={2}
                   dir="rtl"
-                  className="w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-[#D1D5DB] bg-white text-[#1F2937] text-sm placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[rgba(90,45,130,.2)] focus:border-[#5A2D82] resize-none transition-all"
                 />
               </div>
 
@@ -601,7 +601,7 @@ export default function AdminAdvertisements() {
 
               {/* Link URL */}
               <div>
-                <label className="block text-sm font-bold text-foreground mb-1">رابط الإعلان</label>
+                <label className="block text-sm font-bold text-[#374151] mb-1">رابط الإعلان</label>
                 <Input
                   value={form.linkUrl}
                   onChange={e => setForm(f => ({ ...f, linkUrl: e.target.value }))}
@@ -609,12 +609,33 @@ export default function AdminAdvertisements() {
                   dir="ltr"
                   className="text-left"
                 />
+                <p className="text-xs text-[#9CA3AF] mt-1">
+                  روابط داخلية مقبولة: <span className="font-mono">/dossiers /worksheets /exams /weekly-quiz /study-room</span>
+                  {" — "}روابط خارجية: <span className="font-mono">https://...</span>
+                </p>
+                {form.linkUrl && !/^(https?:\/\/|\/)/.test(form.linkUrl) && (
+                  <p className="text-xs text-[#EF4444] mt-1">الرابط غير صالح</p>
+                )}
+                {form.linkUrl && /^(https?:\/\/|\/)/.test(form.linkUrl) && (
+                  <p className="text-xs text-[#9CA3AF] mt-1 flex items-center gap-1">
+                    <span>النقر على الصورة سيفتح الرابط</span>
+                    <a
+                      href={form.linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline hover:text-primary/80 transition-colors mr-2"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      اختبار الرابط ←
+                    </a>
+                  </p>
+                )}
               </div>
 
               {/* Open in new tab + CTA */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-foreground mb-1">نص زر الدعوة (اختياري)</label>
+                  <label className="block text-sm font-bold text-[#374151] mb-1">نص زر الدعوة (اختياري)</label>
                   <Input
                     value={form.ctaText}
                     onChange={e => setForm(f => ({ ...f, ctaText: e.target.value }))}
@@ -630,14 +651,14 @@ export default function AdminAdvertisements() {
                       onChange={e => setForm(f => ({ ...f, openInNewTab: e.target.checked }))}
                       className="w-4 h-4 accent-primary"
                     />
-                    <span className="text-sm text-foreground">فتح في نافذة جديدة</span>
+                    <span className="text-sm text-[#374151]">فتح في نافذة جديدة</span>
                   </label>
                 </div>
               </div>
 
               {/* Display style */}
               <div>
-                <label className="block text-sm font-bold text-foreground mb-2">نمط العرض</label>
+                <label className="block text-sm font-bold text-[#374151] mb-2">نمط العرض</label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {[
                     { value: "image_only", label: "صورة فقط" },
@@ -670,7 +691,7 @@ export default function AdminAdvertisements() {
               {/* Status + Position */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-foreground mb-2">حالة الإعلان</label>
+                  <label className="block text-sm font-bold text-[#374151] mb-2">حالة الإعلان</label>
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
@@ -678,11 +699,11 @@ export default function AdminAdvertisements() {
                       onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))}
                       className="w-4 h-4 accent-primary"
                     />
-                    <span className="text-sm text-foreground">نشط</span>
+                    <span className="text-sm text-[#374151]">نشط</span>
                   </label>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-foreground mb-1">ترتيب الظهور</label>
+                  <label className="block text-sm font-bold text-[#374151] mb-1">ترتيب الظهور</label>
                   <Input
                     type="number"
                     min="0"
@@ -696,7 +717,7 @@ export default function AdminAdvertisements() {
               {/* Schedule */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-foreground mb-1">تاريخ بداية العرض</label>
+                  <label className="block text-sm font-bold text-[#374151] mb-1">تاريخ بداية العرض</label>
                   <Input
                     type="datetime-local"
                     value={form.startAt}
@@ -705,7 +726,7 @@ export default function AdminAdvertisements() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-foreground mb-1">تاريخ نهاية العرض</label>
+                  <label className="block text-sm font-bold text-[#374151] mb-1">تاريخ نهاية العرض</label>
                   <Input
                     type="datetime-local"
                     value={form.endAt}
@@ -772,28 +793,67 @@ export default function AdminAdvertisements() {
             onClick={e => e.stopPropagation()}
             dir="rtl"
           >
-            <div className="flex justify-end mb-2">
+            {/* Top bar */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                {previewAd.linkUrl && (
+                  <>
+                    <span className="text-white/70 text-sm">النقر على الصورة سيفتح الرابط</span>
+                    <a
+                      href={previewAd.linkUrl}
+                      target={previewAd.openInNewTab ? "_blank" : "_self"}
+                      rel={previewAd.openInNewTab ? "noopener noreferrer" : undefined}
+                      className="inline-flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      اختبار الرابط
+                    </a>
+                  </>
+                )}
+              </div>
               <button
                 onClick={() => setPreviewAd(null)}
                 className="bg-white/20 hover:bg-white/30 text-white rounded-full p-2 transition-colors"
+                aria-label="إغلاق المعاينة"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Ad image — whole image is the link if linkUrl exists */}
             <div className="rounded-2xl overflow-hidden shadow-2xl">
               {previewAd.imageUrl ? (
-                <img
-                  src={previewAd.imageUrl}
-                  alt={previewAd.title}
-                  className="w-full object-cover"
-                  style={{ maxHeight: 400 }}
-                />
+                previewAd.linkUrl ? (
+                  <a
+                    href={previewAd.linkUrl}
+                    target={previewAd.openInNewTab ? "_blank" : "_self"}
+                    rel={previewAd.openInNewTab ? "noopener noreferrer" : undefined}
+                    aria-label={`فتح إعلان: ${previewAd.title}`}
+                    className="block group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 rounded-2xl"
+                    tabIndex={0}
+                  >
+                    <img
+                      src={previewAd.imageUrl}
+                      alt={previewAd.title}
+                      className="w-full object-cover transition-all duration-300 group-hover:brightness-110 group-hover:scale-[1.01]"
+                      style={{ maxHeight: 400 }}
+                    />
+                  </a>
+                ) : (
+                  <img
+                    src={previewAd.imageUrl}
+                    alt={previewAd.title}
+                    className="w-full object-cover"
+                    style={{ maxHeight: 400 }}
+                  />
+                )
               ) : (
                 <div className="bg-muted flex items-center justify-center h-48">
                   <ImageIcon className="w-12 h-12 text-muted-foreground/40" />
                 </div>
               )}
             </div>
+
             <div className="mt-3 text-white text-center">
               <p className="font-bold text-lg">{previewAd.title}</p>
               {previewAd.description && <p className="text-white/70 text-sm mt-1">{previewAd.description}</p>}

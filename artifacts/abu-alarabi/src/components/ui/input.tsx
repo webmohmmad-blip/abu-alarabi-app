@@ -10,7 +10,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          "flex h-12 w-full rounded-xl border border-input bg-white/50 px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all shadow-inner backdrop-blur-sm",
+          // Explicit light-mode colours so text is always visible on white
+          "flex h-12 w-full rounded-xl px-4 py-2 text-sm transition-all",
+          "bg-white text-[#1F2937]",
+          "border border-[#D1D5DB]",
+          "placeholder:text-[#9CA3AF]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(90,45,130,.2)] focus-visible:border-[#5A2D82]",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          "file:border-0 file:bg-transparent file:text-sm file:font-medium",
+          // datetime-local / color picker chrome
+          "[color-scheme:light]",
           className
         )}
         ref={ref}

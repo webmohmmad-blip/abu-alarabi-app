@@ -1,0 +1,876 @@
+# GLOBAL BUTTON SYSTEM AUDIT AND FIX
+
+# Abu Al-Arabi Platform
+
+You are a senior frontend engineer, design-system architect, accessibility specialist, and QA engineer.
+
+There is a repeated contrast problem across the website where some buttons have unreadable combinations such as:
+
+- white text on white background
+
+- light text on light background
+
+- invisible hover state
+
+- invisible active state
+
+- disabled text that cannot be read
+
+- transparent button on a light page with white text
+
+This issue has appeared in multiple places, including:
+
+- Exams filter buttons
+
+- Submit Exam button
+
+- Advertisement forms
+
+- Hero buttons
+
+- Admin pages
+
+- Other action buttons
+
+Do not patch individual buttons separately.
+
+Audit and repair the entire button system globally.
+
+==================================================
+
+PART 1: DISCOVER THE BUTTON ARCHITECTURE
+
+==================================================
+
+Inspect the project and identify:
+
+- shared Button component
+
+- button variants
+
+- Tailwind utility classes
+
+- CSS modules
+
+- global CSS variables
+
+- theme tokens
+
+- dark/light mode overrides
+
+- Radix UI buttons
+
+- shadcn/ui Button component
+
+- custom buttons
+
+- icon buttons
+
+- filter buttons
+
+- segmented controls
+
+- tabs that visually behave like buttons
+
+- submit buttons
+
+- links styled as buttons
+
+Create an inventory of all button sources.
+
+Determine whether the repeated bug comes from:
+
+- wrong variant definitions
+
+- inherited text color
+
+- global `.text-white`
+
+- theme overrides
+
+- active state styles
+
+- disabled state styles
+
+- dark-mode classes applied on light backgrounds
+
+- inconsistent ad-hoc Tailwind classes
+
+==================================================
+
+PART 2: CREATE ONE CANONICAL BUTTON SYSTEM
+
+==================================================
+
+Use one shared button design system wherever possible.
+
+Supported variants:
+
+1. Primary
+
+2. Secondary
+
+3. Outline
+
+4. Ghost
+
+5. Destructive
+
+6. Success
+
+7. Warning
+
+8. Neutral
+
+9. Link
+
+10. Icon-only
+
+Do not leave separate random button styles across pages unless there is a justified design reason.
+
+==================================================
+
+PART 3: APPROVED COLOR TOKENS
+
+==================================================
+
+Use the platform brand colors:
+
+Primary Purple:
+
+#5A2D82
+
+Secondary Turquoise:
+
+#0D9BB5
+
+Gold:
+
+#C79A2D
+
+Success Green:
+
+#2FA84F
+
+Background:
+
+#FAFAF8
+
+Dark Text:
+
+#1F2937
+
+Medium Text:
+
+#4B5563
+
+Border:
+
+#D1D5DB
+
+Danger:
+
+#DC2626
+
+==================================================
+
+PART 4: BUTTON VARIANTS
+
+==================================================
+
+Primary:
+
+- background: #5A2D82
+
+- text: #FFFFFF
+
+- border: #5A2D82
+
+- hover background: darker purple
+
+- active background: darker than hover
+
+- focus ring: visible purple ring
+
+- disabled: reduced opacity but readable
+
+Secondary:
+
+- background: #0D9BB5
+
+- text: #FFFFFF
+
+- border: #0D9BB5
+
+- hover: darker turquoise
+
+Outline:
+
+- background: transparent or white
+
+- text: #5A2D82
+
+- border: 1px solid #5A2D82
+
+- hover background: light purple
+
+- hover text: #5A2D82
+
+Ghost:
+
+- background: transparent
+
+- text: readable according to surrounding background
+
+- hover background: subtle visible surface
+
+- never white text on light background
+
+Success:
+
+- background: #2FA84F
+
+- text: #FFFFFF
+
+Warning:
+
+- background: #C79A2D
+
+- text: use #1F2937 if white fails contrast
+
+- ensure WCAG AA
+
+Destructive:
+
+- background: #DC2626
+
+- text: #FFFFFF
+
+Neutral:
+
+- background: #FFFFFF
+
+- text: #1F2937
+
+- border: #D1D5DB
+
+Link:
+
+- background: transparent
+
+- text: #5A2D82
+
+- underline on hover or clear hover state
+
+Icon-only:
+
+- must have visible hover
+
+- must have aria-label
+
+- must not rely on icon color alone
+
+==================================================
+
+PART 5: STATE RULES
+
+==================================================
+
+For every variant, define:
+
+- default
+
+- hover
+
+- active
+
+- focus
+
+- focus-visible
+
+- disabled
+
+- loading
+
+- selected
+
+- unselected
+
+Never allow:
+
+- bg-white + text-white
+
+- bg-transparent + text-white on light background
+
+- hover:bg-white + hover:text-white
+
+- disabled text becoming invisible
+
+- selected state losing contrast
+
+- focus ring missing
+
+- loading spinner without readable label
+
+==================================================
+
+PART 6: EXAM SYSTEM BUTTONS
+
+==================================================
+
+Audit all exam-related buttons:
+
+- ابدأ الامتحان
+
+- التالي
+
+- السابق
+
+- تحديد للمراجعة
+
+- مراجعة الامتحان
+
+- إنهاء الامتحان
+
+- تسليم الامتحان
+
+- العودة للامتحانات
+
+- عرض النتيجة
+
+- إعادة المحاولة if supported
+
+Recommended mapping:
+
+Primary:
+
+- ابدأ الامتحان
+
+- التالي
+
+- تسليم الامتحان
+
+- إنهاء الامتحان
+
+Outline:
+
+- السابق
+
+- العودة
+
+- تحديد للمراجعة
+
+Destructive or warning:
+
+- إلغاء المحاولة
+
+- الخروج بدون تسليم
+
+==================================================
+
+PART 7: FILTERS AND SEGMENTED CONTROLS
+
+==================================================
+
+Audit:
+
+- الكل
+
+- وزاري
+
+- شامل
+
+- وحدة
+
+- status filters
+
+- content filters
+
+- admin filters
+
+- quiz filters
+
+- dossier filters
+
+- worksheet filters
+
+Active filter:
+
+- background: #5A2D82
+
+- text: #FFFFFF
+
+- border: #5A2D82
+
+Inactive filter:
+
+- background: #FFFFFF or transparent
+
+- text: #5A2D82
+
+- border: #5A2D82
+
+Hover:
+
+- light purple background
+
+- readable purple text
+
+Use aria-pressed or proper tab semantics.
+
+==================================================
+
+PART 8: ADMIN BUTTONS
+
+==================================================
+
+Audit all admin actions:
+
+- إضافة
+
+- تعديل
+
+- حفظ
+
+- نشر
+
+- إلغاء النشر
+
+- أرشفة
+
+- حذف
+
+- تفعيل
+
+- إيقاف
+
+- معاينة
+
+- رفع ملف
+
+- استبدال ملف
+
+- إنشاء امتحان
+
+- إنشاء كويز
+
+- إضافة إعلان
+
+- اختبار الرابط
+
+Map them consistently:
+
+Primary:
+
+- حفظ
+
+- إضافة
+
+- نشر
+
+- إنشاء
+
+Secondary:
+
+- معاينة
+
+- اختبار الرابط
+
+Outline:
+
+- تعديل
+
+- إلغاء
+
+Warning:
+
+- أرشفة
+
+- إلغاء النشر
+
+Destructive:
+
+- حذف
+
+Success:
+
+- تفعيل
+
+Neutral:
+
+- إيقاف
+
+==================================================
+
+PART 9: HERO AND HOMEPAGE BUTTONS
+
+==================================================
+
+Audit:
+
+- تصفح الدوسيات
+
+- صمّم جدولك الدراسي
+
+- أي CTA داخل الإعلان
+
+- العودة للرئيسية
+
+On dark backgrounds:
+
+- Primary purple or turquoise buttons with white text
+
+- White buttons must use dark or purple text
+
+- Outline buttons must have visible border and readable text
+
+Never use a white button with white text.
+
+==================================================
+
+PART 10: FORM BUTTONS
+
+==================================================
+
+Audit:
+
+- إرسال
+
+- حفظ
+
+- إلغاء
+
+- رفع
+
+- إزالة
+
+- التالي
+
+- السابق
+
+- تأكيد
+
+- تسجيل
+
+- دخول
+
+- إنشاء حساب
+
+Ensure:
+
+- submit state is clear
+
+- loading state is visible
+
+- disabled state explains why when useful
+
+- button text remains readable
+
+==================================================
+
+PART 11: LINKS STYLED AS BUTTONS
+
+==================================================
+
+Audit every `<a>` or router Link styled as a button.
+
+Ensure:
+
+- same visual system
+
+- visible focus
+
+- valid hover state
+
+- no nested interactive elements
+
+- internal links use router navigation
+
+- external links use safe rel attributes
+
+==================================================
+
+PART 12: MOBILE AND TABLET
+
+==================================================
+
+Test all button types at:
+
+- 320px
+
+- 375px
+
+- 430px
+
+- 768px
+
+- 1024px
+
+- desktop
+
+Verify:
+
+- minimum touch target approximately 44px
+
+- labels do not wrap awkwardly
+
+- buttons do not overflow
+
+- groups wrap or scroll safely
+
+- submit button remains visible
+
+- sticky actions do not cover content
+
+- Arabic text is centered and not clipped
+
+==================================================
+
+PART 13: ACCESSIBILITY
+
+==================================================
+
+Target WCAG 2.1 AA.
+
+Verify:
+
+- sufficient color contrast
+
+- visible keyboard focus
+
+- correct disabled semantics
+
+- icon-only buttons have aria-label
+
+- loading buttons have accessible status
+
+- active state is not shown by color alone
+
+- all buttons are keyboard accessible
+
+- no clickable div without keyboard support
+
+==================================================
+
+PART 14: SEARCH FOR BAD PATTERNS
+
+==================================================
+
+Search the entire codebase for patterns such as:
+
+- bg-white text-white
+
+- text-white bg-transparent
+
+- hover:bg-white hover:text-white
+
+- disabled:text-white
+
+- data-[state=active]:bg-white
+
+- data-[state=active]:text-white
+
+- className strings that override shared variants
+
+- inline styles with color: white on light backgrounds
+
+- duplicate custom button components
+
+Fix all confirmed issues.
+
+==================================================
+
+PART 15: DESIGN SYSTEM IMPLEMENTATION
+
+==================================================
+
+Prefer a reusable component API such as:
+<Button variant="primary" size="md">
+
+  حفظ
+</Button>
+
+Supported sizes:
+
+- sm
+
+- md
+
+- lg
+
+- icon
+
+Avoid repeated raw class strings across pages.
+
+If the project uses class-variance-authority, define all variants centrally.
+
+If the project uses Tailwind, use semantic tokens rather than ad-hoc colors.
+
+==================================================
+
+PART 16: REGRESSION TESTS
+
+==================================================
+
+Add tests for:
+
+- primary button contrast
+
+- outline button contrast
+
+- disabled state
+
+- hover state
+
+- filter active state
+
+- filter inactive state
+
+- exam submit button
+
+- exam previous/next buttons
+
+- admin delete button
+
+- admin save button
+
+- hero buttons
+
+- advertisement buttons
+
+- mobile rendering
+
+- keyboard focus
+
+Use automated visual or component tests where available.
+
+==================================================
+
+PART 17: MANUAL QA CHECKLIST
+
+==================================================
+
+Manually verify:
+
+Student pages:
+
+- Homepage
+
+- Dashboard
+
+- Dossiers
+
+- Worksheets
+
+- Exams
+
+- Weekly Quiz
+
+- Study Room
+
+- Study Schedule
+
+- Notes
+
+Admin pages:
+
+- Dashboard
+
+- Dossiers
+
+- Worksheets
+
+- Exams
+
+- Weekly Quiz
+
+- Advertisements
+
+- Users
+
+- Reports
+
+- Settings
+
+Auth:
+
+- Login
+
+- Registration
+
+- Logout confirmation
+
+Dialogs:
+
+- Delete confirmation
+
+- Publish confirmation
+
+- Submit Exam confirmation
+
+- Archive confirmation
+
+==================================================
+
+PART 18: FINAL ACCEPTANCE CRITERIA
+
+==================================================
+
+Do not mark complete until:
+
+- no white-on-white button remains
+
+- no unreadable hover state remains
+
+- no unreadable active state remains
+
+- no unreadable disabled state remains
+
+- all critical actions are visually obvious
+
+- all filters show clear selected/unselected state
+
+- exam submit button is visible
+
+- "الكل" filter is visible
+
+- all mobile buttons are usable
+
+- keyboard focus is visible
+
+- contrast passes WCAG AA where applicable
+
+==================================================
+
+FINAL REPORT
+
+==================================================
+
+Create:
+
+GLOBAL_BUTTON_SYSTEM_AUDIT_REPORT.md
+
+Include:
+
+- root cause
+
+- shared components changed
+
+- variants created or updated
+
+- pages audited
+
+- bad class patterns removed
+
+- accessibility results
+
+- responsive test results
+
+- remaining exceptions
+
+- screenshots or verification evidence
+
+Do not claim success based only on build passing.
+
+Verify the real published website visually.
+ 
