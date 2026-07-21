@@ -39,4 +39,11 @@ description: Root causes of Mobile PageSpeed 58, fixes applied 2026-07-21, and w
 - New images uploaded by admin go through object storage; they are not compressed server-side. Large uploads will still be slow until server-side resizing (sharp) is added.
 - The combined `/api/public/homepage` endpoint is the source of truth for homepage data. If new homepage sections are added, extend this endpoint instead of adding new React Query calls in home.tsx.
 
-**Why:** Mobile users on slow connections were downloading 2+ MB on first paint. Every extra network round-trip adds 300–1000ms on mobile. The h1 opacity animation was the single biggest LCP killer.
+## LCP Bootstrap Pattern (key technique)
+index.html `<head>` contains an inline `<script>` that fires `fetch('/api/public/homepage')` before React loads. On response: sets `window.__HOMEPAGE__` and dynamically injects `<link rel="preload" as="image" fetchpriority="high">` for the first ad image. React's queries use `initialData: window.__HOMEPAGE__` so they return immediately on first render with zero re-fetch.
+
+Pre-rendered hero HTML is in `<div id="root">` (inline CSS, matches real hero design) — gives FCP < 0.3s instead of 5.6s.
+
+Self-hosted Tajawal in `/public/fonts/` (3 × ~8.7 KB WOFF2); `@font-face` in `index.css`; preload for weight 900 in `<head>`. No Google Fonts DNS/CDN needed.
+
+**Why:** Mobile users on slow connections were downloading 2+ MB on first paint. Every extra network round-trip adds 300–1000ms on mobile. The h1 opacity animation was the single biggest LCP killer. The LCP image was undiscoverable until HTML → JS → React → API — a 6+ second chain. The bootstrap script collapses that chain to HTML → API (parallel with JS) → image cached before React mounts.

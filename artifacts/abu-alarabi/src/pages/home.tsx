@@ -111,12 +111,16 @@ export default function Home() {
   const queryClient = useQueryClient();
 
   // ── Single combined fetch: hero + ads + featured dossiers ─────────────────
-  // One round-trip instead of three. Server caches 60 s.
+  // initialData uses window.__HOMEPAGE__ when available — this is pre-fetched by
+  // the inline <script> in index.html before React even loads, so when React mounts
+  // the data is already there and no API round-trip is needed.
   const { data: homepage } = useQuery<HomepageData>({
     queryKey: ["/api/public/homepage"],
     queryFn: () => customFetch<HomepageData>("/api/public/homepage", { method: "GET" }),
     staleTime: 60_000,
-    placeholderData: { ok: true, hero: HERO_DEFAULTS, ads: [], featuredDossiers: [] },
+    initialData: typeof window !== "undefined"
+      ? ((window as any).__HOMEPAGE__ as HomepageData | undefined)
+      : undefined,
   });
 
   // Seed the ads into React Query cache so HeroAdvertisement uses it immediately
@@ -290,11 +294,19 @@ export default function Home() {
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-primary/20 border border-primary/10">
                 {/* Responsive WebP with JPEG fallback — lazy since it's below the fold */}
                 <picture>
+                  {/* AVIF: smallest size (~6-27 KB) — Chrome, Firefox, Edge 121+ */}
+                  <source
+                    type="image/avif"
+                    srcSet="/teacher-sahouri-380.avif 380w, /teacher-sahouri-760.avif 760w"
+                    sizes="(max-width: 640px) 380px, 760px"
+                  />
+                  {/* WebP fallback (~13-58 KB) — Safari 14+ and all modern browsers */}
                   <source
                     type="image/webp"
                     srcSet="/teacher-sahouri-380.webp 380w, /teacher-sahouri-760.webp 760w"
                     sizes="(max-width: 640px) 380px, 760px"
                   />
+                  {/* JPEG fallback for very old browsers */}
                   <source
                     type="image/jpeg"
                     srcSet="/teacher-sahouri-760.jpg"

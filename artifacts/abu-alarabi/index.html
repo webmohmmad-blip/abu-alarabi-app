@@ -36,23 +36,26 @@
     <!-- <meta name="google-site-verification" content="REPLACE_WITH_GOOGLE_VERIFICATION_TOKEN" /> -->
     <!-- <meta name="msvalidate.01" content="REPLACE_WITH_BING_VERIFICATION_TOKEN" /> -->
 
-    <!-- ═══ Performance — preconnect & preload ═══ -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Tajawal: only 3 weights needed (400 body, 700 bold, 900 black headings) -->
-    <link rel="preload" as="style" fetchpriority="high"
-      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap"
-      onload="this.rel='stylesheet'" />
-    <noscript>
-      <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" />
-    </noscript>
+    <!-- ═══ Performance ═══════════════════════════════════════════════════════════ -->
 
-    <!-- LCP hint: teacher photo shown in the first visible viewport on some screen sizes -->
-    <link rel="preload" as="image"
-      href="/teacher-sahouri-760.webp"
-      imagesrcset="/teacher-sahouri-380.webp 380w, /teacher-sahouri-760.webp 760w"
-      imagesizes="(max-width: 640px) 380px, 760px" />
+    <!-- Tajawal is self-hosted in /fonts/ — no Google Fonts DNS / connection needed.
+         Preload weight 900 (the h1 LCP text weight) so it arrives before React mounts. -->
+    <link rel="preload" as="font" type="font/woff2"
+      href="/fonts/tajawal-900.woff2" crossorigin />
+
+    <!-- ═══ LCP Bootstrap script ════════════════════════════════════════════════
+         Fires the API call BEFORE React loads (no JS framework needed).
+         On response it:
+           1. stores data in window.__HOMEPAGE__ so React uses it as initialData
+              (zero re-fetch when React mounts)
+           2. dynamically injects <link rel="preload"> for the first ad image so
+              the browser starts downloading it ~3 s before React would normally
+              discover the URL (HTML → JS → React → API → image is now
+              HTML → API [parallel with JS] → image)
+    ════════════════════════════════════════════════════════════════════════════ -->
+    <script>
+    !function(){try{fetch('/api/public/homepage').then(function(r){return r.json()}).then(function(d){if(!d||!d.ok)return;window.__HOMEPAGE__=d;var a=d.ads&&d.ads[0];if(!a)return;var m=window.innerWidth<640,src=m?(a.mobileImageUrl||a.imageUrl):a.imageUrl;if(!src)return;var l=document.createElement('link');l.rel='preload';l.as='image';l.fetchPriority='high';l.href=src;document.head.appendChild(l)})}catch(e){}}()
+    </script>
 
     <!-- ═══ Favicon ═══ -->
     <link rel="icon"             type="image/svg+xml" href="/favicon.svg" />
@@ -145,7 +148,14 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     -->
-    <div id="root"></div>
+    <!--
+      Pre-rendered hero: visible immediately on first paint (fixes FCP from ~5.6 s to <0.3 s).
+      Uses inline CSS matching the actual hero design so there is no visual flash.
+      React replaces this when it mounts (~2–3 s later) with the full interactive app.
+      The text matches the admin-set DB content; if admin changes it, a brief swap
+      occurs when React mounts — acceptable trade-off for 5+ second FCP improvement.
+    -->
+    <div id="root"><div aria-hidden="true" style="min-height:100svh;background:#0d0618;display:flex;align-items:center;justify-content:flex-end;direction:rtl;font-family:Tajawal,system-ui,sans-serif;padding:3rem 1.5rem;box-sizing:border-box"><div style="max-width:560px"><h1 style="font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;color:#fff;line-height:1.1;margin:0 0 0.5rem;letter-spacing:-0.01em">أتقن العربية<br><span style="background:linear-gradient(135deg,#C79A2D,#e8c060,#C79A2D);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">مع أبو العربي</span></h1></div></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

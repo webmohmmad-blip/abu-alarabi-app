@@ -50,11 +50,21 @@ const SLIDE_DURATION = 5000;
 export function HeroAdvertisement() {
   const prefersReduced = useReducedMotion();
 
+  // Use bootstrap data from window.__HOMEPAGE__ as initialData when available.
+  // The inline <script> in index.html pre-fetches this before React loads,
+  // so the carousel renders immediately on first paint without a loading state.
+  const bootstrapAds: Ad[] | undefined = (() => {
+    if (typeof window === "undefined") return undefined;
+    const hp = (window as any).__HOMEPAGE__;
+    return hp?.ads?.length ? (hp.ads as Ad[]) : undefined;
+  })();
+
   const { data: ads = [], isLoading, isError } = useQuery<Ad[]>({
     queryKey: ["advertisements", "active"],
     queryFn: fetchActiveAds,
     staleTime: 60_000,
     retry: 1,
+    initialData: bootstrapAds,
   });
 
   const [current, setCurrent] = useState(0);
