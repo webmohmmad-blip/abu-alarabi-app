@@ -1,0 +1,598 @@
+# FIX DOSSIER COVER IMAGE, PDF DOWNLOAD, AND STUDY ROOM FILE OPENING
+
+# Abu Al-Arabi Platform
+
+There are three production bugs on the dossier details page:
+
+1. The uploaded dossier cover image does not appear.
+
+2. Clicking "تحميل PDF" does not download the file to the device.
+
+3. Clicking "ادرس الآن في غرفة الدراسة" returns a file error.
+
+Do not only explain the issue.
+
+Inspect and fix the complete file flow end-to-end:
+
+- Admin upload form
+
+- File storage
+
+- Database values
+
+- Public file URLs
+
+- Dossier API responses
+
+- Cover image rendering
+
+- PDF download behavior
+
+- Study Room PDF loading
+
+- Production deployment configuration
+
+==================================================
+
+1. TRACE THE FILE DATA FLOW
+
+==================================================
+
+Inspect how the admin uploads:
+
+- dossier PDF
+
+- cover image
+
+Trace these values through:
+
+1. Frontend form
+
+2. Upload API
+
+3. Storage provider
+
+4. Database
+
+5. Dossier API
+
+6. Student dossier page
+
+7. Download button
+
+8. Study Room
+
+Identify whether the application stores:
+
+- blob: URLs
+
+- temporary local paths
+
+- localhost URLs
+
+- replit.dev preview URLs
+
+- expired signed URLs
+
+- incorrect relative paths
+
+- filenames without public URLs
+
+- fake placeholder values
+
+These must not be used in production.
+
+==================================================
+
+2. FIX FILE STORAGE
+
+==================================================
+
+Files must be stored in persistent production storage.
+
+Do not rely on:
+
+- browser blob URLs
+
+- temporary filesystem paths
+
+- local development folders
+
+- frontend-only object URLs
+
+Use the existing persistent object storage solution in the project.
+
+If no persistent object storage exists, implement one compatible with the current deployment.
+
+Store at minimum:
+
+Dossier:
+
+- coverImageUrl
+
+- pdfFileUrl
+
+- pdfFileName
+
+- pdfMimeType
+
+- pdfSizeBytes
+
+- storageKey
+
+The database must store stable references, not temporary URLs.
+
+==================================================
+
+3. FIX COVER IMAGE DISPLAY
+
+==================================================
+
+The dossier page currently displays a broken or empty image.
+
+Requirements:
+
+- Read the actual coverImageUrl from the API.
+
+- Validate that the URL is non-empty.
+
+- Render it with the correct image component.
+
+- Use a valid fallback only when no cover was uploaded.
+
+- Do not show a broken-image icon.
+
+- Preserve the correct aspect ratio.
+
+- Use object-fit: cover.
+
+- Add an Arabic alt value using the dossier title.
+
+- Handle loading and error states.
+
+If using an image optimization component, whitelist the storage domain or use the correct unoptimized configuration where required.
+
+Test:
+
+- uploaded JPG
+
+- JPEG
+
+- PNG
+
+- WebP
+
+- missing cover
+
+- replaced cover
+
+- deleted cover
+
+==================================================
+
+4. FIX PDF DOWNLOAD
+
+==================================================
+
+The "تحميل PDF" button must download the actual file to the student's device.
+
+Do not only open a broken URL.
+
+Preferred behavior:
+
+- Call a secure download endpoint.
+
+- Validate access.
+
+- Return or redirect to the correct file.
+
+- Use proper response headers:
+
+Content-Type: application/pdf
+
+Content-Disposition: attachment; filename="safe-file-name.pdf"
+
+If the storage provider uses signed URLs:
+
+- Generate a fresh signed download URL on demand.
+
+- Do not store expired signed URLs permanently in the database.
+
+Frontend behavior:
+
+- Show loading state while preparing the download.
+
+- Disable duplicate clicks.
+
+- Start the download.
+
+- Show an Arabic error message if it fails:
+
+"تعذر تحميل الملف، حاول مرة أخرى"
+
+The button must work on:
+
+- Chrome
+
+- Safari
+
+- iPad
+
+- iPhone
+
+- Android
+
+- Desktop
+
+==================================================
+
+5. FIX STUDY ROOM OPENING
+
+==================================================
+
+When clicking:
+
+"ادرس الآن في غرفة الدراسة"
+
+the selected dossier PDF must open automatically in the Study Room.
+
+Expected flow:
+
+1. User clicks the button.
+
+2. Navigate to a route such as:
+
+/study-room?dossierId=:id
+
+or:
+
+/study-room/dossiers/:id
+
+3. The Study Room requests dossier metadata from the backend.
+
+4. The backend validates the logged-in user's access.
+
+5. It returns a valid PDF viewing URL.
+
+6. The PDF reader loads the document.
+
+Do not pass a temporary blob URL through navigation state.
+
+Do not depend on a stale frontend URL.
+
+==================================================
+
+6. PDF VIEWING ENDPOINT
+
+==================================================
+
+Create or verify a secure endpoint such as:
+
+GET /api/dossiers/:id/view
+
+Response options:
+
+A. Redirect to a fresh signed viewing URL.
+
+or
+
+B. Stream the PDF with:
+
+Content-Type: application/pdf
+
+Content-Disposition: inline
+
+The endpoint must:
+
+- require authentication if the dossier is private
+
+- verify the dossier exists
+
+- verify a PDF is attached
+
+- return 404 if no file exists
+
+- return 403 if access is denied
+
+- return a safe Arabic error response
+
+Example:
+
+{
+
+  "ok": false,
+
+  "message": "ملف الدوسية غير متوفر"
+
+}
+
+==================================================
+
+7. CORS AND RANGE REQUESTS
+
+==================================================
+
+The PDF reader may require HTTP Range requests.
+
+Ensure the PDF source supports:
+
+- Accept-Ranges: bytes
+
+- Range requests
+
+- partial content responses where applicable
+
+- correct CORS headers for the production domain
+
+Allow only the required origin:
+https://malsahori.com
+
+Do not use a wildcard with credentials.
+
+Verify that the storage provider or proxy supports PDF.js range requests.
+
+==================================================
+
+8. API RESPONSE CONSISTENCY
+
+==================================================
+
+Make sure the dossier API returns consistent fields.
+
+Example:
+
+{
+
+  "id": "...",
+
+  "title": "...",
+
+  "description": "...",
+
+  "coverImageUrl": "...",
+
+  "pdfAvailable": true,
+
+  "pdfFileName": "...",
+
+  "pageCount": 120
+
+}
+
+Do not expose internal filesystem paths or private storage secrets.
+
+Do not send incompatible field names such as:
+
+cover
+
+coverUrl
+
+image
+
+imageUrl
+
+from different endpoints.
+
+Choose one canonical contract and update frontend and backend to match.
+
+==================================================
+
+9. ADMIN UPLOAD VALIDATION
+
+==================================================
+
+When the admin creates or edits a dossier:
+
+Cover image:
+
+- allow JPG, JPEG, PNG, WebP
+
+- validate file size
+
+- show upload progress
+
+- preview the actual uploaded image
+
+PDF:
+
+- require application/pdf
+
+- validate file signature where possible
+
+- validate file size
+
+- show upload progress
+
+- confirm successful persistent upload before saving the dossier
+
+Do not save the dossier record with an invalid or temporary file URL.
+
+If upload fails, do not silently continue.
+
+Show an Arabic error message.
+
+==================================================
+
+10. REPLACE AND DELETE FILES SAFELY
+
+==================================================
+
+When replacing a cover or PDF:
+
+- upload the new file first
+
+- update the database only after upload succeeds
+
+- remove the previous file after successful update
+
+- do not leave orphan storage objects
+
+When deleting a dossier:
+
+- apply the project's retention policy
+
+- safely remove or retain associated files
+
+- do not break historical references unexpectedly
+
+==================================================
+
+11. PRODUCTION URL CONFIGURATION
+
+==================================================
+
+Audit all environment variables and URL builders.
+
+Remove any production usage of:
+
+- localhost
+
+- 127.0.0.1
+
+- replit.dev preview domains
+
+- blob:
+
+- file:
+
+- temporary artifact paths
+
+Use:
+https://malsahori.com
+
+for application URLs where needed.
+
+Do not manually concatenate broken public URLs.
+
+Use a centralized storage URL helper.
+
+==================================================
+
+12. FRONTEND ERROR HANDLING
+
+==================================================
+
+Replace generic file errors with specific Arabic messages:
+
+Missing PDF:
+
+"ملف الدوسية غير متوفر"
+
+Failed download:
+
+"تعذر تحميل الملف، حاول مرة أخرى"
+
+Failed Study Room loading:
+
+"تعذر فتح الدوسية في غرفة الدراسة"
+
+Broken cover:
+
+Use the designed fallback image without showing a browser broken-image icon.
+
+Log the technical error safely for debugging.
+
+==================================================
+
+13. TESTS
+
+==================================================
+
+Test the following end-to-end:
+
+1. Create a dossier with a PDF and cover image.
+
+2. Publish it.
+
+3. Open its student details page.
+
+4. Confirm the cover appears.
+
+5. Download the PDF.
+
+6. Confirm the downloaded file opens correctly.
+
+7. Click "ادرس الآن في غرفة الدراسة".
+
+8. Confirm the same PDF loads in the reader.
+
+9. Refresh the Study Room.
+
+10. Confirm the file still loads.
+
+11. Replace the PDF.
+
+12. Confirm the new file is used.
+
+13. Replace the cover.
+
+14. Confirm the new cover appears.
+
+15. Test a dossier with no cover.
+
+16. Test a dossier with no PDF.
+
+17. Test unauthorized access.
+
+18. Test a large PDF.
+
+19. Test Safari/iPad.
+
+20. Confirm no blob or temporary URLs exist in production responses.
+
+==================================================
+
+14. NETWORK VERIFICATION
+
+==================================================
+
+Using browser developer tools, verify:
+
+- Cover image request returns 200.
+
+- PDF download request returns 200 or valid redirect.
+
+- PDF viewing request returns 200 or 206.
+
+- No 401, 403, 404, 500, CORS, or mixed-content errors occur during valid use.
+
+- The response Content-Type is correct.
+
+- The download has Content-Disposition: attachment.
+
+- The Study Room view uses inline PDF delivery or a valid signed URL.
+
+==================================================
+
+15. FINAL REPORT
+
+==================================================
+
+Create:
+
+DOSSIER_FILE_PIPELINE_FIX_REPORT.md
+
+Include:
+
+- root cause of the broken cover
+
+- root cause of the failed download
+
+- root cause of the Study Room file error
+
+- storage strategy used
+
+- database fields updated
+
+- APIs added or changed
+
+- frontend files changed
+
+- production URL configuration
+
+- test results
+
+- confirmation that all three issues are fixed
+أبو العربي — منصة محمد الساحوري للغة العربية
+دوسيات عربي، أوراق عمل، امتحانات محلولة. توجيهي الأردن جيل 2010 مع الأستاذ محمد الساحوري.
+ 

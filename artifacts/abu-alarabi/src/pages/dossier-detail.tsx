@@ -34,6 +34,8 @@ export default function DossierDetail() {
   
   const [isReading, setIsReading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState(false);
   
   const { data: dossier, isLoading } = useGetDossier(dossierId, {
     query: { enabled: !!dossierId }
@@ -111,7 +113,7 @@ export default function DossierDetail() {
         <div className="flex-1 overflow-hidden relative">
           {dossier.fileUrl ? (
             <iframe
-              src={`${dossier.fileUrl}#toolbar=0&navpanes=0&page=${currentPage}`}
+              src={`/api/dossiers/${dossierId}/view#toolbar=0&navpanes=0&page=${currentPage}`}
               title={dossier.title}
               className="w-full h-full border-0"
               style={{ minHeight: "calc(100vh - 128px)" }}
@@ -169,16 +171,25 @@ export default function DossierDetail() {
             <div className="space-y-4">
               <div className="aspect-[1/1.4] bg-muted rounded-2xl overflow-hidden shadow-lg border border-black/5 relative">
                 {dossier.coverUrl ? (
-                  <img src={dossier.coverUrl} alt={dossier.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 text-primary">
-                    <BookOpen className="w-16 h-16 mb-4 opacity-50" />
-                    <span className="font-bold px-4 text-center">{dossier.subjectName}</span>
-                  </div>
-                )}
-                {dossier.isFree && (
-                  <div className="absolute top-4 left-4 bg-success text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">مجاني</div>
-                )}
+                  <img
+                    src={dossier.coverUrl}
+                    alt={`غلاف دوسية ${dossier.title}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Hide broken image and show fallback
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                      const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement | null;
+                      if (fallback) fallback.style.display = "flex";
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="w-full h-full flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 text-primary"
+                  style={{ display: dossier.coverUrl ? "none" : "flex" }}
+                >
+                  <BookOpen className="w-16 h-16 mb-4 opacity-50" />
+                  <span className="font-bold px-4 text-center">{dossier.subjectName}</span>
+                </div>
               </div>
               
               <div className="space-y-2">
@@ -260,9 +271,49 @@ export default function DossierDetail() {
                 )}
 
                 <div className="flex items-center gap-4 pt-4">
-                  <Button variant="outline" className="gap-2 bg-white">
-                    <Download className="w-4 h-4" /> تحميل PDF
-                  </Button>
+                  {dossier.fileUrl ? (
+                    <Button
+                      variant="outline"
+                      className="gap-2 bg-white"
+                      disabled={downloading}
+                      onClick={async () => {
+                        if (downloading) return;
+                        setDownloading(true);
+                        setDownloadError(false);
+                        try {
+                          // Use fetch so the JWT Bearer token is sent automatically,
+                          // then trigger a blob download — works on all browsers including Safari/iOS
+                          const response = await fetch(`/api/dossiers/${dossierId}/download`);
+                          if (!response.ok) throw new Error("download_failed");
+                          const blob = await response.blob();
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = `${dossier.title}.pdf`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                        } catch {
+                          setDownloadError(true);
+                        } finally {
+                          setDownloading(false);
+                        }
+                      }}
+                    >
+                      <Download className="w-4 h-4" />
+                      {downloading ? "جاري التحميل…" : "تحميل PDF"}
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="gap-2 bg-white opacity-50" disabled>
+                      <Download className="w-4 h-4" /> الملف غير متاح
+                    </Button>
+                  )}
+                  {downloadError && (
+                    <span className="text-destructive text-sm font-medium">
+                      تعذر تحميل الملف، حاول مرة أخرى
+                    </span>
+                  )}
                   <Button variant="outline" className="gap-2 bg-white">
                     <Share2 className="w-4 h-4" /> مشاركة
                   </Button>

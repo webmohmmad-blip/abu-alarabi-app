@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { Router, type IRouter, type Request, type Response } from "express";
+import { eq, and, desc, isNull, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   dossiersTable,
@@ -8,6 +8,17 @@ import {
   subjectsTable,
 } from "@workspace/db";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+
+const objectStorageService = new ObjectStorageService();
+
+/** Convert stored fileUrl (/api/storage/objects/...) to objectPath (/objects/...) */
+function fileUrlToObjectPath(fileUrl: string): string | null {
+  if (!fileUrl) return null;
+  if (fileUrl.startsWith("/api/storage")) return fileUrl.slice("/api/storage".length);
+  if (fileUrl.startsWith("/objects/")) return fileUrl;
+  return null;
+}
 
 const router: IRouter = Router();
 
@@ -220,5 +231,114 @@ router.patch(
     res.json({ success: true, readingProgress: progress });
   }
 );
+
+// ─── Shared streaming helper ──────────────────────────────────────────────────
+async function streamDossierPdf(
+  req: Request,
+  res: Response,
+  disposition: "inline" | "attachment",
+): Promise<void> {
+  const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(rawId, 10);
+
+  const [row] = await db
+    .select({ fileUrl: dossiersTable.fileUrl, title: dossiersTable.title, status: dossiersTable.status })
+    .from(dossiersTable)
+    .where(eq(dossiersTable.id, id));
+
+  if (!row) {
+    res.status(404).json({ ok: false, message: "الدوسية غير موجودة" });
+    return;
+  }
+
+  if (!row.fileUrl) {
+    res.status(404).json({ ok: false, message: "ملف الدوسية غير متوفر" });
+    return;
+  }
+
+  const objectPath = fileUrlToObjectPath(row.fileUrl);
+  if (!objectPath) {
+    res.status(404).json({ ok: false, message: "ملف الدوسية غير متوفر" });
+    return;
+  }
+
+  try {
+    const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+    const [metadata] = await objectFile.getMetadata();
+    const fileSize = metadata.size ? Number(metadata.size) : undefined;
+
+    // Safe ASCII filename for Content-Disposition
+    const safeTitle = (row.title ?? "dossier").replace(/[^\w\s-]/g, "").trim() || "dossier";
+    const contentDisposition = `${disposition}; filename="${safeTitle}.pdf"`;
+
+    const rangeHeader = req.headers.range;
+
+    if (rangeHeader && fileSize !== undefined) {
+      const match = rangeHeader.match(/bytes=(\d+)-(\d*)/);
+      if (!match) {
+        res.status(416).set("Content-Range", `bytes */${fileSize}`).end();
+        return;
+      }
+      const start = parseInt(match[1], 10);
+      const end = match[2] !== "" ? parseInt(match[2], 10) : fileSize - 1;
+      const safeEnd = Math.min(end, fileSize - 1);
+      const chunkSize = safeEnd - start + 1;
+
+      res.writeHead(206, {
+        "Content-Range": `bytes ${start}-${safeEnd}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunkSize,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": contentDisposition,
+        "Cache-Control": "private, max-age=3600",
+      });
+      objectFile.createReadStream({ start, end: safeEnd }).pipe(res);
+    } else {
+      const headers: Record<string, string | number> = {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": contentDisposition,
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "private, max-age=3600",
+      };
+      if (fileSize !== undefined) headers["Content-Length"] = fileSize;
+
+      res.writeHead(200, headers);
+      objectFile.createReadStream().pipe(res);
+    }
+  } catch (error) {
+    if (error instanceof ObjectNotFoundError) {
+      res.status(404).json({ ok: false, message: "ملف الدوسية غير متوفر" });
+      return;
+    }
+    console.error("Error streaming dossier PDF", error);
+    res.status(500).json({ ok: false, message: "خطأ في تحميل الملف" });
+  }
+}
+
+/**
+ * GET /dossiers/:id/view
+ * Stream the PDF inline (for PDF.js / Study Room). No auth required.
+ */
+router.get("/dossiers/:id/view", async (req: Request, res: Response): Promise<void> => {
+  await streamDossierPdf(req, res, "inline");
+});
+
+/**
+ * GET /dossiers/:id/download
+ * Stream the PDF as an attachment download. No auth required (published content).
+ * Increments the downloads counter (best-effort, non-blocking).
+ */
+router.get("/dossiers/:id/download", async (req: Request, res: Response): Promise<void> => {
+  const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(rawId, 10);
+
+  // Increment counter best-effort (do not await — streaming must start immediately)
+  db.update(dossiersTable)
+    .set({ downloads: sql`${dossiersTable.downloads} + 1` })
+    .where(eq(dossiersTable.id, id))
+    .catch(() => {});
+
+  await streamDossierPdf(req, res, "attachment");
+});
 
 export default router;

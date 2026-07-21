@@ -1,0 +1,570 @@
+# FIX WEEKLY QUIZ VISIBILITY AND EXAM START ROUTING
+
+# Abu Al-Arabi Platform
+
+There are two production bugs:
+
+1. A weekly quiz is created successfully from the Admin Dashboard, but it does not appear on the student Weekly Quiz page.
+
+2. Clicking the button "ابدأ الامتحان الآن" on the Electronic Exams page does not open the actual exam attempt page.
+
+Do not only explain the issue.
+
+Inspect and fix both flows end-to-end across:
+
+- Admin UI
+
+- Backend APIs
+
+- Database
+
+- Publishing logic
+
+- Student pages
+
+- Route configuration
+
+- Assessment type filters
+
+- Permissions
+
+- Attempt creation
+
+- Frontend navigation
+
+==================================================
+
+PART 1: WEEKLY QUIZ DOES NOT APPEAR
+
+==================================================
+
+Trace the complete weekly quiz flow:
+
+Admin creation
+
+→ database record
+
+→ publish status
+
+→ assessment type
+
+→ target audience
+
+→ student API
+
+→ student page rendering
+
+Verify that the created item is stored with:
+
+assessmentType = "WEEKLY_QUIZ"
+
+not:
+
+EXAM
+
+QUIZ
+
+weeklyQuiz
+
+WEEKLY-QUIZ
+
+or any inconsistent value.
+
+Use one canonical enum everywhere:
+
+EXAM
+
+WEEKLY_QUIZ
+
+==================================================
+
+WEEKLY QUIZ PUBLISHING RULES
+
+==================================================
+
+A weekly quiz should appear to students only when:
+
+- type = WEEKLY_QUIZ
+
+- status = PUBLISHED
+
+- publishAt is null or publishAt <= current time
+
+- closeAt is null or closeAt > current time
+
+- archivedAt is null
+
+- deletedAt is null
+
+- the student matches the target group, grade, or track
+
+- the quiz contains at least one valid question if this is required
+
+Audit whether the admin form saves the quiz as:
+
+DRAFT
+
+instead of:
+
+PUBLISHED
+
+If the user clicks Publish, ensure the backend actually updates the status.
+
+==================================================
+
+STUDENT WEEKLY QUIZ API
+
+==================================================
+
+Create or verify a student endpoint such as:
+
+GET /api/assessments?type=WEEKLY_QUIZ&status=PUBLISHED
+
+or:
+
+GET /api/weekly-quizzes/active
+
+The endpoint must:
+
+- require student authentication if needed
+
+- return only published weekly quizzes
+
+- apply target-group filtering correctly
+
+- return the current quiz and upcoming quizzes if required
+
+- not accidentally filter using EXAM
+
+- not return archived or deleted quizzes
+
+Add safe diagnostic logging for:
+
+- quiz ID
+
+- assessment type
+
+- publish status
+
+- publishAt
+
+- closeAt
+
+- target group match
+
+- number of questions
+
+- exclusion reason
+
+Do not log private student information.
+
+==================================================
+
+FIX THE STUDENT WEEKLY QUIZ PAGE
+
+==================================================
+
+The student page currently shows:
+
+"لا يوجد تحدي حالياً"
+
+even though a quiz was added.
+
+Inspect:
+
+- query key
+
+- endpoint URL
+
+- response shape
+
+- type filter
+
+- status filter
+
+- caching
+
+- stale data
+
+- empty-state condition
+
+After admin publishes a quiz:
+
+- invalidate the weekly quiz query
+
+- refetch the list
+
+- display the quiz immediately
+
+- do not require a full browser restart
+
+- do not use mock leaderboard data
+
+The page should display:
+
+- quiz title
+
+- number of questions
+
+- duration
+
+- total marks
+
+- availability period
+
+- Start Weekly Quiz button
+
+==================================================
+
+PART 2: EXAM START BUTTON DOES NOT OPEN EXAM
+
+==================================================
+
+Trace the current button:
+
+"ابدأ الامتحان الآن"
+
+Inspect:
+
+- click handler
+
+- exam ID passed to navigation
+
+- route definition
+
+- protected route
+
+- attempt creation API
+
+- exam instructions page
+
+- exam session page
+
+The button must navigate to the correct exam route.
+
+Recommended flow:
+
+1. Student clicks "ابدأ الامتحان الآن"
+
+2. Navigate to:
+
+/exams/:examId/instructions
+
+3. Student confirms starting
+
+4. Call:
+
+POST /api/assessments/:examId/attempts
+
+5. Backend creates or resumes an attempt
+
+6. Redirect to:
+
+/exams/:examId/attempt/:attemptId
+
+Do not navigate to a generic or broken route.
+
+==================================================
+
+ROUTE VERIFICATION
+
+==================================================
+
+Verify all routes exist and match exactly:
+
+/exams
+
+/exams/:examId
+
+/exams/:examId/instructions
+
+/exams/:examId/attempt/:attemptId
+
+/exams/:examId/result/:attemptId
+
+For weekly quizzes:
+
+/weekly-quiz
+
+/weekly-quiz/:quizId
+
+/weekly-quiz/:quizId/instructions
+
+/weekly-quiz/:quizId/attempt/:attemptId
+
+/weekly-quiz/:quizId/result/:attemptId
+
+If exams and weekly quizzes share one assessment system, use shared route components internally, but preserve separate visible routes.
+
+==================================================
+
+ATTEMPT CREATION
+
+==================================================
+
+Verify the backend attempt endpoint.
+
+It must:
+
+- verify authentication
+
+- verify assessment exists
+
+- verify assessment is published
+
+- verify availability dates
+
+- verify assessment type
+
+- verify student access
+
+- prevent invalid duplicate attempts according to settings
+
+- resume an existing active attempt when appropriate
+
+- return attemptId
+
+Successful response example:
+
+{
+
+  "ok": true,
+
+  "attemptId": "..."
+
+}
+
+If the exam is unavailable, return a safe Arabic error:
+
+"الامتحان غير متاح حالياً"
+
+==================================================
+
+FRONTEND BUTTON STATE
+
+==================================================
+
+The Start Exam button must:
+
+- disable while starting
+
+- show loading text:
+
+  "جارٍ بدء الامتحان..."
+
+- prevent double-click requests
+
+- show the real safe Arabic error if attempt creation fails
+
+- navigate only after a valid attemptId is returned
+
+Do not silently fail.
+
+==================================================
+
+CHECK ASSESSMENT TYPE CONSISTENCY
+
+==================================================
+
+Audit all frontend and backend code for inconsistent type names.
+
+Replace any mixed values with:
+
+EXAM
+
+WEEKLY_QUIZ
+
+Check:
+
+- database enum
+
+- admin form
+
+- API validation
+
+- filters
+
+- student queries
+
+- route logic
+
+- attempt creation
+
+- result pages
+
+- analytics
+
+- permissions
+
+==================================================
+
+CACHE INVALIDATION
+
+==================================================
+
+After creating, editing, publishing, unpublishing, archiving, or deleting an assessment:
+
+Invalidate and refetch:
+
+- admin assessments list
+
+- student exams list
+
+- student weekly quiz list
+
+- dashboard counters
+
+- active weekly quiz query
+
+Do not let stale React Query or client cache hide newly published content.
+
+==================================================
+
+TARGETING
+
+==================================================
+
+Verify that the quiz is not accidentally hidden because of:
+
+- wrong grade
+
+- wrong track
+
+- wrong group
+
+- null target mismatch
+
+- hardcoded Arabic subject filter
+
+- old onboarding data
+
+- student profile fields that no longer exist
+
+If a quiz is intended for all students, represent that explicitly.
+
+Do not require missing onboarding fields.
+
+==================================================
+
+TESTS
+
+==================================================
+
+Run these end-to-end tests:
+
+1. Admin creates a weekly quiz.
+
+2. Admin adds questions.
+
+3. Admin publishes it.
+
+4. Student Weekly Quiz page displays it.
+
+5. Student opens quiz instructions.
+
+6. Student starts the quiz.
+
+7. Attempt is created.
+
+8. Questions load.
+
+9. Student submits.
+
+10. Result appears.
+
+Then:
+
+11. Admin creates an electronic exam.
+
+12. Admin publishes it.
+
+13. Student Exams page displays it.
+
+14. Student clicks "ابدأ الامتحان الآن".
+
+15. Instructions page opens.
+
+16. Attempt is created.
+
+17. Exam page opens.
+
+18. Refreshing preserves the attempt.
+
+19. Submitting creates a result.
+
+20. Unauthorized and unpublished assessments remain inaccessible.
+
+Also test:
+
+- expired quiz
+
+- scheduled quiz
+
+- draft quiz
+
+- quiz targeted to all students
+
+- quiz targeted to a specific group
+
+- duplicate start click
+
+- no questions
+
+- invalid ID
+
+- refresh after publishing
+
+==================================================
+
+NETWORK VERIFICATION
+
+==================================================
+
+Confirm:
+
+- Weekly quiz list request returns 200
+
+- Published quiz appears in the response
+
+- Start exam request returns 200
+
+- Attempt creation returns attemptId
+
+- Navigation route exists
+
+- No 401, 403, 404, 409, or 500 occurs during valid use
+
+==================================================
+
+FINAL REPORT
+
+==================================================
+
+Create:
+
+ASSESSMENT_VISIBILITY_AND_START_FLOW_FIX_REPORT.md
+
+Include:
+
+- root cause of missing weekly quiz
+
+- root cause of broken exam start button
+
+- files changed
+
+- routes fixed
+
+- APIs fixed
+
+- assessment type normalization
+
+- cache invalidation changes
+
+- targeting fixes
+
+- test results
+
+- confirmation that weekly quizzes now appear
+
+- confirmation that exam start now opens the electronic exam correctly
+ 

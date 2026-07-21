@@ -1,0 +1,544 @@
+# CONVERT WORKSHEETS INTO PDF-BASED STUDY MATERIALS
+
+# Abu Al-Arabi Platform
+
+The current student Worksheets page treats worksheets like electronic quizzes and shows a button:
+
+"ابدأ الحل"
+
+This is no longer the required product behavior.
+
+Worksheets must work exactly like dossiers.
+
+Do not only change the button label.
+
+Refactor the full worksheet experience so every worksheet is a PDF-based educational file that the student can either download or open inside the Study Room.
+
+==================================================
+
+FINAL WORKSHEET MODEL
+
+==================================================
+
+A worksheet is:
+
+- A PDF file
+
+- An optional cover image
+
+- A title
+
+- A short description
+
+- Grade / target group
+
+- Optional estimated time
+
+- Publish status
+
+A worksheet is NOT:
+
+- An electronic assessment
+
+- A question-builder activity
+
+- A timed online test
+
+- An auto-graded quiz
+
+- A student attempt
+
+- A result or score
+
+Remove assessment behavior from worksheets.
+
+==================================================
+
+STUDENT WORKSHEET CARD
+
+==================================================
+
+Replace the current button:
+
+"ابدأ الحل"
+
+with two clear actions:
+
+1. تحميل ورقة العمل
+
+2. حلّ في غرفتي الدراسية
+
+Recommended Arabic labels:
+
+"تحميل PDF"
+
+"حلّ في غرفتي الدراسية"
+
+The Study Room button should be the primary action.
+
+The PDF download button should be secondary.
+
+==================================================
+
+WORKSHEET DETAILS PAGE
+
+==================================================
+
+Create or update a worksheet details page similar to the dossier details page.
+
+Display:
+
+- Cover image
+
+- Worksheet title
+
+- Description
+
+- Grade
+
+- Estimated time if available
+
+- PDF availability
+
+- Publish date if useful
+
+Actions:
+
+- تحميل PDF
+
+- حلّ في غرفتي الدراسية
+
+- العودة إلى أوراق العمل
+
+Do not show:
+
+- Start solving
+
+- Number of electronic questions
+
+- Student count
+
+- Marks
+
+- Online attempt
+
+- Submit answers
+
+- Result
+
+- Score
+
+==================================================
+
+DOWNLOAD BEHAVIOR
+
+==================================================
+
+When the student clicks:
+
+"تحميل PDF"
+
+the actual worksheet PDF must download to the device.
+
+Use the same working file-download pipeline as dossiers.
+
+Requirements:
+
+- Validate student access
+
+- Use a stable stored file
+
+- Return application/pdf
+
+- Use Content-Disposition: attachment
+
+- Use the correct worksheet filename
+
+- Support desktop, iPad, iPhone, Android, Safari and Chrome
+
+- Show a loading state
+
+- Prevent duplicate clicks
+
+Arabic error message:
+
+"تعذر تحميل ورقة العمل، حاول مرة أخرى"
+
+==================================================
+
+STUDY ROOM INTEGRATION
+
+==================================================
+
+When the student clicks:
+
+"حلّ في غرفتي الدراسية"
+
+open the selected worksheet PDF directly inside the Study Room.
+
+Use a route such as:
+
+/study-room?worksheetId=:id
+
+or:
+
+/study-room/worksheets/:id
+
+The Study Room must:
+
+- Load the worksheet automatically
+
+- Display the correct title
+
+- Open the actual PDF
+
+- Support Apple Pencil and drawing tools
+
+- Support pen
+
+- Support highlighter
+
+- Support eraser
+
+- Support text notes
+
+- Support undo and redo
+
+- Save annotations automatically
+
+- Restore the same annotations later
+
+- Remember the last opened page
+
+Do not require the student to upload or manually select the file again.
+
+==================================================
+
+SHARED FILE ARCHITECTURE
+
+==================================================
+
+Dossiers and worksheets now belong to the same educational-file system.
+
+Use shared internal components and services where possible.
+
+Shared behaviors:
+
+- File upload
+
+- PDF storage
+
+- Cover image
+
+- PDF preview
+
+- PDF download
+
+- Study Room opening
+
+- File validation
+
+- Publish / unpublish
+
+- Archive
+
+- Delete
+
+- Access control
+
+Use an internal type:
+
+DOSSIER
+
+WORKSHEET
+
+Do not show these English values to users.
+
+==================================================
+
+STUDY ROOM SOURCE TYPE
+
+==================================================
+
+The Study Room should support a generic educational file source.
+
+Example internal payload:
+
+{
+
+  "sourceType": "WORKSHEET",
+
+  "sourceId": "...",
+
+  "title": "...",
+
+  "pdfViewUrl": "...",
+
+  "lastPage": 1
+
+}
+
+The same reader should also support:
+
+{
+
+  "sourceType": "DOSSIER"
+
+}
+
+Do not build two separate PDF readers.
+
+==================================================
+
+ANNOTATION STORAGE
+
+==================================================
+
+Worksheet annotations must be separated from dossier annotations.
+
+Each annotation record should be linked to:
+
+- userId
+
+- sourceType
+
+- sourceId
+
+- pageNumber
+
+- annotationData
+
+- createdAt
+
+- updatedAt
+
+The student must only see their own annotations.
+
+==================================================
+
+ADMIN WORKSHEET FORM
+
+==================================================
+
+The admin worksheet form should support:
+
+- Title
+
+- Description
+
+- Grade
+
+- Target group
+
+- Estimated time
+
+- PDF upload
+
+- Cover image
+
+- Draft / Published / Archived / Scheduled
+
+Remove worksheet fields related to:
+
+- Online question count
+
+- Electronic question builder
+
+- Correct answers
+
+- Marks
+
+- Attempts
+
+- Results
+
+- Auto grading
+
+Do not remove electronic assessment features from exams or weekly quizzes.
+
+==================================================
+
+REMOVE OLD ELECTRONIC WORKSHEET LOGIC
+
+==================================================
+
+Search the project and remove or disconnect worksheet-specific logic related to:
+
+- start worksheet attempt
+
+- worksheet answers
+
+- worksheet score
+
+- worksheet submission
+
+- worksheet results
+
+- question navigation
+
+- timer for solving
+
+- auto grading
+
+Do not affect:
+
+- electronic exams
+
+- weekly quizzes
+
+These remain assessment systems.
+
+==================================================
+
+FILE PIPELINE
+
+==================================================
+
+Use the same fixed production file pipeline as dossiers.
+
+Do not use:
+
+- blob URLs
+
+- temporary browser URLs
+
+- localhost paths
+
+- preview-domain URLs
+
+- temporary filesystem references
+
+- expired signed URLs stored permanently
+
+Store stable persistent file references.
+
+==================================================
+
+API REQUIREMENTS
+
+==================================================
+
+Create or verify endpoints such as:
+
+GET /api/worksheets/:id
+
+GET /api/worksheets/:id/download
+
+GET /api/worksheets/:id/view
+
+Download endpoint:
+
+- returns or redirects to a valid PDF
+
+- uses attachment disposition
+
+View endpoint:
+
+- streams inline PDF
+
+- or returns a fresh signed viewing URL
+
+- supports the Study Room
+
+==================================================
+
+STUDENT PAGE DESIGN
+
+==================================================
+
+Make the Worksheets page visually consistent with the Dossiers page.
+
+Each worksheet card should contain:
+
+- Cover or clean fallback
+
+- Title
+
+- Short description
+
+- Grade
+
+- Estimated time
+
+- Status if relevant
+
+- "حلّ في غرفتي الدراسية"
+
+- "تحميل PDF"
+
+Do not display fake statistics.
+
+==================================================
+
+TESTS
+
+==================================================
+
+Test all scenarios:
+
+1. Admin uploads a worksheet PDF.
+
+2. Admin publishes the worksheet.
+
+3. Student sees it on the Worksheets page.
+
+4. Student opens worksheet details.
+
+5. Cover image appears.
+
+6. Student downloads the PDF successfully.
+
+7. Student opens it in the Study Room.
+
+8. Student writes on the PDF.
+
+9. Annotation auto-saves.
+
+10. Student leaves and returns.
+
+11. Annotation is restored.
+
+12. Last page is restored.
+
+13. Worksheet with no cover uses fallback.
+
+14. Worksheet with no PDF shows a safe error.
+
+15. Unauthorized access is blocked.
+
+16. iPad and Apple Pencil work correctly.
+
+17. No electronic-attempt flow remains for worksheets.
+
+18. Exams and weekly quizzes continue working normally.
+
+==================================================
+
+FINAL REPORT
+
+==================================================
+
+Create:
+
+WORKSHEET_PDF_STUDY_ROOM_REFACTOR_REPORT.md
+
+Include:
+
+- old electronic worksheet behavior removed
+
+- new download behavior
+
+- Study Room integration
+
+- shared components reused with dossiers
+
+- APIs changed
+
+- database changes
+
+- annotation-storage approach
+
+- tests performed
+
+- confirmation that worksheets now work like dossiers
+ 

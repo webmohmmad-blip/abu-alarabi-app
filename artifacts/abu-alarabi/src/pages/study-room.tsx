@@ -240,7 +240,9 @@ export default function StudyRoom() {
     pushRecent({ id: d.id, title: d.title, subjectName: d.subjectName, fileUrl: d.fileUrl });
     setDossierId(d.id);
     setDossierTitle(d.title);
-    setDossierFileUrl(d.fileUrl ?? null);
+    // Always use the secure view endpoint — ensures range-request support for PDF.js
+    // and avoids stale/relative fileUrl strings from the dossier list cache.
+    setDossierFileUrl(`/api/dossiers/${d.id}/view`);
     setCurrentPage(1);
     setStrokes(new Map());
     setPdfDoc(null);
