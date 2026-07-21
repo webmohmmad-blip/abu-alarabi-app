@@ -7,7 +7,7 @@ import { Helmet } from "react-helmet-async";
 
 export const SITE_URL =
   (import.meta as any).env?.VITE_SITE_URL?.replace(/\/$/, "") ??
-  "https://abu-alarabi.replit.app";
+  "https://malsahori.com";
 
 export const SITE_NAME   = "أبو العربي";
 export const DEFAULT_DESC =

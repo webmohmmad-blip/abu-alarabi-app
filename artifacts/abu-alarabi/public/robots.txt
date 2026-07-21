@@ -1,19 +1,30 @@
 User-agent: *
 Allow: /
+
+# Private — admin panel
 Disallow: /admin
 Disallow: /admin/
+
+# Private — authenticated student pages
 Disallow: /dashboard
 Disallow: /dashboard/
-Disallow: /login
-Disallow: /register
-Disallow: /onboarding
 Disallow: /profile
 Disallow: /settings
-Disallow: /api/
 Disallow: /study-room
 Disallow: /notes
 Disallow: /study-plan
 Disallow: /sessions-history
+Disallow: /onboarding
 
-# Sitemap location
-Sitemap: https://abu-alarabi.replit.app/sitemap.xml
+# Auth pages
+Disallow: /login
+Disallow: /register
+
+# API — not meant for crawlers
+Disallow: /api/
+
+# ── Sitemaps ──────────────────────────────────────────────────────────────────
+# Static sitemap (all known public pages)
+Sitemap: https://malsahori.com/sitemap.xml
+# Dynamic sitemap (published dossiers, worksheets, exams — from database)
+Sitemap: https://malsahori.com/api/sitemap.xml

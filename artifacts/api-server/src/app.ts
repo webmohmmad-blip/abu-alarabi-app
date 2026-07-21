@@ -4,6 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import pinoHttp from "pino-http";
 import router from "./routes";
+import sitemapRouter from "./routes/sitemap";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -78,6 +79,13 @@ app.use(
 // ─── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+
+// ─── SEO — sitemap.xml and robots.txt at root (before SPA / wildcard) ────────
+// These must be registered at the app root, NOT under /api, so that if the
+// reverse proxy is ever configured to route /sitemap.xml and /robots.txt to
+// this server, they are served correctly without authentication or SPA fallback.
+// They are ALSO accessible at /api/sitemap.xml via the /api router below.
+app.use(sitemapRouter);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api", router);
