@@ -98,11 +98,13 @@ app.use("/api", router);
 const staticPath = path.resolve(import.meta.dirname, "../../abu-alarabi/dist/public");
 if (fs.existsSync(staticPath)) {
   app.use(express.static(staticPath));
-  app.get("*", (req, res, next) => {
+  app.use((req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
     if (req.path.startsWith("/api")) return next();
     res.sendFile(path.join(staticPath, "index.html"));
   });
 }
+
 
 export default app;
 
