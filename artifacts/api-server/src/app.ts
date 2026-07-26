@@ -1,3 +1,5 @@
+import path from "path";
+import fs from "fs";
 import express, { type Express } from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -25,9 +27,11 @@ const allowedOrigins = [
   /\.replit\.dev$/,
   /\.replit\.app$/,
   /malsahori\.com$/,
+  /onrender\.com$/,
   /localhost/,
   /127\.0\.0\.1/,
 ];
+
 app.use(
   cors({
     origin: (origin, cb) => {
@@ -90,4 +94,15 @@ app.use(sitemapRouter);
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api", router);
 
+// ─── Static Frontend Serving & SPA Fallback ───────────────────────────────────
+const staticPath = path.resolve(import.meta.dirname, "../../abu-alarabi/dist/public");
+if (fs.existsSync(staticPath)) {
+  app.use(express.static(staticPath));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) return next();
+    res.sendFile(path.join(staticPath, "index.html"));
+  });
+}
+
 export default app;
+
