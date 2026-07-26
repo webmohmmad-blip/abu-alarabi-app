@@ -23,8 +23,39 @@ import {
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
+  PutBucketCorsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+let _corsConfigured = false;
+
+export async function ensureR2BucketCors(): Promise<void> {
+  if (_corsConfigured) return;
+  try {
+    const bucket = getR2BucketName();
+    const s3 = getS3Client();
+    await s3.send(
+      new PutBucketCorsCommand({
+        Bucket: bucket,
+        CORSConfiguration: {
+          CORSRules: [
+            {
+              AllowedOrigins: ['*'],
+              AllowedMethods: ['PUT', 'GET', 'HEAD', 'OPTIONS'],
+              AllowedHeaders: ['*'],
+              ExposeHeaders: ['ETag', 'Content-Length', 'Content-Type'],
+              MaxAgeSeconds: 3600,
+            },
+          ],
+        },
+      }),
+    );
+    _corsConfigured = true;
+    console.log('✅ Cloudflare R2 Bucket CORS policy applied successfully.');
+  } catch (err: any) {
+    console.warn('⚠️ Could not automatically apply R2 CORS policy (verify API permissions):', err.message || err);
+  }
+}
 
 // ── R2 client (lazy, validated at first use) ──────────────────────────────────
 
@@ -203,6 +234,7 @@ export class ObjectStorageService {
   async getObjectEntityUploadURL(): Promise<string> {
     const bucket = getR2BucketName();
     const s3 = getS3Client();
+    await ensureR2BucketCors();
 
     const objectId = randomUUID();
     const dir = this.getPrivateObjectDir();
