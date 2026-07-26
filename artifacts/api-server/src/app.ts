@@ -1,3 +1,4 @@
+import zlib from "zlib";
 import path from "path";
 import fs from "fs";
 import express, { type Express } from "express";
@@ -13,6 +14,55 @@ const app: Express = express();
 
 // Trust the Replit reverse proxy so rate-limit & IP headers work correctly
 app.set("trust proxy", 1);
+
+// ─── Gzip Compression Middleware for Mobile & Desktop Speed ──────────────
+app.use((req, res, next) => {
+  const acceptEncoding = req.headers["accept-encoding"] || "";
+  if (!acceptEncoding.includes("gzip")) return next();
+
+  const originalWrite = res.write;
+  const originalEnd = res.end;
+  let gzip: zlib.Gzip | null = null;
+
+  function initGzip() {
+    if (gzip) return;
+    const type = (res.getHeader("content-type") as string) || "";
+    if (
+      type.includes("json") ||
+      type.includes("javascript") ||
+      type.includes("css") ||
+      type.includes("text") ||
+      type.includes("xml") ||
+      type.includes("svg")
+    ) {
+      res.setHeader("Content-Encoding", "gzip");
+      res.removeHeader("Content-Length");
+      gzip = zlib.createGzip({ level: 6 });
+      gzip.on("data", (chunk) => originalWrite.call(res, chunk));
+      gzip.on("end", () => originalEnd.call(res));
+    }
+  }
+
+  res.write = function (chunk: any, encoding?: any, callback?: any): boolean {
+    initGzip();
+    if (gzip) {
+      return gzip.write(chunk, encoding, callback);
+    }
+    return originalWrite.call(res, chunk, encoding, callback);
+  } as any;
+
+  res.end = function (chunk?: any, encoding?: any, callback?: any): any {
+    initGzip();
+    if (gzip) {
+      if (chunk) gzip.write(chunk, encoding);
+      return gzip.end(callback);
+    }
+    return originalEnd.call(res, chunk, encoding, callback);
+  } as any;
+
+  next();
+});
+
 
 // ─── Security headers ────────────────────────────────────────────────────────
 app.use(
@@ -97,13 +147,20 @@ app.use("/api", router);
 // ─── Static Frontend Serving & SPA Fallback ───────────────────────────────────
 const staticPath = path.resolve(import.meta.dirname, "../../abu-alarabi/dist/public");
 if (fs.existsSync(staticPath)) {
-  app.use(express.static(staticPath));
+  app.use(
+    express.static(staticPath, {
+      maxAge: "1y",
+      immutable: true,
+      index: false,
+    })
+  );
   app.use((req, res, next) => {
     if (req.method !== "GET" && req.method !== "HEAD") return next();
     if (req.path.startsWith("/api")) return next();
     res.sendFile(path.join(staticPath, "index.html"));
   });
 }
+
 
 
 export default app;
