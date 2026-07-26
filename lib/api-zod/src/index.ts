@@ -1,4 +1,5 @@
 export * from "./generated/api";
-export type * from "./generated/types";
+export * as ApiTypes from "./generated/types";
+
 
 
