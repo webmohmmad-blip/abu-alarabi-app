@@ -8,6 +8,13 @@
       "when": 1784397091835,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785020000000,
+      "tag": "0001_add_homepage_ads",
+      "breakpoints": true
     }
   ]
 }
