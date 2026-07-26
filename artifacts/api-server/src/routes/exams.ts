@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, isNull, isNotNull, desc, asc, sql } from "drizzle-orm";
+import { eq, and, isNull, isNotNull, desc, asc, sql, inArray } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   examsTable,
@@ -16,7 +16,10 @@ import { requireAuth, type AuthRequest } from "../lib/auth";
 const router: IRouter = Router();
 
 router.get("/exams", requireAuth, async (req, res): Promise<void> => {
-  const { subjectId, type } = req.query as Record<string, string>;
+  const aReq = req as AuthRequest;
+  const { subjectId, type, includeAll } = req.query as Record<string, string>;
+  const isAdmin = ["admin", "super_admin"].includes(aReq.userRole ?? "");
+  const shouldIncludeAll = isAdmin && includeAll === "true";
 
   let rows = await db
     .select({
@@ -25,7 +28,15 @@ router.get("/exams", requireAuth, async (req, res): Promise<void> => {
     })
     .from(examsTable)
     .leftJoin(subjectsTable, eq(examsTable.subjectId, subjectsTable.id))
-    .where(isNull(examsTable.deletedAt));
+    .where(
+      shouldIncludeAll
+        ? isNull(examsTable.deletedAt)
+        : and(
+            isNull(examsTable.deletedAt),
+            eq(examsTable.status, "published"),
+            eq(examsTable.isAvailable, true)
+          )
+    );
 
   if (subjectId) {
     rows = rows.filter((r) => r.exam.subjectId === parseInt(subjectId, 10));
@@ -108,8 +119,10 @@ router.get("/exams/:id", requireAuth, async (req, res): Promise<void> => {
     .leftJoin(subjectsTable, eq(examsTable.subjectId, subjectsTable.id))
     .where(eq(examsTable.id, id));
 
-  if (!row) {
-    res.status(404).json({ error: "الامتحان غير موجود" });
+  const aReq = req as AuthRequest;
+  const isAdmin = ["admin", "super_admin"].includes(aReq.userRole ?? "");
+  if (!row || (!isAdmin && (row.exam.status !== "published" || !row.exam.isAvailable))) {
+    res.status(404).json({ error: "الامتحان غير موجود أو غير متاح حالياً" });
     return;
   }
 
@@ -152,8 +165,9 @@ router.post("/exams/:id/start", requireAuth, async (req, res): Promise<void> => 
     .from(examsTable)
     .where(eq(examsTable.id, examId));
 
-  if (!exam) {
-    res.status(404).json({ error: "الامتحان غير موجود" });
+  const isAdmin = ["admin", "super_admin"].includes(aReq.userRole ?? "");
+  if (!exam || (!isAdmin && (exam.status !== "published" || !exam.isAvailable))) {
+    res.status(404).json({ error: "الامتحان غير موجود أو غير متاح حالياً" });
     return;
   }
 
@@ -167,28 +181,39 @@ router.post("/exams/:id/start", requireAuth, async (req, res): Promise<void> => 
     .from(questionsTable)
     .where(eq(questionsTable.examId, examId));
 
-  const questionsWithChoices = await Promise.all(
-    questions.map(async (q) => {
-      const choices = await db
-        .select()
-        .from(questionChoicesTable)
-        .where(eq(questionChoicesTable.questionId, q.id));
+  const questionIds = questions.map((q) => q.id);
+  const allChoices =
+    questionIds.length > 0
+      ? await db
+          .select()
+          .from(questionChoicesTable)
+          .where(inArray(questionChoicesTable.questionId, questionIds))
+      : [];
 
-      return {
-        id: q.id,
-        text: q.text,
-        type: q.type,
-        order: q.order,
-        score: parseFloat(q.score),
-        imageUrl: q.imageUrl,
-        choices: choices.map((c) => ({
-          id: c.choiceKey,
-          text: c.text,
-          imageUrl: c.imageUrl,
-        })),
-      };
-    })
-  );
+  const choicesByQuestion: Record<number, typeof allChoices> = {};
+  for (const c of allChoices) {
+    if (!choicesByQuestion[c.questionId]) {
+      choicesByQuestion[c.questionId] = [];
+    }
+    choicesByQuestion[c.questionId].push(c);
+  }
+
+  const questionsWithChoices = questions.map((q) => {
+    const choices = choicesByQuestion[q.id] ?? [];
+    return {
+      id: q.id,
+      text: q.text,
+      type: q.type,
+      order: q.order,
+      score: parseFloat(q.score),
+      imageUrl: q.imageUrl,
+      choices: choices.map((c) => ({
+        id: c.choiceKey,
+        text: c.text,
+        imageUrl: c.imageUrl,
+      })),
+    };
+  });
 
   res.status(201).json({
     id: attempt.id,
@@ -225,20 +250,35 @@ router.get(
 
     const questions = await db.select().from(questionsTable).where(eq(questionsTable.examId, attempt.examId));
 
-    const questionsWithChoices = await Promise.all(
-      questions.map(async (q) => {
-        const choices = await db.select().from(questionChoicesTable).where(eq(questionChoicesTable.questionId, q.id));
-        return {
-          id: q.id,
-          text: q.text,
-          type: q.type,
-          order: q.order,
-          score: parseFloat(q.score),
-          imageUrl: q.imageUrl,
-          choices: choices.map((c) => ({ id: c.choiceKey, text: c.text, imageUrl: c.imageUrl })),
-        };
-      })
-    );
+    const questionIds = questions.map((q) => q.id);
+    const allChoices =
+      questionIds.length > 0
+        ? await db
+            .select()
+            .from(questionChoicesTable)
+            .where(inArray(questionChoicesTable.questionId, questionIds))
+        : [];
+
+    const choicesByQuestion: Record<number, typeof allChoices> = {};
+    for (const c of allChoices) {
+      if (!choicesByQuestion[c.questionId]) {
+        choicesByQuestion[c.questionId] = [];
+      }
+      choicesByQuestion[c.questionId].push(c);
+    }
+
+    const questionsWithChoices = questions.map((q) => {
+      const choices = choicesByQuestion[q.id] ?? [];
+      return {
+        id: q.id,
+        text: q.text,
+        type: q.type,
+        order: q.order,
+        score: parseFloat(q.score),
+        imageUrl: q.imageUrl,
+        choices: choices.map((c) => ({ id: c.choiceKey, text: c.text, imageUrl: c.imageUrl })),
+      };
+    });
 
     const savedAnswersArr = await db
       .select()
@@ -270,6 +310,23 @@ router.post(
       ? req.params.attemptId[0]
       : req.params.attemptId;
     const attemptId = parseInt(rawId, 10);
+    const aReq = req as AuthRequest;
+
+    const [attempt] = await db
+      .select()
+      .from(examAttemptsTable)
+      .where(
+        and(
+          eq(examAttemptsTable.id, attemptId),
+          eq(examAttemptsTable.userId, aReq.userId)
+        )
+      );
+
+    if (!attempt) {
+      res.status(404).json({ error: "المحاولة غير موجودة أو غير مصرح بها" });
+      return;
+    }
+
     const { questionId, answer } = req.body as { questionId: number; answer: string };
 
     const [question] = await db
@@ -312,11 +369,17 @@ router.post(
       ? req.params.attemptId[0]
       : req.params.attemptId;
     const attemptId = parseInt(rawId, 10);
+    const aReq = req as AuthRequest;
 
     const [attempt] = await db
       .select()
       .from(examAttemptsTable)
-      .where(eq(examAttemptsTable.id, attemptId));
+      .where(
+        and(
+          eq(examAttemptsTable.id, attemptId),
+          eq(examAttemptsTable.userId, aReq.userId)
+        )
+      );
 
     if (!attempt) {
       res.status(404).json({ error: "المحاولة غير موجودة" });
@@ -370,7 +433,12 @@ router.post(
         wrongCount,
         unansweredCount,
       })
-      .where(eq(examAttemptsTable.id, attemptId))
+      .where(
+        and(
+          eq(examAttemptsTable.id, attemptId),
+          eq(examAttemptsTable.userId, aReq.userId)
+        )
+      )
       .returning();
 
     res.json({

@@ -33,6 +33,7 @@ const Settings        = lazy(() => import('@/pages/settings'));
 const Summaries       = lazy(() => import('@/pages/summaries'));
 const SessionsHistory = lazy(() => import('@/pages/sessions-history'));
 const Schedule        = lazy(() => import('@/pages/schedule'));
+const Videos          = lazy(() => import('@/pages/videos'));
 
 // ── Admin pages (lazy — never needed by students) ─────────────────────────────
 const AdminDashboard    = lazy(() => import('@/pages/admin/index'));
@@ -84,6 +85,7 @@ function Router() {
         <Route path="/dossiers/:id" component={DossierDetail} />
         <Route path="/worksheets" component={Worksheets} />
         <Route path="/worksheets/:id" component={WorksheetDetail} />
+        <Route path="/videos" component={Videos} />
 
         {/* Exam routes */}
         <Route path="/exams" component={Exams} />

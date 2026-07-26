@@ -354,13 +354,19 @@ router.delete("/users/:id", async (req, res) => {
 
 router.post("/users/import", async (req, res) => {
   const { users, defaultRole = "student", defaultGroupId, defaultPassword } = req.body;
-  if (!Array.isArray(users)) res.status(400).json({ error: "Invalid data" });
+  if (!Array.isArray(users)) {
+    res.status(400).json({ error: "Invalid data: users array required" });
     return;
+  }
 
   let created = 0, skipped = 0, errors: string[] = [];
 
   for (const u of users) {
     try {
+      if (!u.fullName || typeof u.fullName !== "string" || !u.fullName.trim()) {
+        errors.push(`${u.phone ?? "unknown"}: الاسم الكامل مطلوب`);
+        continue;
+      }
       const phoneResult = validatePhone(u.phone ?? "");
       if (!phoneResult.ok) {
         errors.push(`${u.phone}: ${(phoneResult as { ok: false; error: string }).error}`);
@@ -373,7 +379,7 @@ router.post("/users/import", async (req, res) => {
 
       const passwordHash = await hashPassword(defaultPassword || normalizedPhone.slice(-6));
       const [newUser] = await db.insert(usersTable).values({
-        fullName: u.fullName,
+        fullName: u.fullName.trim(),
         phone: normalizedPhone,
         email: u.email ?? null,
         passwordHash,
@@ -392,7 +398,7 @@ router.post("/users/import", async (req, res) => {
 
       created++;
     } catch (e: any) {
-      errors.push(`${u.phone}: ${e.message}`);
+      errors.push(`${u.phone ?? "unknown"}: ${e.message}`);
     }
   }
 
