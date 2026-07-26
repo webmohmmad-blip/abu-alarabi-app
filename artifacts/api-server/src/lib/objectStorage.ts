@@ -29,8 +29,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 // ── R2 client (lazy, validated at first use) ──────────────────────────────────
 
 function getR2BucketName(): string {
-  const bucket = process.env.CLOUDFLARE_R2_BUCKET_NAME;
-  if (!bucket) throw new Error('CLOUDFLARE_R2_BUCKET_NAME is not set');
+  const bucket = process.env.CLOUDFLARE_R2_BUCKET_NAME || process.env.R2_BUCKET_NAME;
+  if (!bucket) throw new Error('CLOUDFLARE_R2_BUCKET_NAME or R2_BUCKET_NAME is not set');
   return bucket;
 }
 
@@ -39,22 +39,27 @@ let _s3: S3Client | null = null;
 function getS3Client(): S3Client {
   if (_s3) return _s3;
 
-  const accountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID;
-  const accessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
+  const accountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
+  const accessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY;
+  const endpoint =
+    process.env.R2_ENDPOINT ||
+    process.env.CLOUDFLARE_R2_ENDPOINT ||
+    (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined);
 
-  if (!accountId) throw new Error('CLOUDFLARE_R2_ACCOUNT_ID is not set');
-  if (!accessKeyId) throw new Error('CLOUDFLARE_R2_ACCESS_KEY_ID is not set');
-  if (!secretAccessKey) throw new Error('CLOUDFLARE_R2_SECRET_ACCESS_KEY is not set');
+  if (!endpoint) throw new Error('R2_ENDPOINT or CLOUDFLARE_R2_ACCOUNT_ID is not set');
+  if (!accessKeyId) throw new Error('R2_ACCESS_KEY_ID or CLOUDFLARE_R2_ACCESS_KEY_ID is not set');
+  if (!secretAccessKey) throw new Error('R2_SECRET_ACCESS_KEY or CLOUDFLARE_R2_SECRET_ACCESS_KEY is not set');
 
   _s3 = new S3Client({
     region: 'auto',
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    endpoint,
     credentials: { accessKeyId, secretAccessKey },
   });
 
   return _s3;
 }
+
 
 // ── Error types ───────────────────────────────────────────────────────────────
 

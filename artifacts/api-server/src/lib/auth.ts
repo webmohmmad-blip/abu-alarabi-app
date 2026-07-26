@@ -5,17 +5,18 @@ import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
+const secretVal = process.env.SESSION_SECRET || process.env.JWT_SECRET;
 if (
   process.env.NODE_ENV === "production" &&
-  (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === "dev-secret-change-me")
+  (!secretVal || secretVal === "dev-secret-change-me")
 ) {
   console.error(
-    "FATAL: SESSION_SECRET environment variable is missing or insecure in production. Application cannot start."
+    "FATAL: SESSION_SECRET (or JWT_SECRET) environment variable is missing or insecure in production. Application cannot start."
   );
   process.exit(1);
 }
 
-const JWT_SECRET = process.env.SESSION_SECRET ?? "dev-secret-change-me";
+const JWT_SECRET = secretVal ?? "dev-secret-change-me";
 
 export interface JwtPayload {
   userId: number;
