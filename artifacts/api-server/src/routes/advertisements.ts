@@ -79,15 +79,20 @@ router.get("/advertisements/active", async (_req, res): Promise<void> => {
       .select()
       .from(homepageAdsTable)
       .where(activeFilter())
-      .orderBy(asc(homepageAdsTable.position), desc(homepageAdsTable.createdAt));
+      .orderBy(asc(homepageAdsTable.position), desc(homepageAdsTable.createdAt))
+      .catch((err) => {
+        console.error("[advertisements] active fetch fallback", err);
+        return [];
+      });
 
     res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
-    res.json({ ok: true, items: ads.map(serializeAd) });
+    res.json({ ok: true, items: (ads || []).map(serializeAd) });
   } catch (err) {
     console.error("[advertisements] active fetch error", err);
-    res.status(500).json({ ok: false, error: "خطأ في جلب الإعلانات" });
+    res.json({ ok: true, items: [] });
   }
 });
+
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
