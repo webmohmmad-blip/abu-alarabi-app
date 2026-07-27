@@ -23,6 +23,7 @@ import {
   User,
   PhoneCall,
   LogIn,
+  GraduationCap,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLogout } from "@workspace/api-client-react";
@@ -180,27 +181,15 @@ export function Header() {
   const completedCustom = today?.customTasks.filter((t) => t.isCompleted) ?? [];
   const pendingCustomTasks = today?.customTasks.filter((t) => !t.isCompleted) ?? [];
 
-  // Mobile Drawer Navigation Items
-  const drawerNavItems = [
+  // 6 Main Mobile Navigation Items (Exact requested order)
+  const mainNavItems = [
     { href: isAuthenticated ? "/dashboard" : "/", label: "الرئيسية", icon: Home },
     { href: "/dossiers", label: "الدوسيات", icon: BookOpen },
     { href: "/worksheets", label: "أوراق العمل", icon: FileText },
     { href: "/exams", label: "الامتحانات المحوسبة", icon: Target },
-    { href: "/schedule", label: "جدولي الدراسي", icon: CalendarDays },
-    { href: "/study-room", label: "مؤقت الدراسة", icon: Clock },
-    { href: "/summaries", label: "ملخصاتي", icon: BookMarked },
-    { href: "/dossiers?favorite=true", label: "المفضلة", icon: Star },
-    { href: "/profile", label: "الملف الشخصي", icon: User },
-    { href: "/settings", label: "الإعدادات", icon: Settings },
+    { href: "/schedule", label: "الجدول الدراسي", icon: CalendarDays },
+    { href: "/study-room", label: "الغرفة الدراسية", icon: GraduationCap },
   ];
-
-  const handleContactClick = () => {
-    setIsMobileMenuOpen(false);
-    const footer = document.querySelector("footer");
-    if (footer) {
-      footer.scrollIntoView({ behavior: "smooth" });
-    }
-  };
 
   return (
     <>
@@ -548,10 +537,11 @@ export function Header() {
         )}
 
         {/* Drawer Nav Links (Min 48px Touch Height) */}
-        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1.5">
-          {drawerNavItems.map((item) => {
+        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1.5 scrollbar-hide">
+          {/* 6 Main Navigation Items */}
+          {mainNavItems.map((item) => {
             const Icon = item.icon;
-            const active = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+            const active = location === item.href || (item.href !== "/" && item.href !== "/dashboard" && location.startsWith(item.href));
 
             return (
               <Link
@@ -570,14 +560,40 @@ export function Header() {
             );
           })}
 
-          {/* Contact link */}
-          <button
-            onClick={handleContactClick}
-            className="w-full flex items-center gap-3.5 px-4 min-h-[48px] rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 active:bg-white/15 transition-all text-right"
-          >
-            <PhoneCall className="w-5 h-5 shrink-0 text-white/60" />
-            <span>تواصل معنا</span>
-          </button>
+          {/* Separator */}
+          <div className="border-t border-white/10 my-2" />
+
+          {/* Personal Section */}
+          <div className="space-y-1">
+            <Link
+              href="/profile"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`flex items-center gap-3.5 px-4 min-h-[48px] rounded-xl text-sm font-medium transition-all duration-150 ${
+                location === "/profile"
+                  ? "bg-primary text-white font-bold shadow-md shadow-primary/20"
+                  : "text-white/70 hover:text-white hover:bg-white/10 active:bg-white/15"
+              }`}
+            >
+              <User className="w-5 h-5 shrink-0 text-white/60" />
+              <span>الملف الشخصي</span>
+            </Link>
+
+            {/* Nested Sub-item: الإعدادات under الملف الشخصي */}
+            <div className="pr-6">
+              <Link
+                href="/settings"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 min-h-[42px] rounded-xl text-xs font-medium transition-all duration-150 ${
+                  location === "/settings"
+                    ? "bg-white/15 text-white font-bold"
+                    : "text-white/60 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Settings className="w-4 h-4 shrink-0 text-white/50" />
+                <span>الإعدادات</span>
+              </Link>
+            </div>
+          </div>
         </nav>
 
         {/* Drawer Footer Auth Button */}

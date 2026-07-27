@@ -8,25 +8,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  UserCircle, 
-  Camera, 
-  Edit3, 
-  Save, 
-  Trophy, 
-  BookOpen, 
+import { Link, useLocation } from "wouter";
+import {
+  UserCircle,
+  Camera,
+  Edit3,
+  Save,
+  Trophy,
+  BookOpen,
   Target,
-  GraduationCap
+  GraduationCap,
+  Settings as SettingsIcon,
+  Lock,
+  UserCheck
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
+type ProfileTab = "data" | "edit" | "password" | "settings";
+
 export default function Profile() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const { data: profile, isLoading } = useGetProfile();
   const { data: achievements } = useGetAchievements();
   const updateProfile = useUpdateProfile();
   const queryClient = useQueryClient();
 
+  const [activeTab, setActiveTab] = useState<ProfileTab>("data");
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -109,6 +117,57 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Profile Sub-Navigation Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-black/10 scrollbar-hide">
+          <button
+            onClick={() => { setActiveTab("data"); setIsEditing(false); }}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
+              activeTab === "data" && !isEditing
+                ? "bg-primary text-white shadow-md shadow-primary/20"
+                : "bg-white/80 hover:bg-white text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <UserCheck className="w-4 h-4" />
+            <span>بياناتي</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab("edit"); setIsEditing(true); }}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
+              activeTab === "edit" || isEditing
+                ? "bg-primary text-white shadow-md shadow-primary/20"
+                : "bg-white/80 hover:bg-white text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Edit3 className="w-4 h-4" />
+            <span>تعديل الحساب</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab("password"); setLocation("/settings?tab=security"); }}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
+              activeTab === "password"
+                ? "bg-primary text-white shadow-md shadow-primary/20"
+                : "bg-white/80 hover:bg-white text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Lock className="w-4 h-4" />
+            <span>تغيير كلمة المرور</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab("settings"); setLocation("/settings"); }}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
+              activeTab === "settings"
+                ? "bg-primary text-white shadow-md shadow-primary/20"
+                : "bg-white/80 hover:bg-white text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <SettingsIcon className="w-4 h-4" />
+            <span>الإعدادات</span>
+          </button>
+        </div>
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Main Info */}
