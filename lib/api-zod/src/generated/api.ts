@@ -22,7 +22,8 @@ export const registerBodyFullNameMin = 3;
 
 export const RegisterBody = zod.object({
   "fullName": zod.string().min(registerBodyFullNameMin),
-  "phone": zod.string()
+  "phone": zod.string(),
+  "tawjihiYear": zod.number().optional()
 })
 
 export const RegisterResponse = zod.object({

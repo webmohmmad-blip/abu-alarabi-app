@@ -48,6 +48,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   }
   const { fullName } = parsed.data;
   const phone = phoneResult.phone;
+  const tawjihiYear = (parsed.data as any).tawjihiYear ? Number((parsed.data as any).tawjihiYear) : 2010;
 
   const [existing] = await db
     .select()
@@ -55,6 +56,16 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     .where(eq(usersTable.phone, phone));
 
   if (existing) {
+    // If existing user registers again with tawjihiYear, update their profile
+    if (existing.role === "student") {
+      await db
+        .insert(studentProfilesTable)
+        .values({ userId: existing.id, tawjihiYear })
+        .onConflictDoUpdate({
+          target: studentProfilesTable.userId,
+          set: { tawjihiYear },
+        });
+    }
     const token = signToken({ userId: existing.id, role: existing.role });
     res.json({ user: userResponse(existing), token });
     return;
@@ -74,7 +85,11 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     })
     .returning();
 
-  await db.insert(studentProfilesTable).values({ userId: user.id });
+  await db.insert(studentProfilesTable).values({
+    userId: user.id,
+    tawjihiYear,
+    grade: tawjihiYear === 2010 ? "12" : "11",
+  });
 
   const token = signToken({ userId: user.id, role: user.role });
   res.status(201).json({ user: userResponse(user), token });

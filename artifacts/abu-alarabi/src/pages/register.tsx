@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { BookOpen, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { BookOpen, AlertCircle, Loader2, CheckCircle2, GraduationCap } from "lucide-react";
 import { motion } from "framer-motion";
 import { VerticalLogo } from "@/components/BrandAssets";
 
@@ -21,6 +21,7 @@ const registerSchema = z.object({
   phone: z
     .string()
     .regex(JORDAN_PHONE_RE, "رقم الهاتف غير صالح"),
+  tawjihiYear: z.enum(["2010", "2011"], { required_error: "يرجى اختيار الجيل" }),
 });
 
 type RegisterValues = z.infer<typeof registerSchema>;
@@ -33,7 +34,7 @@ export default function Register() {
 
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { fullName: "", phone: "" },
+    defaultValues: { fullName: "", phone: "", tawjihiYear: "2010" },
   });
 
   // Strip non-digits and cap at 10 characters on every keystroke
@@ -44,7 +45,7 @@ export default function Register() {
 
   const onSubmit = (data: RegisterValues) => {
     registerMutation.mutate(
-      { data: { fullName: data.fullName, phone: data.phone } },
+      { data: { fullName: data.fullName, phone: data.phone, tawjihiYear: Number(data.tawjihiYear) } as any },
       {
         onSuccess: (res) => {
           localStorage.setItem("token", res.token);
@@ -121,6 +122,44 @@ export default function Register() {
                   {form.formState.errors.phone.message}
                 </p>
               )}
+            </div>
+
+            {/* Tawjihi Generation Selector (2010 / 2011) */}
+            <div className="space-y-2 pt-1">
+              <Label>اختر جيل التوجيهي</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => form.setValue("tawjihiYear", "2010")}
+                  className={`p-3.5 rounded-2xl border-2 font-bold text-sm flex flex-col items-center justify-center gap-1 transition-all ${
+                    form.watch("tawjihiYear") === "2010"
+                      ? "border-primary bg-primary/10 text-primary shadow-md shadow-primary/10 scale-[1.02]"
+                      : "border-muted bg-card hover:bg-muted/40 text-muted-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <GraduationCap className="w-5 h-5" />
+                    <span>جيل 2010</span>
+                  </div>
+                  <span className="text-[11px] font-normal opacity-80">التوجيهي الحالي</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => form.setValue("tawjihiYear", "2011")}
+                  className={`p-3.5 rounded-2xl border-2 font-bold text-sm flex flex-col items-center justify-center gap-1 transition-all ${
+                    form.watch("tawjihiYear") === "2011"
+                      ? "border-primary bg-primary/10 text-primary shadow-md shadow-primary/10 scale-[1.02]"
+                      : "border-muted bg-card hover:bg-muted/40 text-muted-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <GraduationCap className="w-5 h-5" />
+                    <span>جيل 2011</span>
+                  </div>
+                  <span className="text-[11px] font-normal opacity-80">توجيهي 2026 / 2027</span>
+                </button>
+              </div>
             </div>
 
             <div className="text-xs text-muted-foreground pt-2 flex items-start gap-2">
