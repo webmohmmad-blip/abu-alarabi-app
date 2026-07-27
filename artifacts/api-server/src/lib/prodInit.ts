@@ -25,6 +25,27 @@ export async function ensureProductionReady(): Promise<void> {
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS group_id integer`,
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at timestamptz`,
 
+    `DO $$ BEGIN
+      CREATE TYPE content_status AS ENUM ('draft', 'published', 'archived', 'hidden', 'scheduled');
+    EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+
+    `DO $$ BEGIN
+      CREATE TYPE difficulty AS ENUM ('easy', 'medium', 'hard');
+    EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+
+    `ALTER TABLE worksheets DROP COLUMN IF EXISTS is_free`,
+    `ALTER TABLE worksheets ADD COLUMN IF NOT EXISTS description text`,
+    `ALTER TABLE worksheets ADD COLUMN IF NOT EXISTS cover_url text`,
+    `ALTER TABLE worksheets ADD COLUMN IF NOT EXISTS downloads integer NOT NULL DEFAULT 0`,
+    `ALTER TABLE worksheets ADD COLUMN IF NOT EXISTS solvers integer NOT NULL DEFAULT 0`,
+    `ALTER TABLE worksheets ADD COLUMN IF NOT EXISTS question_count integer NOT NULL DEFAULT 0`,
+    `ALTER TABLE worksheets ADD COLUMN IF NOT EXISTS estimated_minutes integer NOT NULL DEFAULT 30`,
+    `ALTER TABLE worksheets ADD COLUMN IF NOT EXISTS status content_status NOT NULL DEFAULT 'published'`,
+    `ALTER TABLE worksheets ADD COLUMN IF NOT EXISTS published_at timestamptz`,
+    `ALTER TABLE worksheets ADD COLUMN IF NOT EXISTS scheduled_at timestamptz`,
+    `ALTER TABLE worksheets ADD COLUMN IF NOT EXISTS expires_at timestamptz`,
+    `ALTER TABLE worksheets ADD COLUMN IF NOT EXISTS deleted_at timestamptz`,
+
     `CREATE TABLE IF NOT EXISTS roles (
       id serial PRIMARY KEY,
       name varchar(100) NOT NULL UNIQUE,
