@@ -102,22 +102,30 @@ router.get("/worksheets", requireAuth, async (req, res): Promise<void> => {
   const pageNum = parseInt(page, 10);
   const limitNum = Math.min(parseInt(limit, 10), 50);
 
-  let rows = await db
-    .select({ ws: worksheetsTable, subjectName: subjectsTable.name })
-    .from(worksheetsTable)
-    .leftJoin(subjectsTable, eq(worksheetsTable.subjectId, subjectsTable.id))
-    .where(isNull((worksheetsTable as any).deletedAt));
-
-  if (subjectId) rows = rows.filter((r) => r.ws.subjectId === parseInt(subjectId, 10));
-  if (search) {
-    const q = search.toLowerCase();
-    rows = rows.filter((r) => r.ws.title.toLowerCase().includes(q));
+  const conditions = [isNull((worksheetsTable as any).deletedAt), eq(worksheetsTable.status as any, "published")];
+  if (subjectId) {
+    conditions.push(eq(worksheetsTable.subjectId, parseInt(subjectId, 10)));
+  }
+  if (search?.trim()) {
+    conditions.push(sql`LOWER(${worksheetsTable.title}) LIKE ${`%${search.trim().toLowerCase()}%`}`);
   }
 
-  const total = rows.length;
-  const items = rows
-    .slice((pageNum - 1) * limitNum, pageNum * limitNum)
-    .map(({ ws, subjectName }) => ({
+  const whereClause = and(...conditions);
+
+  const [countResult, rows] = await Promise.all([
+    db.select({ count: sql<number>`count(*)` }).from(worksheetsTable).where(whereClause),
+    db
+      .select({ ws: worksheetsTable, subjectName: subjectsTable.name })
+      .from(worksheetsTable)
+      .leftJoin(subjectsTable, eq(worksheetsTable.subjectId, subjectsTable.id))
+      .where(whereClause)
+      .orderBy(desc(worksheetsTable.createdAt))
+      .limit(limitNum)
+      .offset((pageNum - 1) * limitNum),
+  ]);
+
+  const total = Number(countResult[0]?.count ?? 0);
+  const items = rows.map(({ ws, subjectName }) => ({
       id: ws.id,
       title: ws.title,
       description: (ws as any).description ?? null,

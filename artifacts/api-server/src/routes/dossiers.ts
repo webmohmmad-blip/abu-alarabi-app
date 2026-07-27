@@ -30,30 +30,33 @@ router.get("/dossiers", requireAuth, async (req, res): Promise<void> => {
   const pageNum = parseInt(page, 10);
   const limitNum = Math.min(parseInt(limit, 10), 50);
 
-  let rows = await db
-    .select({
-      dossier: dossiersTable,
-      subjectName: subjectsTable.name,
-    })
-    .from(dossiersTable)
-    .leftJoin(subjectsTable, eq(dossiersTable.subjectId, subjectsTable.id))
-    .where(isNull((dossiersTable as any).deletedAt))
-    .orderBy(desc(dossiersTable.createdAt));
-
+  const conditions = [isNull((dossiersTable as any).deletedAt), eq(dossiersTable.status as any, "published")];
   if (subjectId) {
-    rows = rows.filter(
-      (d) => d.dossier.subjectId === parseInt(subjectId, 10)
-    );
+    conditions.push(eq(dossiersTable.subjectId, parseInt(subjectId, 10)));
   }
-  if (search) {
-    const q = search.toLowerCase();
-    rows = rows.filter((d) => d.dossier.title.toLowerCase().includes(q));
+  if (search?.trim()) {
+    conditions.push(sql`LOWER(${dossiersTable.title}) LIKE ${`%${search.trim().toLowerCase()}%`}`);
   }
 
-  const total = rows.length;
-  const items = rows
-    .slice((pageNum - 1) * limitNum, pageNum * limitNum)
-    .map(({ dossier, subjectName }) => ({
+  const whereClause = and(...conditions);
+
+  const [countResult, rows] = await Promise.all([
+    db.select({ count: sql<number>`count(*)` }).from(dossiersTable).where(whereClause),
+    db
+      .select({
+        dossier: dossiersTable,
+        subjectName: subjectsTable.name,
+      })
+      .from(dossiersTable)
+      .leftJoin(subjectsTable, eq(dossiersTable.subjectId, subjectsTable.id))
+      .where(whereClause)
+      .orderBy(desc(dossiersTable.createdAt))
+      .limit(limitNum)
+      .offset((pageNum - 1) * limitNum),
+  ]);
+
+  const total = Number(countResult[0]?.count ?? 0);
+  const items = rows.map(({ dossier, subjectName }) => ({
       id: dossier.id,
       title: dossier.title,
       description: dossier.description,

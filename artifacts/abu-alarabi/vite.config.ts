@@ -92,6 +92,10 @@ export default defineConfig({
         // the "radix-vendor loads before react-vendor" forwardRef crash.
         manualChunks(id) {
           if (id.includes('pdfjs-dist')) return 'pdf-vendor';
+          if (id.includes('@tanstack/react-query')) return 'query-vendor';
+          if (id.includes('zod')) return 'zod-vendor';
+          if (id.includes('lucide-react')) return 'icons-vendor';
+          if (id.includes('@radix-ui')) return 'ui-vendor';
         },
       },
     },

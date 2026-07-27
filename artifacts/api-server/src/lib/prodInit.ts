@@ -70,6 +70,15 @@ export async function ensureProductionReady(): Promise<void> {
     )`,
 
     `CREATE INDEX IF NOT EXISTS idx_homepage_ads_active_position ON homepage_ads(is_active, position)`,
+    `CREATE INDEX IF NOT EXISTS idx_exams_status_avail_subj_type ON exams(status, is_available, subject_id, type)`,
+    `CREATE INDEX IF NOT EXISTS idx_questions_exam_id ON questions(exam_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_question_choices_question_id ON question_choices(question_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_exam_attempts_user_exam ON exam_attempts(user_id, exam_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_attempt_answers_attempt_id ON attempt_answers(attempt_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_study_tasks_user_scheduled ON study_tasks(user_id, scheduled_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_study_sessions_user ON study_sessions(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_notes_user ON notes(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_dossier_progress_user_dossier ON dossier_reading_progress(user_id, dossier_id)`,
   ];
 
   let success = 0;

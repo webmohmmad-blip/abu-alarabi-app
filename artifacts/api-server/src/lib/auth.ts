@@ -62,6 +62,15 @@ export function requireRole(roles: string[]) {
   };
 }
 
+interface CachedUserAuth {
+  id: number;
+  role: string;
+  cachedAt: number;
+}
+
+const userAuthCache = new Map<number, CachedUserAuth>();
+const USER_CACHE_TTL_MS = 60_000; // 60 seconds
+
 export async function requireAuth(
   req: Request,
   res: Response,
@@ -79,18 +88,26 @@ export async function requireAuth(
     return;
   }
 
-  // Verify user still exists
-  const [user] = await db
-    .select({ id: usersTable.id, role: usersTable.role })
-    .from(usersTable)
-    .where(eq(usersTable.id, payload.userId));
+  const now = Date.now();
+  let cached = userAuthCache.get(payload.userId);
 
-  if (!user) {
-    res.status(401).json({ error: "المستخدم غير موجود" });
-    return;
+  if (!cached || now - cached.cachedAt > USER_CACHE_TTL_MS) {
+    const [user] = await db
+      .select({ id: usersTable.id, role: usersTable.role })
+      .from(usersTable)
+      .where(eq(usersTable.id, payload.userId));
+
+    if (!user) {
+      userAuthCache.delete(payload.userId);
+      res.status(401).json({ error: "المستخدم غير موجود" });
+      return;
+    }
+
+    cached = { id: user.id, role: user.role, cachedAt: now };
+    userAuthCache.set(user.id, cached);
   }
 
-  (req as AuthRequest).userId = user.id;
-  (req as AuthRequest).userRole = user.role;
+  (req as AuthRequest).userId = cached.id;
+  (req as AuthRequest).userRole = cached.role;
   next();
 }

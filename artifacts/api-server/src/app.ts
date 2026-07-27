@@ -97,7 +97,17 @@ app.use("/api", router);
 // ─── Static Frontend Serving & SPA Fallback ───────────────────────────────────
 const staticPath = path.resolve(import.meta.dirname, "../../abu-alarabi/dist/public");
 if (fs.existsSync(staticPath)) {
-  app.use(express.static(staticPath));
+  const assetsPath = path.join(staticPath, "assets");
+  if (fs.existsSync(assetsPath)) {
+    app.use(
+      "/assets",
+      express.static(assetsPath, {
+        maxAge: "1y",
+        immutable: true,
+      })
+    );
+  }
+  app.use(express.static(staticPath, { maxAge: "1h" }));
   app.use((req, res, next) => {
     if (req.method !== "GET" && req.method !== "HEAD") return next();
     if (req.path.startsWith("/api")) return next();

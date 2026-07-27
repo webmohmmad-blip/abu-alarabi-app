@@ -1,4 +1,4 @@
-import { createContext, useCallback, ReactNode } from 'react';
+import { createContext, useCallback, useMemo, ReactNode } from 'react';
 import { useGetMe, getGetMeQueryKey, User } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -34,15 +34,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.replace('/login');
   }, [queryClient]);
 
+  const value = useMemo(
+    () => ({
+      user: isError ? null : (user ?? null),
+      isLoading,
+      isAuthenticated: !!user && !isError,
+      logout,
+    }),
+    [user, isLoading, isError, logout]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user: isError ? null : (user ?? null),
-        isLoading,
-        isAuthenticated: !!user && !isError,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
