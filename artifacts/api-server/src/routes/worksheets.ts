@@ -110,11 +110,16 @@ router.get("/worksheets", optionalAuth, async (req: Request, res: Response): Pro
     const userRole = (req as AuthRequest).userRole;
     const isAdmin = userRole === "admin" || userRole === "super_admin";
 
-    const conditions = [isNull(worksheetsTable.deletedAt)];
+    const conditions = [isNull(worksheetsTable.deletedAt as any)];
 
-    // Non-admin users see only published worksheets
+    // Non-admin users see published or default worksheets
     if (!isAdmin) {
-      conditions.push(eq(worksheetsTable.status, "published"));
+      conditions.push(
+        or(
+          eq((worksheetsTable as any).status, "published"),
+          isNull((worksheetsTable as any).status)
+        ) as any
+      );
     }
 
     if (subjectId) {
@@ -133,7 +138,20 @@ router.get("/worksheets", optionalAuth, async (req: Request, res: Response): Pro
     const [countResult, rows] = await Promise.all([
       db.select({ count: sql<number>`count(*)` }).from(worksheetsTable).where(whereClause),
       db
-        .select({ ws: worksheetsTable, subjectName: subjectsTable.name })
+        .select({
+          id: worksheetsTable.id,
+          title: worksheetsTable.title,
+          description: worksheetsTable.description,
+          subjectId: worksheetsTable.subjectId,
+          grade: worksheetsTable.grade,
+          estimatedMinutes: worksheetsTable.estimatedMinutes,
+          fileUrl: worksheetsTable.fileUrl,
+          coverUrl: worksheetsTable.coverUrl,
+          downloads: worksheetsTable.downloads,
+          status: worksheetsTable.status,
+          createdAt: worksheetsTable.createdAt,
+          subjectName: subjectsTable.name,
+        })
         .from(worksheetsTable)
         .leftJoin(subjectsTable, eq(worksheetsTable.subjectId, subjectsTable.id))
         .where(whereClause)
@@ -143,18 +161,18 @@ router.get("/worksheets", optionalAuth, async (req: Request, res: Response): Pro
     ]);
 
     const total = Number(countResult[0]?.count ?? 0);
-    const items = rows.map(({ ws, subjectName }) => ({
+    const items = rows.map((ws) => ({
       id: ws.id,
       title: ws.title,
       description: ws.description ?? null,
       subjectId: ws.subjectId,
-      subjectName: subjectName ?? "",
+      subjectName: ws.subjectName ?? "",
       grade: ws.grade,
-      estimatedMinutes: ws.estimatedMinutes,
+      estimatedMinutes: ws.estimatedMinutes ?? 30,
       fileUrl: ws.fileUrl,
       coverUrl: ws.coverUrl ?? null,
-      downloads: ws.downloads,
-      status: ws.status,
+      downloads: ws.downloads ?? 0,
+      status: ws.status ?? "published",
       createdAt: ws.createdAt,
     }));
 
@@ -177,10 +195,24 @@ router.get("/worksheets/:id", optionalAuth, async (req: Request, res: Response):
     }
 
     const [row] = await db
-      .select({ ws: worksheetsTable, subjectName: subjectsTable.name })
+      .select({
+        id: worksheetsTable.id,
+        title: worksheetsTable.title,
+        description: worksheetsTable.description,
+        subjectId: worksheetsTable.subjectId,
+        grade: worksheetsTable.grade,
+        estimatedMinutes: worksheetsTable.estimatedMinutes,
+        fileUrl: worksheetsTable.fileUrl,
+        coverUrl: worksheetsTable.coverUrl,
+        downloads: worksheetsTable.downloads,
+        status: worksheetsTable.status,
+        publishedAt: worksheetsTable.publishedAt,
+        createdAt: worksheetsTable.createdAt,
+        subjectName: subjectsTable.name,
+      })
       .from(worksheetsTable)
       .leftJoin(subjectsTable, eq(worksheetsTable.subjectId, subjectsTable.id))
-      .where(and(eq(worksheetsTable.id, id), isNull(worksheetsTable.deletedAt)));
+      .where(and(eq(worksheetsTable.id, id), isNull(worksheetsTable.deletedAt as any)));
 
     if (!row) {
       res.status(404).json({ error: "ورقة العمل غير موجودة" });
@@ -189,26 +221,27 @@ router.get("/worksheets/:id", optionalAuth, async (req: Request, res: Response):
 
     const userRole = (req as AuthRequest).userRole;
     const isAdmin = userRole === "admin" || userRole === "super_admin";
+    const statusVal = (row as any).status ?? "published";
 
-    if (!isAdmin && row.ws.status !== "published") {
+    if (!isAdmin && statusVal !== "published") {
       res.status(404).json({ error: "ورقة العمل غير متاحة" });
       return;
     }
 
     res.json({
-      id: row.ws.id,
-      title: row.ws.title,
-      description: row.ws.description ?? null,
-      subjectId: row.ws.subjectId,
+      id: row.id,
+      title: row.title,
+      description: row.description ?? null,
+      subjectId: row.subjectId,
       subjectName: row.subjectName ?? "",
-      grade: row.ws.grade,
-      estimatedMinutes: row.ws.estimatedMinutes,
-      fileUrl: row.ws.fileUrl,
-      coverUrl: row.ws.coverUrl ?? null,
-      downloads: row.ws.downloads,
-      status: row.ws.status,
-      publishedAt: row.ws.publishedAt,
-      createdAt: row.ws.createdAt,
+      grade: row.grade,
+      estimatedMinutes: row.estimatedMinutes ?? 30,
+      fileUrl: row.fileUrl,
+      coverUrl: row.coverUrl ?? null,
+      downloads: row.downloads ?? 0,
+      status: statusVal,
+      publishedAt: row.publishedAt ?? null,
+      createdAt: row.createdAt,
     });
   } catch (error) {
     console.error("Error in GET /api/worksheets/:id:", error);
