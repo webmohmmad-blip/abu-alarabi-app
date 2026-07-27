@@ -1,9 +1,10 @@
 /**
  * Automated tests for /api/worksheets endpoint
  * Run with:
- *   pnpm --filter @workspace/api-server exec ts-node src/routes/worksheets.test.ts
+ *   npx ts-node --compiler-options '{"module":"CommonJS"}' artifacts/api-server/src/routes/worksheets.test.ts
  */
 import http from "http";
+import https from "https";
 
 const BASE_URL = process.env.BASE_URL || "https://malsahori.com";
 
@@ -24,7 +25,7 @@ function assert(condition: boolean, message: string) {
 async function fetchUrl(path: string): Promise<{ status: number; headers: http.IncomingHttpHeaders; body: string }> {
   return new Promise((resolve, reject) => {
     const url = new URL(path, BASE_URL);
-    const client = url.protocol === "https:" ? require("https") : require("http");
+    const client = url.protocol === "https:" ? https : http;
 
     const req = client.get(url.toString(), (res: http.IncomingMessage) => {
       let body = "";
