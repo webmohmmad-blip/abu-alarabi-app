@@ -90,7 +90,7 @@ router.get(
     const where = and(...conditions);
 
     try {
-      // ── Fetch all matching users (no pagination limit) ─────────────────────
+      // ── Fetch all matching users with student profile generation ───────────
       const users = await db
         .select({
           id: usersTable.id,
@@ -99,8 +99,10 @@ router.get(
           role: usersTable.role,
           status: usersTable.status,
           createdAt: usersTable.createdAt,
+          tawjihiYear: studentProfilesTable.tawjihiYear,
         })
         .from(usersTable)
+        .leftJoin(studentProfilesTable, eq(usersTable.id, studentProfilesTable.userId))
         .where(where)
         .orderBy(usersTable.createdAt);
 
@@ -139,14 +141,15 @@ router.get(
 
       // Column definitions
       sheet.columns = [
-        { header: "الرقم",             key: "num",       width: 8  },
-        { header: "الاسم الكامل",       key: "fullName",  width: 30 },
-        { header: "رقم الهاتف",         key: "phone",     width: 16 },
-        { header: "الدور",              key: "role",      width: 16 },
-        { header: "الحالة",             key: "status",    width: 14 },
-        { header: "تاريخ التسجيل",      key: "createdAt", width: 22 },
-        { header: "عدد الامتحانات",     key: "exams",     width: 18 },
-        { header: "عدد الكويزات",       key: "quizzes",   width: 16 },
+        { header: "الرقم",             key: "num",        width: 8  },
+        { header: "الاسم الكامل",       key: "fullName",   width: 30 },
+        { header: "رقم الهاتف",         key: "phone",      width: 16 },
+        { header: "الدور",              key: "role",       width: 16 },
+        { header: "جيل الطالب",         key: "generation", width: 14 },
+        { header: "الحالة",             key: "status",     width: 14 },
+        { header: "تاريخ التسجيل",      key: "createdAt",  width: 22 },
+        { header: "عدد الامتحانات",     key: "exams",      width: 18 },
+        { header: "عدد الكويزات",       key: "quizzes",    width: 16 },
       ];
 
       // Header row styling
@@ -176,11 +179,14 @@ router.get(
       const EVEN_FILL = "F5F0FA"; // very light purple
       users.forEach((u, idx) => {
         const counts = countMap.get(u.id) ?? { exams: 0, quizzes: 0 };
+        const genValue = u.role === "student" && u.tawjihiYear ? String(u.tawjihiYear) : "-";
+        
         const row = sheet.addRow({
           num: idx + 1,
           fullName: u.fullName,
           phone: u.phone,
           role: ROLE_AR[u.role] ?? u.role,
+          generation: genValue,
           status: STATUS_AR[u.status] ?? u.status,
           createdAt: fmtDate(u.createdAt),
           exams: counts.exams,
@@ -204,11 +210,12 @@ router.get(
         phoneCell.value = String(u.phone);
 
         // Align numbers centre
-        row.getCell("num").alignment    = { horizontal: "center" };
-        row.getCell("exams").alignment  = { horizontal: "center" };
-        row.getCell("quizzes").alignment = { horizontal: "center" };
-        row.getCell("status").alignment  = { horizontal: "center" };
-        row.getCell("role").alignment    = { horizontal: "center" };
+        row.getCell("num").alignment        = { horizontal: "center" };
+        row.getCell("generation").alignment = { horizontal: "center" };
+        row.getCell("exams").alignment      = { horizontal: "center" };
+        row.getCell("quizzes").alignment    = { horizontal: "center" };
+        row.getCell("status").alignment     = { horizontal: "center" };
+        row.getCell("role").alignment       = { horizontal: "center" };
 
         // RTL text
         row.getCell("fullName").alignment = { readingOrder: "rtl" };

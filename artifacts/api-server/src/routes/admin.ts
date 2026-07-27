@@ -140,8 +140,10 @@ router.get("/users", async (req, res) => {
         status: usersTable.status,
         avatarUrl: usersTable.avatarUrl,
         createdAt: usersTable.createdAt,
+        tawjihiYear: studentProfilesTable.tawjihiYear,
       })
       .from(usersTable)
+      .leftJoin(studentProfilesTable, eq(usersTable.id, studentProfilesTable.userId))
       .where(and(...conditions))
       .orderBy(desc(usersTable.createdAt))
       .limit(limitNum)
@@ -152,6 +154,7 @@ router.get("/users", async (req, res) => {
   res.json({
     items: users.map((u) => ({
       ...u,
+      tawjihiYear: u.role === "student" ? u.tawjihiYear : null,
       totalSessions: 0,
       totalExams: 0,
       lastLoginAt: null,

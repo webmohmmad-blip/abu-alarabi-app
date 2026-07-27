@@ -38,6 +38,7 @@ interface AdminUser {
   totalSessions: number;
   totalExams: number;
   lastLoginAt: string | null;
+  tawjihiYear?: number | null;
 }
 
 const roleLabels: Record<UserRole, string> = {
@@ -240,6 +241,7 @@ export default function AdminUsers() {
                   <th className="text-right px-5 py-3.5 text-muted-foreground font-medium">المستخدم</th>
                   <th className="text-right px-4 py-3.5 text-muted-foreground font-medium">الهاتف</th>
                   <th className="text-right px-4 py-3.5 text-muted-foreground font-medium">الدور</th>
+                  <th className="text-right px-4 py-3.5 text-muted-foreground font-medium">جيل الطالب</th>
                   <th className="text-right px-4 py-3.5 text-muted-foreground font-medium">الحالة</th>
                   <th className="text-right px-4 py-3.5 text-muted-foreground font-medium">تاريخ الإنشاء</th>
                   <th className="px-4 py-3.5"></th>
@@ -249,7 +251,7 @@ export default function AdminUsers() {
                 {isLoading
                   ? Array.from({ length: 8 }).map((_, i) => (
                       <tr key={i}>
-                        <td colSpan={6} className="px-5 py-3">
+                        <td colSpan={7} className="px-5 py-3">
                           <Skeleton className="h-10 w-full bg-white/5" />
                         </td>
                       </tr>
@@ -272,6 +274,9 @@ export default function AdminUsers() {
                           <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${roleColors[user.role]}`}>
                             {roleLabels[user.role]}
                           </span>
+                        </td>
+                        <td className="px-4 py-4 text-xs font-bold text-white/80">
+                          {user.role === "student" && user.tawjihiYear ? `جيل ${user.tawjihiYear}` : "-"}
                         </td>
                         <td className="px-4 py-4">
                           <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[user.status]}`}>

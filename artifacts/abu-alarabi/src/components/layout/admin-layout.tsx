@@ -32,11 +32,7 @@ const adminNavItems = [
   { name: "أوراق العمل", href: "/admin/worksheets", icon: BookText },
   { name: "الكويز الأسبوعي", href: "/admin/quiz", icon: MessageSquareWarning },
   { name: "الصلاحيات", href: "/admin/roles", icon: ShieldCheck },
-  { name: "الإعلانات", href: "/admin/announcements", icon: Megaphone },
-  { name: "لافتات الصفحة", href: "/admin/advertisements", icon: Wallpaper },
-  { name: "الصفحة الرئيسية", href: "/admin/homepage-settings", icon: Layout },
-  { name: "التقارير", href: "/admin/reports", icon: BarChart3 },
-  { name: "سجل المراجعة", href: "/admin/audit", icon: ScrollText },
+  { name: "الفئات الرئيسية", href: "/admin/groups", icon: Users2 },
   { name: "الإعدادات", href: "/admin/settings", icon: Settings },
 ];
 
