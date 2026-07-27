@@ -141,19 +141,7 @@ export default function Profile() {
             }`}
           >
             <Edit3 className="w-4 h-4" />
-            <span>تعديل الحساب</span>
-          </button>
-
-          <button
-            onClick={() => { setActiveTab("password"); setLocation("/settings?tab=security"); }}
-            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
-              activeTab === "password"
-                ? "bg-primary text-white shadow-md shadow-primary/20"
-                : "bg-white/80 hover:bg-white text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Lock className="w-4 h-4" />
-            <span>تغيير كلمة المرور</span>
+            <span>تعديل الملف الشخصي</span>
           </button>
 
           <button

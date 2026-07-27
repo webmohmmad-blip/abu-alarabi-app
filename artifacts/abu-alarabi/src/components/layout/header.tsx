@@ -181,9 +181,10 @@ export function Header() {
   const completedCustom = today?.customTasks.filter((t) => t.isCompleted) ?? [];
   const pendingCustomTasks = today?.customTasks.filter((t) => !t.isCompleted) ?? [];
 
-  // 6 Main Mobile Navigation Items (Exact requested order)
+  // Mobile Navigation Drawer Items (Exact requested order)
   const mainNavItems = [
-    { href: isAuthenticated ? "/dashboard" : "/", label: "الرئيسية", icon: Home },
+    { href: "/", label: "الرئيسية", icon: Home },
+    { href: "/dashboard", label: "مهام اليوم", icon: CheckCircle2 },
     { href: "/dossiers", label: "الدوسيات", icon: BookOpen },
     { href: "/worksheets", label: "أوراق العمل", icon: FileText },
     { href: "/exams", label: "الامتحانات المحوسبة", icon: Target },
@@ -437,12 +438,12 @@ export function Header() {
                 <div className="relative" ref={accountRef}>
                   <button
                     onClick={() => setShowAccount((s) => !s)}
-                    className={`flex items-center gap-2 px-2.5 py-1.5 md:px-3 md:py-2 rounded-xl transition-colors ${showAccount ? "bg-white/15" : "hover:bg-white/10"}`}
+                    className={`flex items-center gap-2 px-2 py-1.5 md:px-3 md:py-2 rounded-xl transition-colors ${showAccount ? "bg-white/15" : "hover:bg-white/10"}`}
                     aria-label="قائمة الحساب"
                     aria-expanded={showAccount}
                   >
-                    <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white shrink-0 font-bold text-xs">
-                      {user?.fullName?.[0] || <UserCircle className="w-[18px] h-[18px]" />}
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shrink-0 shadow-md border border-white/20">
+                      <User className="w-4 h-4" />
                     </div>
                     <span className="hidden sm:block text-sm font-medium text-white/80 truncate max-w-[100px]">
                       {user?.fullName}
@@ -459,6 +460,10 @@ export function Header() {
                         </p>
                       </div>
                       <div className="p-1.5 space-y-0.5">
+                        <Link href="/profile" onClick={() => setShowAccount(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 text-white/70 hover:text-white transition-colors">
+                          <User className="w-4 h-4" />
+                          <span className="text-sm font-medium">الملف الشخصي</span>
+                        </Link>
                         <Link href="/settings" onClick={() => setShowAccount(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 text-white/70 hover:text-white transition-colors">
                           <Settings className="w-4 h-4" />
                           <span className="text-sm font-medium">الإعدادات</span>
@@ -562,38 +567,6 @@ export function Header() {
 
           {/* Separator */}
           <div className="border-t border-white/10 my-2" />
-
-          {/* Personal Section */}
-          <div className="space-y-1">
-            <Link
-              href="/profile"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center gap-3.5 px-4 min-h-[48px] rounded-xl text-sm font-medium transition-all duration-150 ${
-                location === "/profile"
-                  ? "bg-primary text-white font-bold shadow-md shadow-primary/20"
-                  : "text-white/70 hover:text-white hover:bg-white/10 active:bg-white/15"
-              }`}
-            >
-              <User className="w-5 h-5 shrink-0 text-white/60" />
-              <span>الملف الشخصي</span>
-            </Link>
-
-            {/* Nested Sub-item: الإعدادات under الملف الشخصي */}
-            <div className="pr-6">
-              <Link
-                href="/settings"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 min-h-[42px] rounded-xl text-xs font-medium transition-all duration-150 ${
-                  location === "/settings"
-                    ? "bg-white/15 text-white font-bold"
-                    : "text-white/60 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <Settings className="w-4 h-4 shrink-0 text-white/50" />
-                <span>الإعدادات</span>
-              </Link>
-            </div>
-          </div>
         </nav>
 
         {/* Drawer Footer Auth Button */}
