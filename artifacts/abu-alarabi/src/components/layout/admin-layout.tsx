@@ -31,6 +31,8 @@ const adminNavItems = [
   { name: "الامتحانات", href: "/admin/exams", icon: PenTool },
   { name: "أوراق العمل", href: "/admin/worksheets", icon: BookText },
   { name: "الكويز الأسبوعي", href: "/admin/quiz", icon: MessageSquareWarning },
+  { name: "لافتات الصفحة", href: "/admin/advertisements", icon: Wallpaper },
+  { name: "الصفحة الرئيسية", href: "/admin/homepage-settings", icon: Layout },
   { name: "الصلاحيات", href: "/admin/roles", icon: ShieldCheck },
   { name: "الفئات الرئيسية", href: "/admin/groups", icon: Users2 },
   { name: "الإعدادات", href: "/admin/settings", icon: Settings },
