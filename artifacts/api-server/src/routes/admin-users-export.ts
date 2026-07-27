@@ -8,6 +8,7 @@ import ExcelJS from "exceljs";
 import { db } from "@workspace/db";
 import {
   usersTable,
+  studentProfilesTable,
   examAttemptsTable,
   examsTable,
   auditLogsTable,
