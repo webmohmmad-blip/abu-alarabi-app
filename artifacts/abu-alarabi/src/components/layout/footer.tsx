@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { BookOpen, Phone, MapPin, Instagram, Facebook, Youtube, Mail } from "lucide-react";
+import { MonochromeLogo } from "@/components/BrandAssets";
 
 /* WhatsApp icon — not in lucide, using inline SVG */
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -60,8 +61,6 @@ export function Footer() {
 
           {/* Brand + socials */}
           <div className="space-y-4">
-import { MonochromeLogo } from "@/components/BrandAssets";
-
             <Link href="/" className="inline-block">
               <MonochromeLogo showSubtitle={true} className="scale-105" />
             </Link>
