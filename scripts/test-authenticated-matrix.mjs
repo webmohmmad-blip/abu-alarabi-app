@@ -85,7 +85,8 @@ async function runTests() {
     { method: "GET", path: "/api/exams", expected: 200, desc: "List exams" },
     { method: "GET", path: "/api/notes", expected: 200, desc: "List notes" },
     { method: "GET", path: "/api/summaries", expected: 200, desc: "List summaries" },
-    { method: "GET", path: "/api/quiz", expected: 200, desc: "List weekly quizzes" }
+    { method: "GET", path: "/api/quiz/current", expected: 200, desc: "Get current weekly quiz (200 with quiz or null)" },
+    { method: "GET", path: "/api/quiz/leaderboard", expected: 200, desc: "Get weekly quiz leaderboard" }
   ];
 
   let studentPassed = 0;

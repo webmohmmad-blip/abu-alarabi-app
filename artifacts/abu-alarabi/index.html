@@ -54,7 +54,7 @@
               HTML → API [parallel with JS] → image)
     ════════════════════════════════════════════════════════════════════════════ -->
     <script>
-    !function(){try{fetch('/api/public/homepage').then(function(r){return r.json()}).then(function(d){if(!d||!d.ok)return;window.__HOMEPAGE__=d;var a=d.ads&&d.ads[0];if(!a)return;var m=window.innerWidth<640,src=m?(a.mobileImageUrl||a.imageUrl):a.imageUrl;if(!src)return;var l=document.createElement('link');l.rel='preload';l.as='image';l.fetchPriority='high';l.href=src;document.head.appendChild(l)})}catch(e){}}()
+    !function(){try{if(window.location.pathname!=='/'&&window.location.pathname!=='')return;fetch('/api/public/homepage').then(function(r){return r.json()}).then(function(d){if(!d||!d.ok)return;window.__HOMEPAGE__=d;var a=d.ads&&d.ads[0];if(!a)return;var m=window.innerWidth<640,src=m?(a.mobileImageUrl||a.imageUrl):a.imageUrl;if(!src||src.toLowerCase().indexOf('.pdf')!==-1)return;var l=document.createElement('link');l.rel='preload';l.as='image';l.fetchPriority='high';l.href=src;document.head.appendChild(l)})}catch(e){}}()
     </script>
 
     <!-- ═══ Favicon ═══ -->

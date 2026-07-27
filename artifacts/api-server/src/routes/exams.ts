@@ -541,7 +541,7 @@ router.get("/quiz/current", requireAuth, async (req, res): Promise<void> => {
     );
 
   if (!rows.length) {
-    res.status(404).json({ error: "لا يوجد كويز حالياً" });
+    res.status(200).json(null);
     return;
   }
 
