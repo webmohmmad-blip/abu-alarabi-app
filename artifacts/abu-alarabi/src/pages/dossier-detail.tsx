@@ -27,11 +27,14 @@ import {
   Pencil
 } from "lucide-react";
 
+import { useToast } from "@/hooks/use-toast";
+
 export default function DossierDetail() {
   const { id } = useParams();
   const dossierId = parseInt(id || "0", 10);
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   
   const [isReading, setIsReading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,6 +48,59 @@ export default function DossierDetail() {
 
   const toggleFavorite = useToggleDossierFavorite();
   const updateProgress = useUpdateDossierProgress();
+
+  const handleShare = async () => {
+    if (!dossier) return;
+
+    // Public canonical URL format (stripping any internal query parameters)
+    const publicUrl = `${window.location.origin}/dossiers/${dossier.id}`;
+
+    const shareData = {
+      title: dossier.title,
+      text: dossier.description || "دوسية تعليمية من منصة أبو العربي",
+      url: publicUrl,
+    };
+
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(publicUrl);
+        toast({
+          title: "تم نسخ رابط الدوسية",
+        });
+      } else {
+        toast({
+          title: "تعذر مشاركة الدوسية، حاول مرة أخرى",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
+      try {
+        if (typeof navigator !== "undefined" && navigator.clipboard) {
+          await navigator.clipboard.writeText(publicUrl);
+          toast({
+            title: "تم نسخ رابط الدوسية",
+          });
+          return;
+        }
+      } catch {
+        // Fallback failed as well
+      }
+
+      toast({
+        title: "تعذر مشاركة الدوسية، حاول مرة أخرى",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleToggleFavorite = () => {
     toggleFavorite.mutate(
@@ -326,7 +382,13 @@ export default function DossierDetail() {
                       تعذر تحميل الملف، حاول مرة أخرى
                     </span>
                   )}
-                  <Button variant="outline" className="gap-2 bg-white">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2 bg-white min-h-[44px]"
+                    onClick={handleShare}
+                    aria-label="مشاركة الدوسية"
+                  >
                     <Share2 className="w-4 h-4" /> مشاركة
                   </Button>
                 </div>
