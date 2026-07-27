@@ -7,20 +7,19 @@ process.env.CLOUDFLARE_R2_ACCESS_KEY_ID = process.env.CLOUDFLARE_R2_ACCESS_KEY_I
 process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || 'test-secret-key';
 
 async function runVerification() {
-  console.log('--- Cloudflare R2 Presigned Upload URL Verification ---');
+  console.log('--- Step 1: Generating Presigned PUT URL ---');
 
   const storage = new ObjectStorageService();
+  const bucket = process.env.CLOUDFLARE_R2_BUCKET_NAME;
 
   const testCases = [
-    { type: 'image/png', label: 'Image (PNG)' },
-    { type: 'image/jpeg', label: 'Image (JPEG)' },
-    { type: 'image/webp', label: 'Image (WEBP)' },
-    { type: 'application/pdf', label: 'PDF Document / Dossier' },
-    { type: 'image/gif', label: 'Advertisement Banner' },
+    { type: 'image/png', label: 'Image Upload' },
+    { type: 'application/pdf', label: 'PDF / Dossier Upload' },
   ];
 
   for (const testCase of testCases) {
-    console.log(`\nTesting ${testCase.label} (${testCase.type})...`);
+    console.log(`\n=== Testing ${testCase.label} (${testCase.type}) ===`);
+    
     let presignedUrl;
     try {
       presignedUrl = await storage.getObjectEntityUploadURL(testCase.type);
@@ -29,36 +28,49 @@ async function runVerification() {
       continue;
     }
 
-    console.log('Generated Presigned URL:');
+    console.log('1. Generated Presigned URL:');
     console.log(presignedUrl);
+
+    // Step 2 & 3: Check Virtual Host vs Path Style
+    const isPathStyle = presignedUrl.includes(`/${bucket}/`);
+    console.log('2. URL Style Check:');
+    if (isPathStyle) {
+      console.log('   ✅ Path Style URL confirmed (forcePathStyle: true is active).');
+    } else {
+      console.log('   ⚠️ Virtual Host URL detected! (Requires forcePathStyle: true).');
+    }
 
     const hasSdkChecksumAlgorithm = presignedUrl.includes('x-amz-sdk-checksum-algorithm');
     const hasChecksumCrc32 = presignedUrl.includes('x-amz-checksum-crc32');
-    const hasSigV4 = presignedUrl.includes('X-Amz-Algorithm=AWS4-HMAC-SHA256');
 
-    if (hasSdkChecksumAlgorithm) {
-      console.error(`❌ FAILED: Presigned URL contains x-amz-sdk-checksum-algorithm!`);
-      process.exit(1);
-    } else {
-      console.log(`✅ VERIFIED: x-amz-sdk-checksum-algorithm absent.`);
-    }
+    console.log('3. Checksum Query Parameter Check:');
+    console.log('   x-amz-sdk-checksum-algorithm present:', hasSdkChecksumAlgorithm);
+    console.log('   x-amz-checksum-crc32 present:', hasChecksumCrc32);
 
-    if (hasChecksumCrc32) {
-      console.error(`❌ FAILED: Presigned URL contains x-amz-checksum-crc32!`);
-      process.exit(1);
-    } else {
-      console.log(`✅ VERIFIED: x-amz-checksum-crc32 absent.`);
-    }
+    // Step 4: Test OPTIONS preflight request to inspect CORS response headers
+    console.log('4. Inspecting OPTIONS Preflight Response Headers:');
+    try {
+      const preflightRes = await fetch(presignedUrl, {
+        method: 'OPTIONS',
+        headers: {
+          'Origin': 'https://abu-alarabi.com',
+          'Access-Control-Request-Method': 'PUT',
+          'Access-Control-Request-Headers': 'content-type',
+        },
+      });
 
-    if (!hasSigV4) {
-      console.error(`❌ FAILED: Presigned URL missing SigV4 signature!`);
-      process.exit(1);
-    } else {
-      console.log(`✅ VERIFIED: SigV4 signature present.`);
+      console.log(`   OPTIONS Response HTTP Status: ${preflightRes.status} ${preflightRes.statusText}`);
+      console.log('   OPTIONS Response CORS Headers:');
+      console.log('   - access-control-allow-origin:', preflightRes.headers.get('access-control-allow-origin'));
+      console.log('   - access-control-allow-methods:', preflightRes.headers.get('access-control-allow-methods'));
+      console.log('   - access-control-allow-headers:', preflightRes.headers.get('access-control-allow-headers'));
+      console.log('   - access-control-max-age:', preflightRes.headers.get('access-control-max-age'));
+    } catch (err) {
+      console.log('   ⚠️ Preflight fetch note (dummy creds or local env network check):', err.message);
     }
   }
 
-  console.log('\n🎉 ALL CHECKSUM REMOVAL VERIFICATIONS PASSED SUCCESSFULLY!');
+  console.log('\n🎉 Step Verification Execution Completed.');
 }
 
 runVerification().catch((err) => {

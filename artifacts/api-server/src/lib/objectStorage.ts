@@ -86,6 +86,7 @@ function getS3Client(): S3Client {
     region: 'auto',
     endpoint,
     credentials: { accessKeyId, secretAccessKey },
+    forcePathStyle: true,
     requestChecksumCalculation: 'WHEN_REQUIRED',
     responseChecksumValidation: 'WHEN_REQUIRED',
   });
@@ -251,6 +252,10 @@ export class ObjectStorageService {
       }),
       { expiresIn: 900 }, // 15 minutes
     );
+
+    const isPathStyle = presignedUrl.includes(`/${bucket}/`);
+    console.log('🔑 Presigned PUT URL:', presignedUrl);
+    console.log(`📌 URL Style: ${isPathStyle ? 'Path Style (Correct for R2)' : 'Virtual Host (Requires forcePathStyle)'}`);
 
     return presignedUrl;
   }
