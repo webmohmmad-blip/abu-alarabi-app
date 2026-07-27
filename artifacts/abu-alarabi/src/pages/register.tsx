@@ -11,18 +11,19 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { BookOpen, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { VerticalLogo } from "@/components/BrandAssets";
 
 // ─── Validation ─────────────────────────────────────────────────────────────
 const JORDAN_PHONE_RE = /^(077|078|079)\d{7}$/;
 
 const registerSchema = z.object({
-  fullName: z.string().min(3, "الاسم يجب أن يكون 3 أحرف على الأقل"),
+  fullName: z.string().min(3, "يرجى كتابة الاسم الثلاثي على الأقل"),
   phone: z
     .string()
     .regex(JORDAN_PHONE_RE, "رقم الهاتف غير صالح"),
 });
 
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type RegisterValues = z.infer<typeof registerSchema>;
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function Register() {
@@ -30,7 +31,7 @@ export default function Register() {
   const registerMutation = useRegister();
   const queryClient = useQueryClient();
 
-  const form = useForm<RegisterFormValues>({
+  const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { fullName: "", phone: "" },
   });
@@ -41,17 +42,22 @@ export default function Register() {
     form.setValue("phone", clean, { shouldValidate: form.formState.isSubmitted });
   };
 
-  const onSubmit = (data: RegisterFormValues) => {
+  const onSubmit = (data: RegisterValues) => {
     registerMutation.mutate(
-      { data },
+      { data: { fullName: data.fullName, phone: data.phone } },
       {
         onSuccess: (res) => {
           localStorage.setItem("token", res.token);
           queryClient.setQueryData(getGetMeQueryKey(), res.user);
           setLocation("/dashboard");
         },
-        onError: () => {
-          form.setError("phone", { message: "رقم الهاتف غير صالح" });
+        onError: (err: any) => {
+          const msg = err?.data?.error ?? err?.message ?? "";
+          if (msg.includes("مستخدم بالفعل")) {
+            form.setError("phone", { message: "رقم الهاتف مسجل بالفعل" });
+          } else {
+            form.setError("phone", { message: "فشل إنشاء الحساب، يرجى المحاولة لاحقاً" });
+          }
         },
       }
     );
@@ -59,9 +65,9 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
-      <SEO title="إنشاء حساب" description="أنشئ حسابك في منصة أبو العربي وابدأ رحلتك في إتقان اللغة العربية مع الأستاذ محمد الساحوري." canonical="/register" noindex />
-      <div className="absolute bottom-0 right-0 w-full h-1/2 bg-secondary/5 skew-y-6 transform origin-bottom-right -z-10" />
-      <div className="absolute top-10 left-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10" />
+      <SEO title="إنشاء حساب جديد" description="أنشئ حسابك في منصة أبو العربي وانضم إلى آلاف الطلاب المتفوقين في مادة اللغة العربية." canonical="/register" noindex />
+      <div className="absolute top-0 left-0 w-full h-1/2 bg-primary/5 -skew-y-6 transform origin-top-left -z-10" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -z-10" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -69,11 +75,8 @@ export default function Register() {
         className="w-full max-w-md my-8"
       >
         <div className="flex justify-center mb-8">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
-              <BookOpen className="w-8 h-8" />
-            </div>
-            <span className="text-3xl font-black text-foreground tracking-tight">أبو العربي</span>
+          <Link href="/" className="flex flex-col items-center">
+            <VerticalLogo className="scale-110" />
           </Link>
         </div>
 

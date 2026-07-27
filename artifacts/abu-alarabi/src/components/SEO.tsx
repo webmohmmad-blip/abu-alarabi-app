@@ -10,8 +10,9 @@ export const SITE_URL =
   "https://malsahori.com";
 
 export const SITE_NAME   = "أبو العربي";
+export const DEFAULT_TITLE = "أبو العربي | المنصة التعليمية المتخصصة في اللغة العربية";
 export const DEFAULT_DESC =
-  "منصة أبو العربي — رفيقك الدراسي الأول لتوجيهي الأردن جيل 2010. دوسيات عربي، أوراق عمل، امتحانات، وشرح الأستاذ محمد الساحوري في اللغة العربية.";
+  "تعلم اللغة العربية مع الأستاذ محمد الساحوري (أبو العربي). دوسيات، أوراق عمل، امتحانات محوسبة، كويزات، وخطط دراسية لطلاب التوجيهي الأردني.";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/teacher-sahouri.jpg`;
 
 export interface BreadcrumbItem {

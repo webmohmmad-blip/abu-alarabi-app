@@ -12,6 +12,8 @@ import { Card } from "@/components/ui/card";
 import { BookOpen, AlertCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { VerticalLogo } from "@/components/BrandAssets";
+
 // ─── Validation ─────────────────────────────────────────────────────────────
 const JORDAN_PHONE_RE = /^(077|078|079)\d{7}$/;
 
@@ -76,11 +78,8 @@ export default function Login() {
         className="w-full max-w-md"
       >
         <div className="flex justify-center mb-8">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
-              <BookOpen className="w-8 h-8" />
-            </div>
-            <span className="text-3xl font-black text-foreground tracking-tight">أبو العربي</span>
+          <Link href="/" className="flex flex-col items-center">
+            <VerticalLogo className="scale-110" />
           </Link>
         </div>
 

@@ -1,80 +1,20 @@
-<svg width="180" height="180" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <mask id="rm">
-      <circle cx="50" cy="50" r="49" fill="white"/>
-      <circle cx="50" cy="50" r="31" fill="black"/>
-    </mask>
-    <clipPath id="cc">
-      <circle cx="50" cy="50" r="30"/>
-    </clipPath>
-  </defs>
-
-  <!-- Black background circle -->
-  <circle cx="50" cy="50" r="50" fill="#111"/>
-
-  <!-- Dense white calligraphy ring — two rows -->
-  <g mask="url(#rm)" font-family="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="white" font-size="9" font-weight="700" text-anchor="middle">
-    <text transform="rotate(0   50 50) translate(50 8)">لغة</text>
-    <text transform="rotate(20  50 50) translate(50 8)">الضاد</text>
-    <text transform="rotate(40  50 50) translate(50 8)">بيان</text>
-    <text transform="rotate(60  50 50) translate(50 8)">كلام</text>
-    <text transform="rotate(80  50 50) translate(50 8)">أدب</text>
-    <text transform="rotate(100 50 50) translate(50 8)">نحو</text>
-    <text transform="rotate(120 50 50) translate(50 8)">صرف</text>
-    <text transform="rotate(140 50 50) translate(50 8)">بلاغة</text>
-    <text transform="rotate(160 50 50) translate(50 8)">فصحى</text>
-    <text transform="rotate(180 50 50) translate(50 8)">شعر</text>
-    <text transform="rotate(200 50 50) translate(50 8)">نثر</text>
-    <text transform="rotate(220 50 50) translate(50 8)">عربي</text>
-    <text transform="rotate(240 50 50) translate(50 8)">خط</text>
-    <text transform="rotate(260 50 50) translate(50 8)">قرآن</text>
-    <text transform="rotate(280 50 50) translate(50 8)">ضاد</text>
-    <text transform="rotate(300 50 50) translate(50 8)">أدب</text>
-    <text transform="rotate(320 50 50) translate(50 8)">كتاب</text>
-    <text transform="rotate(340 50 50) translate(50 8)">لسان</text>
-    <text transform="rotate(10  50 50) translate(50 15)">العربية</text>
-    <text transform="rotate(30  50 50) translate(50 15)">حرف</text>
-    <text transform="rotate(50  50 50) translate(50 15)">كلمة</text>
-    <text transform="rotate(70  50 50) translate(50 15)">جملة</text>
-    <text transform="rotate(90  50 50) translate(50 15)">معنى</text>
-    <text transform="rotate(110 50 50) translate(50 15)">علم</text>
-    <text transform="rotate(130 50 50) translate(50 15)">فكر</text>
-    <text transform="rotate(150 50 50) translate(50 15)">شعر</text>
-    <text transform="rotate(170 50 50) translate(50 15)">نحو</text>
-    <text transform="rotate(190 50 50) translate(50 15)">صرف</text>
-    <text transform="rotate(210 50 50) translate(50 15)">بيان</text>
-    <text transform="rotate(230 50 50) translate(50 15)">لغة</text>
-    <text transform="rotate(250 50 50) translate(50 15)">قلم</text>
-    <text transform="rotate(270 50 50) translate(50 15)">كتب</text>
-    <text transform="rotate(290 50 50) translate(50 15)">أمة</text>
-    <text transform="rotate(310 50 50) translate(50 15)">ضاد</text>
-    <text transform="rotate(330 50 50) translate(50 15)">فصيح</text>
-    <text transform="rotate(350 50 50) translate(50 15)">أقلام</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" rx="112" fill="#FAFAF8"/>
+  <!-- Stylized Purple Calligraphy Letter "ع" + Gold Arrow -->
+  <g transform="translate(16, 16) scale(4.8)">
+    <path
+      d="M32 72C24 64 24 50 34 40C44 30 52 24 42 14C35 7 28 12 22 18C18 12 28 2 40 2C56 2 66 14 56 25C47 34 42 40 46 48C50 56 60 52 66 46L72 52C62 62 44 78 32 72Z"
+      fill="#5A2D82"
+    />
+    <path
+      d="M52 50L82 12"
+      stroke="#C79A2D"
+      stroke-width="10"
+      stroke-linecap="round"
+    />
+    <path
+      d="M66 10L86 8L82 28L75 18L66 10Z"
+      fill="#C79A2D"
+    />
   </g>
-
-  <!-- White inner circle -->
-  <circle cx="50" cy="50" r="31" fill="white"/>
-
-  <!-- Ornamental inner ring -->
-  <circle cx="50" cy="50" r="28.5" fill="none" stroke="#111" stroke-width="0.8"/>
-  <circle cx="50" cy="21.5" r="1.4" fill="#111"/>
-  <circle cx="70.2" cy="29.8" r="1.4" fill="#111"/>
-  <circle cx="78.5" cy="50" r="1.4" fill="#111"/>
-  <circle cx="70.2" cy="70.2" r="1.4" fill="#111"/>
-  <circle cx="50" cy="78.5" r="1.4" fill="#111"/>
-  <circle cx="29.8" cy="70.2" r="1.4" fill="#111"/>
-  <circle cx="21.5" cy="50" r="1.4" fill="#111"/>
-  <circle cx="29.8" cy="29.8" r="1.4" fill="#111"/>
-  <circle cx="50" cy="50" r="25.5" fill="none" stroke="#111" stroke-width="0.4" stroke-dasharray="1.5 2.5"/>
-
-  <!-- ع letter — large bold black -->
-  <text
-    x="50" y="68"
-    text-anchor="middle"
-    font-size="52"
-    font-weight="900"
-    font-family="'Amiri','Scheherazade New','Traditional Arabic',serif"
-    fill="#111"
-    clip-path="url(#cc)"
-  >ع</text>
 </svg>

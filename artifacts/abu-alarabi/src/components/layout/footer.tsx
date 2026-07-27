@@ -60,55 +60,10 @@ export function Footer() {
 
           {/* Brand + socials */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2">
-              {/* Same ض calligraphy ring logo as header */}
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-xl shrink-0 overflow-hidden bg-black">
-                <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <mask id="frm">
-                      <circle cx="50" cy="50" r="49" fill="white"/>
-                      <circle cx="50" cy="50" r="31" fill="black"/>
-                    </mask>
-                    <clipPath id="fcc">
-                      <circle cx="50" cy="50" r="30"/>
-                    </clipPath>
-                  </defs>
-                  <circle cx="50" cy="50" r="50" fill="#111"/>
-                  <g mask="url(#frm)" fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="white" fontSize="13" fontWeight="700" textAnchor="middle">
-                    <text transform="rotate(0   50 50) translate(50 17)">لغة</text>
-                    <text transform="rotate(20  50 50) translate(50 17)">الضاد</text>
-                    <text transform="rotate(40  50 50) translate(50 17)">بيان</text>
-                    <text transform="rotate(60  50 50) translate(50 17)">كلام</text>
-                    <text transform="rotate(80  50 50) translate(50 17)">أدب</text>
-                    <text transform="rotate(100 50 50) translate(50 17)">نحو</text>
-                    <text transform="rotate(120 50 50) translate(50 17)">صرف</text>
-                    <text transform="rotate(140 50 50) translate(50 17)">بلاغة</text>
-                    <text transform="rotate(160 50 50) translate(50 17)">فصحى</text>
-                    <text transform="rotate(180 50 50) translate(50 17)">شعر</text>
-                    <text transform="rotate(200 50 50) translate(50 17)">نثر</text>
-                    <text transform="rotate(220 50 50) translate(50 17)">عربي</text>
-                    <text transform="rotate(240 50 50) translate(50 17)">خط</text>
-                    <text transform="rotate(280 50 50) translate(50 17)">ضاد</text>
-                    <text transform="rotate(300 50 50) translate(50 17)">كتاب</text>
-                    <text transform="rotate(320 50 50) translate(50 17)">لسان</text>
-                    <text transform="rotate(340 50 50) translate(50 17)">قلم</text>
-                  </g>
-                  <circle cx="50" cy="50" r="31" fill="white"/>
-                {/* Ornamental inner ring */}
-                <circle cx="50" cy="50" r="28.5" fill="none" stroke="#111" strokeWidth="0.8"/>
-                {[0,45,90,135,180,225,270,315].map((deg, i) => {
-                  const rad = (deg * Math.PI) / 180;
-                  const cx2 = 50 + 28.5 * Math.sin(rad);
-                  const cy2 = 50 - 28.5 * Math.cos(rad);
-                  return <circle key={i} cx={cx2} cy={cy2} r="1.4" fill="#111"/>;
-                })}
-                <circle cx="50" cy="50" r="25.5" fill="none" stroke="#111" strokeWidth="0.4" strokeDasharray="1.5 2.5"/>
-                {/* ع — big */}
-                <text x="50" y="68" textAnchor="middle" fontSize="52" fontWeight="900"
-                  fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="#111" clipPath="url(#fcc)">ع</text>
-                </svg>
-              </div>
-              <span className="text-2xl font-bold tracking-wide">أبو العربي</span>
+import { MonochromeLogo } from "@/components/BrandAssets";
+
+            <Link href="/" className="inline-block">
+              <MonochromeLogo showSubtitle={true} className="scale-105" />
             </Link>
             <p className="text-sm text-sidebar-foreground/70 leading-relaxed max-w-xs">
               رفيقك الدراسي الأول لتوجيهي الأردن. منصة الأستاذ محمد الساحوري للتفوق في اللغة العربية.

@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { HorizontalLogo } from "@/components/BrandAssets";
 import { 
   LayoutDashboard, 
   BookText, 
@@ -69,21 +70,14 @@ export function Sidebar() {
         />
       )}
 
-      {/* Sidebar */}
-      <aside className={`
-        fixed inset-y-0 right-0 z-40 w-72 bg-sidebar text-sidebar-foreground border-l border-white/10
-        transform transition-transform duration-300 ease-in-out flex flex-col
-        ${isOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}
-      `}>
+      <aside
+        className={`fixed inset-y-0 right-0 z-40 w-72 bg-sidebar text-sidebar-foreground border-l border-white/10 transform transition-transform duration-300 ease-in-out flex flex-col ${
+          isOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
+        }`}
+      >
         <div className="p-6 border-b border-white/10 shrink-0">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/20 group-hover:scale-105 transition-transform duration-300">
-              <BookText className="h-7 w-7" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold tracking-wide">أبو العربي</span>
-              <span className="text-xs text-sidebar-foreground/60">منصة التفوق</span>
-            </div>
+          <Link href="/" className="flex items-center group">
+            <HorizontalLogo variant="white" />
           </Link>
         </div>
 

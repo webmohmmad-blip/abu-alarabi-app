@@ -1,14 +1,15 @@
 {
-  "name": "أبو العربي — منصة محمد الساحوري",
+  "name": "أبو العربي | المنصة التعليمية المتخصصة في اللغة العربية",
   "short_name": "أبو العربي",
-  "description": "منصة أبو العربي لتعلم اللغة العربية — توجيهي الأردن جيل 2010",
+  "description": "تعلم اللغة العربية مع الأستاذ محمد الساحوري (أبو العربي). دوسيات، أوراق عمل، امتحانات محوسبة، كويزات، وخطط دراسية لطلاب التوجيهي الأردني.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a0a2e",
+  "background_color": "#FAFAF8",
   "theme_color": "#5A2D82",
   "lang": "ar",
   "dir": "rtl",
   "icons": [
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "192x192 512x512", "type": "image/svg+xml", "purpose": "maskable" }
   ]
 }

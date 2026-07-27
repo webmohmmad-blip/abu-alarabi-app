@@ -30,6 +30,8 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";
 
+import { HorizontalLogo, BrandBookSymbol } from "@/components/BrandAssets";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ScheduleSlot {
   id: number;
@@ -210,9 +212,9 @@ export function Header() {
         }`}
       >
         <div className="flex h-16 md:h-[72px] items-center justify-between px-4 md:px-6 gap-3">
-          {/* ── Right side in RTL: Hamburger menu + Logo ── */}
-          <div className="flex items-center gap-2 md:gap-3 shrink-0">
-            {/* Hamburger Button (Mobile RTL Right Side) */}
+          {/* ── Right side (RTL): Hamburger Menu on mobile, Logo on Desktop/Mobile ── */}
+          <div className="flex items-center gap-3 shrink-0 md:static flex-1 md:flex-none justify-between md:justify-start">
+            {/* Hamburger Button (Mobile Right) */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl text-white/80 hover:text-white hover:bg-white/10 active:bg-white/15 transition-colors"
@@ -222,84 +224,13 @@ export function Header() {
               <Menu className="w-6 h-6" />
             </button>
 
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-              <div className="w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-xl shrink-0 overflow-hidden bg-black">
-                <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <mask id="rm">
-                      <circle cx="50" cy="50" r="49" fill="white"/>
-                      <circle cx="50" cy="50" r="31" fill="black"/>
-                    </mask>
-                    <clipPath id="cc">
-                      <circle cx="50" cy="50" r="30"/>
-                    </clipPath>
-                  </defs>
-
-                  <circle cx="50" cy="50" r="50" fill="#111"/>
-
-                  <g mask="url(#rm)" fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif" fill="white" fontSize="9" fontWeight="700" textAnchor="middle">
-                    <text transform="rotate(0   50 50) translate(50 8)">لغة</text>
-                    <text transform="rotate(20  50 50) translate(50 8)">الضاد</text>
-                    <text transform="rotate(40  50 50) translate(50 8)">بيان</text>
-                    <text transform="rotate(60  50 50) translate(50 8)">كلام</text>
-                    <text transform="rotate(80  50 50) translate(50 8)">أدب</text>
-                    <text transform="rotate(100 50 50) translate(50 8)">نحو</text>
-                    <text transform="rotate(120 50 50) translate(50 8)">صرف</text>
-                    <text transform="rotate(140 50 50) translate(50 8)">بلاغة</text>
-                    <text transform="rotate(160 50 50) translate(50 8)">فصحى</text>
-                    <text transform="rotate(180 50 50) translate(50 8)">شعر</text>
-                    <text transform="rotate(200 50 50) translate(50 8)">نثر</text>
-                    <text transform="rotate(220 50 50) translate(50 8)">عربي</text>
-                    <text transform="rotate(240 50 50) translate(50 8)">خط</text>
-                    <text transform="rotate(260 50 50) translate(50 8)">قرآن</text>
-                    <text transform="rotate(280 50 50) translate(50 8)">ضاد</text>
-                    <text transform="rotate(300 50 50) translate(50 8)">أدب</text>
-                    <text transform="rotate(320 50 50) translate(50 8)">كتاب</text>
-                    <text transform="rotate(340 50 50) translate(50 8)">لسان</text>
-                    <text transform="rotate(10  50 50) translate(50 15)">العربية</text>
-                    <text transform="rotate(30  50 50) translate(50 15)">حرف</text>
-                    <text transform="rotate(50  50 50) translate(50 15)">كلمة</text>
-                    <text transform="rotate(70  50 50) translate(50 15)">جملة</text>
-                    <text transform="rotate(90  50 50) translate(50 15)">معنى</text>
-                    <text transform="rotate(110 50 50) translate(50 15)">علم</text>
-                    <text transform="rotate(130 50 50) translate(50 15)">فكر</text>
-                    <text transform="rotate(150 50 50) translate(50 15)">شعر</text>
-                    <text transform="rotate(170 50 50) translate(50 15)">نحو</text>
-                    <text transform="rotate(190 50 50) translate(50 15)">صرف</text>
-                    <text transform="rotate(210 50 50) translate(50 15)">بيان</text>
-                    <text transform="rotate(230 50 50) translate(50 15)">لغة</text>
-                    <text transform="rotate(250 50 50) translate(50 15)">قلم</text>
-                    <text transform="rotate(270 50 50) translate(50 15)">كتب</text>
-                    <text transform="rotate(290 50 50) translate(50 15)">أمة</text>
-                    <text transform="rotate(310 50 50) translate(50 15)">ضاد</text>
-                    <text transform="rotate(330 50 50) translate(50 15)">فصيح</text>
-                    <text transform="rotate(350 50 50) translate(50 15)">أقلام</text>
-                  </g>
-
-                  <circle cx="50" cy="50" r="31" fill="white"/>
-                  <circle cx="50" cy="50" r="28.5" fill="none" stroke="#111" strokeWidth="0.8"/>
-                  {[0,45,90,135,180,225,270,315].map((deg, i) => {
-                    const rad = (deg * Math.PI) / 180;
-                    const cx = 50 + 28.5 * Math.sin(rad);
-                    const cy = 50 - 28.5 * Math.cos(rad);
-                    return <circle key={i} cx={cx} cy={cy} r="1.4" fill="#111"/>;
-                  })}
-                  <circle cx="50" cy="50" r="25.5" fill="none" stroke="#111" strokeWidth="0.4" strokeDasharray="1.5 2.5"/>
-
-                  <text
-                    x="50" y="68"
-                    textAnchor="middle"
-                    fontSize="52"
-                    fontWeight="900"
-                    fontFamily="'Amiri','Scheherazade New','Traditional Arabic',serif"
-                    fill="#111"
-                    clipPath="url(#cc)"
-                  >ع</text>
-                </svg>
-              </div>
-              <span className="text-base md:text-lg font-bold text-white tracking-tight">أبو العربي</span>
+            {/* Logo (Centered on mobile via flex-1 / text-center alignment) */}
+            <Link href="/" className="flex items-center group shrink-0 mx-auto md:mx-0">
+              <HorizontalLogo variant="white" showSubtitle={false} className="scale-95 md:scale-100" />
             </Link>
+
+            {/* Placeholder element for mobile flex symmetry if needed */}
+            <div className="w-10 md:hidden" aria-hidden="true" />
           </div>
 
           {/* ── Desktop Centre nav ── */}
