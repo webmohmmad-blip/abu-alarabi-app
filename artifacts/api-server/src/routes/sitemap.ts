@@ -81,7 +81,6 @@ async function generateSitemap(): Promise<string> {
     { loc: `${SITE_URL}/exams`,      changefreq: "weekly",  priority: "0.8", lastmod: today },
     { loc: `${SITE_URL}/quiz`,       changefreq: "weekly",  priority: "0.7", lastmod: today },
     { loc: `${SITE_URL}/summaries`,  changefreq: "weekly",  priority: "0.7", lastmod: today },
-    { loc: `${SITE_URL}/videos`,     changefreq: "weekly",  priority: "0.6", lastmod: today },
   ];
 
   // Published dossiers

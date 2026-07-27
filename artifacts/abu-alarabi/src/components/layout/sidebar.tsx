@@ -15,7 +15,6 @@ import {
   Menu,
   X,
   ShieldCheck,
-  Video,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -32,7 +31,6 @@ export function Sidebar() {
     { name: "الدوسيات", href: "/dossiers", icon: BookText },
     { name: "أوراق العمل", href: "/worksheets", icon: FileText },
     { name: "الامتحانات", href: "/exams", icon: PenTool },
-    { name: "الفيديوهات", href: "/videos", icon: Video },
     { name: "الملخصات", href: "/summaries", icon: BookText },
     { name: "الكويز الأسبوعي", href: "/quiz", icon: Target },
     { name: "خطتي الدراسية", href: "/study-plan", icon: CalendarDays },
