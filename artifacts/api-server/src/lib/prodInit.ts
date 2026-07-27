@@ -1,6 +1,6 @@
 import { pool } from "@workspace/db";
 import { logger } from "./logger";
-import { ensureR2BucketCors } from "./objectStorage";
+import { ensureR2BucketCors, validateR2ConfigOnStartup } from "./objectStorage";
 
 let _initialized = false;
 
@@ -83,6 +83,15 @@ export async function ensureProductionReady(): Promise<void> {
     }
   }
   logger.info({ success, failed }, "Production database schema verification completed.");
+
+  logger.info("Validating Cloudflare R2 environment variables...");
+  try {
+    validateR2ConfigOnStartup();
+    logger.info("✅ Cloudflare R2 environment variables sanitized & validated successfully.");
+  } catch (err: any) {
+    logger.error({ err: err.message }, "❌ Cloudflare R2 environment variable validation failed!");
+    throw err;
+  }
 
   logger.info("Verifying Cloudflare R2 Bucket CORS policy...");
   await ensureR2BucketCors();
