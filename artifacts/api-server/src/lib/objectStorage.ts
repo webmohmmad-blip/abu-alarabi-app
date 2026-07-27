@@ -86,6 +86,8 @@ function getS3Client(): S3Client {
     region: 'auto',
     endpoint,
     credentials: { accessKeyId, secretAccessKey },
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
   });
 
   return _s3;
@@ -231,7 +233,7 @@ export class ObjectStorageService {
    * Returns the presigned URL; call normalizeObjectEntityPath() on it to get
    * the internal /objects/<key> path to store in the database.
    */
-  async getObjectEntityUploadURL(): Promise<string> {
+  async getObjectEntityUploadURL(contentType?: string): Promise<string> {
     const bucket = getR2BucketName();
     const s3 = getS3Client();
     await ensureR2BucketCors();
@@ -242,7 +244,11 @@ export class ObjectStorageService {
 
     const presignedUrl = await getSignedUrl(
       s3,
-      new PutObjectCommand({ Bucket: bucket, Key: key }),
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        ...(contentType ? { ContentType: contentType } : {}),
+      }),
       { expiresIn: 900 }, // 15 minutes
     );
 
