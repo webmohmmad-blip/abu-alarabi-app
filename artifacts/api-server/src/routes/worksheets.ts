@@ -3,7 +3,7 @@ import { eq, isNull, sql, and, desc } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { worksheetsTable, subjectsTable } from "@workspace/db";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
-import { requireAuth } from "../lib/auth";
+import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -96,84 +96,124 @@ async function streamWorksheetPdf(
   }
 }
 
-// ─── List worksheets (students) ───────────────────────────────────────────────
-router.get("/worksheets", requireAuth, async (req, res): Promise<void> => {
-  const { subjectId, search, page = "1", limit = "12" } = req.query as Record<string, string>;
-  const pageNum = parseInt(page, 10);
-  const limitNum = Math.min(parseInt(limit, 10), 50);
+// ─── List worksheets ───────────────────────────────────────────────────────────
+router.get("/worksheets", optionalAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { subjectId, search, page = "1", limit = "12" } = req.query as Record<string, string>;
 
-  const conditions = [isNull((worksheetsTable as any).deletedAt), eq(worksheetsTable.status as any, "published")];
-  if (subjectId) {
-    conditions.push(eq(worksheetsTable.subjectId, parseInt(subjectId, 10)));
-  }
-  if (search?.trim()) {
-    conditions.push(sql`LOWER(${worksheetsTable.title}) LIKE ${`%${search.trim().toLowerCase()}%`}`);
-  }
+    const parsedPage = parseInt(page, 10);
+    const pageNum = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
 
-  const whereClause = and(...conditions);
+    const parsedLimit = parseInt(limit, 10);
+    const limitNum = Number.isNaN(parsedLimit) || parsedLimit < 1 ? 12 : Math.min(parsedLimit, 50);
 
-  const [countResult, rows] = await Promise.all([
-    db.select({ count: sql<number>`count(*)` }).from(worksheetsTable).where(whereClause),
-    db
-      .select({ ws: worksheetsTable, subjectName: subjectsTable.name })
-      .from(worksheetsTable)
-      .leftJoin(subjectsTable, eq(worksheetsTable.subjectId, subjectsTable.id))
-      .where(whereClause)
-      .orderBy(desc(worksheetsTable.createdAt))
-      .limit(limitNum)
-      .offset((pageNum - 1) * limitNum),
-  ]);
+    const userRole = (req as AuthRequest).userRole;
+    const isAdmin = userRole === "admin" || userRole === "super_admin";
 
-  const total = Number(countResult[0]?.count ?? 0);
-  const items = rows.map(({ ws, subjectName }) => ({
+    const conditions = [isNull(worksheetsTable.deletedAt)];
+
+    // Non-admin users see only published worksheets
+    if (!isAdmin) {
+      conditions.push(eq(worksheetsTable.status, "published"));
+    }
+
+    if (subjectId) {
+      const parsedSubjectId = parseInt(subjectId, 10);
+      if (!Number.isNaN(parsedSubjectId)) {
+        conditions.push(eq(worksheetsTable.subjectId, parsedSubjectId));
+      }
+    }
+
+    if (search?.trim()) {
+      conditions.push(sql`LOWER(${worksheetsTable.title}) LIKE ${`%${search.trim().toLowerCase()}%`}`);
+    }
+
+    const whereClause = and(...conditions);
+
+    const [countResult, rows] = await Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(worksheetsTable).where(whereClause),
+      db
+        .select({ ws: worksheetsTable, subjectName: subjectsTable.name })
+        .from(worksheetsTable)
+        .leftJoin(subjectsTable, eq(worksheetsTable.subjectId, subjectsTable.id))
+        .where(whereClause)
+        .orderBy(desc(worksheetsTable.createdAt))
+        .limit(limitNum)
+        .offset((pageNum - 1) * limitNum),
+    ]);
+
+    const total = Number(countResult[0]?.count ?? 0);
+    const items = rows.map(({ ws, subjectName }) => ({
       id: ws.id,
       title: ws.title,
-      description: (ws as any).description ?? null,
+      description: ws.description ?? null,
       subjectId: ws.subjectId,
       subjectName: subjectName ?? "",
       grade: ws.grade,
       estimatedMinutes: ws.estimatedMinutes,
       fileUrl: ws.fileUrl,
-      coverUrl: (ws as any).coverUrl ?? null,
+      coverUrl: ws.coverUrl ?? null,
       downloads: ws.downloads,
       status: ws.status,
       createdAt: ws.createdAt,
     }));
 
-  res.json({ items, total, page: pageNum, limit: limitNum });
+    res.json({ items, total, page: pageNum, limit: limitNum });
+  } catch (error) {
+    console.error("Error in GET /api/worksheets:", error);
+    res.status(500).json({ error: "تعذر جلب أوراق العمل" });
+  }
 });
 
 // ─── Get single worksheet ────────────────────────────────────────────────────
-router.get("/worksheets/:id", requireAuth, async (req, res): Promise<void> => {
-  const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const id = parseInt(rawId, 10);
+router.get("/worksheets/:id", optionalAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(rawId, 10);
 
-  const [row] = await db
-    .select({ ws: worksheetsTable, subjectName: subjectsTable.name })
-    .from(worksheetsTable)
-    .leftJoin(subjectsTable, eq(worksheetsTable.subjectId, subjectsTable.id))
-    .where(eq(worksheetsTable.id, id));
+    if (Number.isNaN(id)) {
+      res.status(400).json({ error: "معرف ورقة العمل غير صالح" });
+      return;
+    }
 
-  if (!row) {
-    res.status(404).json({ error: "ورقة العمل غير موجودة" });
-    return;
+    const [row] = await db
+      .select({ ws: worksheetsTable, subjectName: subjectsTable.name })
+      .from(worksheetsTable)
+      .leftJoin(subjectsTable, eq(worksheetsTable.subjectId, subjectsTable.id))
+      .where(and(eq(worksheetsTable.id, id), isNull(worksheetsTable.deletedAt)));
+
+    if (!row) {
+      res.status(404).json({ error: "ورقة العمل غير موجودة" });
+      return;
+    }
+
+    const userRole = (req as AuthRequest).userRole;
+    const isAdmin = userRole === "admin" || userRole === "super_admin";
+
+    if (!isAdmin && row.ws.status !== "published") {
+      res.status(404).json({ error: "ورقة العمل غير متاحة" });
+      return;
+    }
+
+    res.json({
+      id: row.ws.id,
+      title: row.ws.title,
+      description: row.ws.description ?? null,
+      subjectId: row.ws.subjectId,
+      subjectName: row.subjectName ?? "",
+      grade: row.ws.grade,
+      estimatedMinutes: row.ws.estimatedMinutes,
+      fileUrl: row.ws.fileUrl,
+      coverUrl: row.ws.coverUrl ?? null,
+      downloads: row.ws.downloads,
+      status: row.ws.status,
+      publishedAt: row.ws.publishedAt,
+      createdAt: row.ws.createdAt,
+    });
+  } catch (error) {
+    console.error("Error in GET /api/worksheets/:id:", error);
+    res.status(500).json({ error: "تعذر جلب ورقة العمل" });
   }
-
-  res.json({
-    id: row.ws.id,
-    title: row.ws.title,
-    description: (row.ws as any).description ?? null,
-    subjectId: row.ws.subjectId,
-    subjectName: row.subjectName ?? "",
-    grade: row.ws.grade,
-    estimatedMinutes: row.ws.estimatedMinutes,
-    fileUrl: row.ws.fileUrl,
-    coverUrl: (row.ws as any).coverUrl ?? null,
-    downloads: row.ws.downloads,
-    status: row.ws.status,
-    publishedAt: row.ws.publishedAt,
-    createdAt: row.ws.createdAt,
-  });
 });
 
 // ─── View PDF inline (for PDF.js / Study Room) ───────────────────────────────

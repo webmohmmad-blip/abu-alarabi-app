@@ -84,7 +84,7 @@ export default function Profile() {
         
         {/* Profile Hero */}
         <Card className="border-none shadow-xl overflow-hidden relative bg-gradient-to-r from-primary to-[#3a1a59] text-white">
-          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(rgba(255,255,255,0.15)_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
           <CardContent className="p-8 md:p-12 relative z-10 flex flex-col md:flex-row items-center gap-8">
             <div className="relative group">
               <div className="w-32 h-32 rounded-full border-4 border-white/20 overflow-hidden bg-white/10 flex items-center justify-center">

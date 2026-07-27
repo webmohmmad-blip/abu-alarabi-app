@@ -111,3 +111,20 @@ export async function requireAuth(
   (req as AuthRequest).userRole = cached.role;
   next();
 }
+
+export async function optionalAuth(
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    const payload = verifyToken(token);
+    if (payload) {
+      (req as AuthRequest).userId = payload.userId;
+      (req as AuthRequest).userRole = payload.role;
+    }
+  }
+  next();
+}
