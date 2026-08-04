@@ -91,13 +91,6 @@ const FEATURES = [
     accent: "#C79A2D",
     href: "/worksheets",
   },
-  {
-    icon: Sparkles,
-    title: "الملخصات والشروحات",
-    desc: "ملخصات مركزة وشروحات مبسطة لجميع دروس المنهاج لضمان المراجعة السريعة والتفوق.",
-    accent: "#2FA84F",
-    href: "/summaries",
-  },
 ];
 
 export default function Home() {
@@ -404,7 +397,7 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {FEATURES.map((f) => (
               <Link key={f.title} href={f.href} className="block h-full">
                 <div
