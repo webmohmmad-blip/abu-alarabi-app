@@ -155,32 +155,26 @@ export function HeroAdvertisement() {
             className="relative bg-white/5 overflow-hidden"
             style={{ aspectRatio: "16 / 9" }}
           >
-            {/* Desktop / tablet image — eager + high priority (potential LCP element) */}
-            <img
-              key={`desk-${ad.id}`}
-              src={ad.imageUrl ?? ""}
-              alt={ad.title}
-              className="absolute inset-0 w-full h-full object-cover hidden sm:block select-none"
-              draggable={false}
-              width="800"
-              height="450"
-              loading="eager"
-              decoding="async"
-              fetchPriority="high"
-            />
-            {/* Mobile image — falls back to desktop src */}
-            <img
-              key={`mob-${ad.id}`}
-              src={ad.mobileImageUrl ?? ad.imageUrl ?? ""}
-              alt={ad.title}
-              className="absolute inset-0 w-full h-full object-cover block sm:hidden select-none"
-              draggable={false}
-              width="480"
-              height="270"
-              loading="eager"
-              decoding="async"
-              fetchPriority="high"
-            />
+            {/* Responsive picture element — downloads ONLY ONE image variant matching the active viewport */}
+            <picture key={`ad-pic-${ad.id}`}>
+              {ad.mobileImageUrl && (
+                <source
+                  media="(max-width: 639px)"
+                  srcSet={ad.mobileImageUrl}
+                />
+              )}
+              <img
+                src={ad.imageUrl ?? ad.mobileImageUrl ?? ""}
+                alt={ad.title}
+                className="absolute inset-0 w-full h-full object-cover select-none"
+                draggable={false}
+                width="800"
+                height="450"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+              />
+            </picture>
           </div>
         </AdLink>
 

@@ -1,9 +1,9 @@
-import { lazy, Suspense, useState, useEffect } from 'react';
+import { lazy, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { AuthProvider } from '@/contexts/auth-context';
-import { BrandSymbol, VerticalLogo } from "@/components/BrandAssets";
+import { BrandSymbol } from "@/components/BrandAssets";
 
 // ── Public pages ──────────────────────────────────────────────────────────────
 // Home and NotFound are always eager (zero layout shift on first paint).
@@ -125,30 +125,12 @@ function Router() {
   );
 }
 
-function SplashScreen() {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#5A2D82] text-white transition-opacity duration-300">
-      <div className="flex flex-col items-center transition-all duration-700 ease-out transform animate-in fade-in zoom-in-95">
-        <VerticalLogo variant="white" className="scale-125" />
-      </div>
-    </div>
-  );
-}
-
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 700);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-            {showSplash && <SplashScreen />}
             <Router />
           </WouterRouter>
         </AuthProvider>

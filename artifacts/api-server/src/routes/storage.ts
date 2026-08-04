@@ -52,7 +52,7 @@ router.get('/storage/public-objects/*filePath', async (req: Request, res: Respon
 
     const headers: Record<string, string | number> = {
       'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=86400',
+      'Cache-Control': 'public, max-age=31536000, immutable',
       'Accept-Ranges': 'bytes',
     };
     if (fileSize !== undefined) headers['Content-Length'] = fileSize;
