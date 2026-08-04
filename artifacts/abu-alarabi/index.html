@@ -148,14 +148,7 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     -->
-    <!--
-      Pre-rendered hero: visible immediately on first paint (fixes FCP from ~5.6 s to <0.3 s).
-      Uses inline CSS matching the actual hero design so there is no visual flash.
-      React replaces this when it mounts (~2–3 s later) with the full interactive app.
-      The text matches the admin-set DB content; if admin changes it, a brief swap
-      occurs when React mounts — acceptable trade-off for 5+ second FCP improvement.
-    -->
-    <div id="root"><div aria-hidden="true" style="min-height:100svh;background:#0d0618;display:flex;align-items:center;justify-content:flex-end;direction:rtl;font-family:Tajawal,system-ui,sans-serif;padding:3rem 1.5rem;box-sizing:border-box"><div style="max-width:560px"><h1 style="font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;color:#fff;line-height:1.1;margin:0 0 0.5rem;letter-spacing:-0.01em">أتقن العربية<br><span style="background:linear-gradient(135deg,#C79A2D,#e8c060,#C79A2D);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">مع أبو العربي</span></h1></div></div></div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
