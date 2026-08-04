@@ -326,6 +326,11 @@ router.post(
       return;
     }
 
+    if (attempt.submittedAt) {
+      res.status(409).json({ error: "لا يمكن تعديل الإجابات بعد تسليم الامتحان" });
+      return;
+    }
+
     const { questionId, answer } = req.body as { questionId: number; answer: string };
 
     const [question] = await db
@@ -382,6 +387,11 @@ router.post(
 
     if (!attempt) {
       res.status(404).json({ error: "المحاولة غير موجودة" });
+      return;
+    }
+
+    if (attempt.submittedAt) {
+      res.status(409).json({ error: "تم تسليم هذا الامتحان من قبل" });
       return;
     }
 
@@ -511,6 +521,162 @@ router.get(
       unansweredCount: attempt.unansweredCount ?? 0,
       rank: attempt.rank ?? null,
       completedAt: attempt.submittedAt?.toISOString() ?? null,
+    });
+  }
+);
+
+// ─── ATTEMPT REVIEW (GET) ──────────────────────────────────────────────────────
+// Read-only exam review endpoint for submitted attempts.
+router.get(
+  "/exams/attempts/:attemptId/review",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const aReq = req as AuthRequest;
+    const rawAttemptId = Array.isArray(req.params.attemptId)
+      ? req.params.attemptId[0]
+      : req.params.attemptId;
+    const attemptId = parseInt(rawAttemptId, 10);
+    if (isNaN(attemptId)) {
+      res.status(400).json({ error: "معرف غير صالح" });
+      return;
+    }
+
+    const [attempt] = await db
+      .select()
+      .from(examAttemptsTable)
+      .where(
+        and(
+          eq(examAttemptsTable.id, attemptId),
+          eq(examAttemptsTable.userId, aReq.userId)
+        )
+      );
+
+    if (!attempt) {
+      res.status(404).json({ error: "تعذر العثور على محاولة الامتحان أو غير مصرح لك بعرضها" });
+      return;
+    }
+
+    if (!attempt.submittedAt) {
+      res.status(400).json({ error: "لا يمكن مراجعة الامتحان قبل تسليمه" });
+      return;
+    }
+
+    const [exam] = await db
+      .select()
+      .from(examsTable)
+      .where(eq(examsTable.id, attempt.examId));
+
+    if (!exam) {
+      res.status(404).json({ error: "الامتحان غير موجود" });
+      return;
+    }
+
+    const [subject] = exam.subjectId
+      ? await db
+          .select({ name: subjectsTable.name })
+          .from(subjectsTable)
+          .where(eq(subjectsTable.id, exam.subjectId))
+      : [undefined];
+
+    const questions = await db
+      .select()
+      .from(questionsTable)
+      .where(eq(questionsTable.examId, attempt.examId))
+      .orderBy(asc(questionsTable.order));
+
+    const questionIds = questions.map((q) => q.id);
+    const allChoices =
+      questionIds.length > 0
+        ? await db
+            .select()
+            .from(questionChoicesTable)
+            .where(inArray(questionChoicesTable.questionId, questionIds))
+            .orderBy(asc(questionChoicesTable.order))
+        : [];
+
+    const choicesByQuestion: Record<number, typeof allChoices> = {};
+    for (const c of allChoices) {
+      if (!choicesByQuestion[c.questionId]) {
+        choicesByQuestion[c.questionId] = [];
+      }
+      choicesByQuestion[c.questionId].push(c);
+    }
+
+    const savedAnswersArr = await db
+      .select()
+      .from(attemptAnswersTable)
+      .where(eq(attemptAnswersTable.attemptId, attemptId));
+
+    const studentAnswersMap = new Map<number, string>();
+    for (const a of savedAnswersArr) {
+      if (a.answer) {
+        studentAnswersMap.set(a.questionId, a.answer);
+      }
+    }
+
+    const reviewedQuestions = questions.map((q) => {
+      const qChoices = choicesByQuestion[q.id] ?? [];
+      const studentAnswer = studentAnswersMap.get(q.id) ?? null;
+      const correctAnswer = q.correctAnswer ?? null;
+
+      const isAnswered = studentAnswer !== null && studentAnswer !== "";
+      const isCorrect = isAnswered && studentAnswer === correctAnswer;
+
+      const choices = qChoices.map((c) => ({
+        id: c.choiceKey,
+        choiceKey: c.choiceKey,
+        text: c.text,
+        imageUrl: c.imageUrl,
+        isStudentAnswer: studentAnswer === c.choiceKey,
+        isCorrectAnswer: correctAnswer === c.choiceKey,
+      }));
+
+      return {
+        id: q.id,
+        order: q.order,
+        text: q.text,
+        type: q.type,
+        score: parseFloat(q.score ?? "1"),
+        imageUrl: q.imageUrl,
+        explanation: q.explanation ?? null,
+        studentAnswer,
+        correctAnswer,
+        isCorrect,
+        isAnswered,
+        choices,
+      };
+    });
+
+    const totalQuestions = questions.length;
+    const correctCount = attempt.correctCount ?? reviewedQuestions.filter((q) => q.isCorrect).length;
+    const unansweredCount = attempt.unansweredCount ?? reviewedQuestions.filter((q) => !q.isAnswered).length;
+    const wrongCount = attempt.wrongCount ?? (totalQuestions - correctCount - unansweredCount);
+
+    res.json({
+      attempt: {
+        id: attempt.id,
+        examId: attempt.examId,
+        status: "submitted",
+        score: parseFloat(attempt.score ?? "0"),
+        totalScore: parseFloat(attempt.totalScore ?? "100"),
+        percentage: parseFloat(attempt.percentage ?? "0"),
+        passed: attempt.passed ?? false,
+        totalQuestions,
+        correctCount,
+        wrongCount,
+        unansweredCount,
+        startedAt: attempt.startedAt.toISOString(),
+        submittedAt: attempt.submittedAt.toISOString(),
+        durationMinutes: attempt.timeTakenMinutes ?? 0,
+      },
+      exam: {
+        id: exam.id,
+        title: exam.title,
+        subjectName: subject?.name ?? "",
+        passingScore: parseFloat(exam.passingScore ?? "50"),
+        totalScore: parseFloat(exam.totalScore ?? "100"),
+      },
+      questions: reviewedQuestions,
     });
   }
 );

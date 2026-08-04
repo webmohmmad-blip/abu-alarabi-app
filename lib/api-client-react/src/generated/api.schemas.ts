@@ -389,6 +389,12 @@ export interface LeaderboardEntry {
   isCurrentUser?: boolean;
 }
 
+export interface ExamAttemptReview {
+  attempt: Record<string, unknown>;
+  exam: Record<string, unknown>;
+  questions: Record<string, unknown>[];
+}
+
 export type StudyTaskType = typeof StudyTaskType[keyof typeof StudyTaskType];
 
 

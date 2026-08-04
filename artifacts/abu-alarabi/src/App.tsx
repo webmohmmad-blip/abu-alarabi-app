@@ -24,6 +24,7 @@ const Exams           = lazy(() => import('@/pages/exams'));
 const ExamInstructions= lazy(() => import('@/pages/exam-instructions'));
 const ExamTake        = lazy(() => import('@/pages/exam-take'));
 const ExamResult      = lazy(() => import('@/pages/exam-result'));
+const ExamReview      = lazy(() => import('@/pages/exam-review'));
 const StudyPlan       = lazy(() => import('@/pages/study-plan'));
 const Notes           = lazy(() => import('@/pages/notes'));
 const Statistics      = lazy(() => import('@/pages/statistics'));
@@ -89,6 +90,8 @@ function Router() {
         <Route path="/exams/:examId/instructions" component={ExamInstructions} />
         <Route path="/exams/:examId/attempt/:attemptId" component={ExamTake} />
         <Route path="/exams/:examId/result/:attemptId" component={ExamResult} />
+        <Route path="/exams/:examId/result/:attemptId/review" component={ExamReview} />
+        <Route path="/exams/:examId/review/:attemptId" component={ExamReview} />
         <Route path="/exams/:id" component={ExamInstructions} />
 
         {/* Other student pages */}

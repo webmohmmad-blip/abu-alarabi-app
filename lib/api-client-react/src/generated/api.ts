@@ -51,6 +51,7 @@ import type {
   DossierProgressUpdate,
   Exam,
   ExamAttempt,
+  ExamAttemptReview,
   ExamDetail,
   ExamResult,
   FavoriteResult,
@@ -1664,6 +1665,43 @@ export function useListExamResults<TData = Awaited<ReturnType<typeof listExamRes
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetExamAttemptReviewUrl = (attemptId: number) => {
+  return `/api/exams/attempts/${attemptId}/review`;
+};
+
+export const getExamAttemptReview = async (attemptId: number, options?: RequestInit): Promise<ExamAttemptReview> => {
+  return customFetch<ExamAttemptReview>(getGetExamAttemptReviewUrl(attemptId), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetExamAttemptReviewQueryKey = (attemptId: number) => {
+  return [`/api/exams/attempts`, attemptId, `review`] as const;
+};
+
+export const getGetExamAttemptReviewQueryOptions = <TData = Awaited<ReturnType<typeof getExamAttemptReview>>, TError = ErrorType<unknown>>(
+  attemptId: number,
+  options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getExamAttemptReview>>, TError, TData>; request?: SecondParameter<typeof customFetch> }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetExamAttemptReviewQueryKey(attemptId);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getExamAttemptReview>>> = ({ signal }) => getExamAttemptReview(attemptId, { signal, ...requestOptions });
+  return { queryKey, queryFn, enabled: !!attemptId, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getExamAttemptReview>>, TError, TData> & { queryKey: QueryKey };
+};
+
+export type GetExamAttemptReviewQueryResult = NonNullable<Awaited<ReturnType<typeof getExamAttemptReview>>>;
+export type GetExamAttemptReviewQueryError = ErrorType<unknown>;
+
+export function useGetExamAttemptReview<TData = Awaited<ReturnType<typeof getExamAttemptReview>>, TError = ErrorType<unknown>>(
+  attemptId: number,
+  options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getExamAttemptReview>>, TError, TData>; request?: SecondParameter<typeof customFetch>}
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetExamAttemptReviewQueryOptions(attemptId, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
   return withQueryKey(query, queryOptions.queryKey);
 }
 

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Trophy, Target, Clock, CheckCircle2, XCircle, AlertCircle,
-  ChevronRight, BarChart3
+  ChevronRight, BarChart3, Eye
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -218,8 +218,15 @@ export default function ExamResult() {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-wrap gap-3 justify-center pt-2">
-          <Button asChild size="lg">
+        <div className="flex flex-wrap gap-4 justify-center pt-4">
+          <Button asChild size="lg" className="gap-2 px-8 font-bold shadow-md">
+            <Link href={`/exams/${result.examId}/result/${result.id}/review`}>
+              <Eye className="w-5 h-5" />
+              مراجعة الامتحان
+            </Link>
+          </Button>
+
+          <Button asChild variant="outline" size="lg" className="gap-2">
             <Link href={backPath}>{backLabel}</Link>
           </Button>
         </div>

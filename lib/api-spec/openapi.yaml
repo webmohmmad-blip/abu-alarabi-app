@@ -435,6 +435,24 @@ paths:
                 items:
                   $ref: "#/components/schemas/ExamResult"
 
+  /exams/attempts/{attemptId}/review:
+    get:
+      operationId: getExamAttemptReview
+      tags: [exams]
+      parameters:
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Read-only attempt review data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExamAttemptReview"
+
 
 
   # ─── STUDY PLAN ─────────────────────────────────────────
@@ -2358,6 +2376,19 @@ components:
           type: ["string", "null"]
         isCurrentUser:
           type: boolean
+
+    ExamAttemptReview:
+      type: object
+      required: [attempt, exam, questions]
+      properties:
+        attempt:
+          type: object
+        exam:
+          type: object
+        questions:
+          type: array
+          items:
+            type: object
 
     # ─── STUDY PLAN ─────────────────────────────────────
     StudyPlan:
