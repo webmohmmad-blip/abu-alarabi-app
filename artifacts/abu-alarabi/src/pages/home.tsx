@@ -75,24 +75,28 @@ const FEATURES = [
     title: "الدوسيات",
     desc: "ملزمات شاملة لكل وحدة من وحدات اللغة العربية، مُعدَّة بعناية من الأستاذ محمد الساحوري.",
     accent: "#5A2D82",
+    href: "/dossiers",
   },
   {
     icon: PenTool,
     title: "الامتحانات الوزارية",
     desc: "محاكاة دقيقة للامتحانات الوزارية مع تصليح فوري وتحليل شامل للأداء.",
     accent: "#0D9BB5",
+    href: "/exams",
   },
   {
     icon: FileText,
     title: "أوراق العمل",
     desc: "تدريبات مستهدفة على مستوى كل قاعدة نحوية وكل أسلوب بلاغي في المنهاج.",
     accent: "#C79A2D",
+    href: "/worksheets",
   },
   {
-    icon: BrainCircuit,
-    title: "غرفة الدراسة",
-    desc: "بيئة تركيز خالية من المشتتات، مع مؤقت بومودورو وتتبع ساعات الدراسة.",
+    icon: Sparkles,
+    title: "الملخصات والشروحات",
+    desc: "ملخصات مركزة وشروحات مبسطة لجميع دروس المنهاج لضمان المراجعة السريعة والتفوق.",
     accent: "#2FA84F",
+    href: "/summaries",
   },
 ];
 
@@ -402,20 +406,27 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                data-fade
-                className="group bg-card border border-border rounded-2xl p-7 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-              >
+              <Link key={f.title} href={f.href} className="block h-full">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-6"
-                  style={{ backgroundColor: `${f.accent}15` }}
+                  data-fade
+                  className="group bg-card border border-border rounded-2xl p-7 hover:shadow-xl hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full flex flex-col"
                 >
-                  <f.icon className="w-6 h-6" style={{ color: f.accent }} />
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                    style={{ backgroundColor: `${f.accent}15` }}
+                  >
+                    <f.icon className="w-6 h-6" style={{ color: f.accent }} />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
+                    {f.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed flex-1">{f.desc}</p>
+                  <div className="flex items-center gap-1 text-xs font-bold text-primary mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span>تصفح الآن</span>
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-foreground mb-3">{f.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
