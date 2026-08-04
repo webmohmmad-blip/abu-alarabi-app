@@ -155,11 +155,6 @@ function WorksheetCard({ ws, idx, onOpenDetail }: { ws: WorksheetItem; idx: numb
     }
   };
 
-  const handleStudyRoom = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setLocation(`/study-room?worksheetId=${ws.id}`);
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -224,15 +219,6 @@ function WorksheetCard({ ws, idx, onOpenDetail }: { ws: WorksheetItem; idx: numb
 
           {/* Actions */}
           <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
-            {/* Primary: Study Room */}
-            <Button
-              className="w-full bg-secondary hover:bg-secondary/90 shadow-secondary/20 gap-2 text-sm"
-              onClick={handleStudyRoom}
-              disabled={!ws.fileUrl}
-            >
-              <BookOpen className="w-4 h-4" />
-              حلّ في غرفتي الدراسية
-            </Button>
 
             {/* Secondary: Download */}
             {ws.fileUrl ? (

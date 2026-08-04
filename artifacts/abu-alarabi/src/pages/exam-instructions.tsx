@@ -19,11 +19,9 @@ import {
 } from "lucide-react";
 
 export default function ExamInstructions() {
-  // Support both /exams/:examId/instructions and /weekly-quiz/:quizId/instructions
-  const params = useParams<{ examId?: string; id?: string; quizId?: string }>();
-  const rawId = params.examId || params.id || params.quizId || "0";
+  const params = useParams<{ examId?: string; id?: string }>();
+  const rawId = params.examId || params.id || "0";
   const examId = parseInt(rawId, 10);
-  const isWeeklyQuiz = !!params.quizId;
 
   const [, setLocation] = useLocation();
   
@@ -40,11 +38,7 @@ export default function ExamInstructions() {
       { id: examId },
       {
         onSuccess: (data) => {
-          if (isWeeklyQuiz) {
-            setLocation(`/weekly-quiz/${examId}/attempt/${data.id}`);
-          } else {
-            setLocation(`/exams/${examId}/attempt/${data.id}`);
-          }
+          setLocation(`/exams/${examId}/attempt/${data.id}`);
         },
         onError: () => {
           // error is surfaced via startExam.isError / startExam.error below

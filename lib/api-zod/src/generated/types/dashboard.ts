@@ -8,8 +8,6 @@
 import type { Dossier } from './dossier';
 import type { PlatformStats } from './platformStats';
 import type { StudyTask } from './studyTask';
-import type { WeeklyQuiz } from './weeklyQuiz';
-
 export interface Dashboard {
   greeting: string;
   todayGoalMinutes: number;
@@ -24,5 +22,4 @@ export interface Dashboard {
   weeklyProgress?: number;
   platformStats: PlatformStats;
   latestDossiers?: Dossier[];
-  currentQuiz?: WeeklyQuiz;
 }

@@ -430,59 +430,7 @@ export const ListExamResultsResponseItem = zod.object({
 export const ListExamResultsResponse = zod.array(ListExamResultsResponseItem)
 
 
-export const GetCurrentQuizResponse = zod.object({
-  "id": zod.number(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "subjectName": zod.string(),
-  "startsAt": zod.string(),
-  "endsAt": zod.string(),
-  "questionCount": zod.number(),
-  "durationMinutes": zod.number(),
-  "participants": zod.number(),
-  "prizes": zod.string().nullish(),
-  "hasParticipated": zod.boolean().optional(),
-  "userRank": zod.number().nullish()
-})
 
-
-export const StartQuizParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const StartQuizResponse = zod.object({
-  "id": zod.number(),
-  "examId": zod.number(),
-  "startedAt": zod.string(),
-  "durationMinutes": zod.number(),
-  "questions": zod.array(zod.object({
-  "id": zod.number(),
-  "text": zod.string(),
-  "type": zod.enum(['mcq', 'true_false', 'fill_blank', 'matching', 'ordering', 'short_answer', 'essay']),
-  "order": zod.number(),
-  "score": zod.number().optional(),
-  "imageUrl": zod.string().nullish(),
-  "choices": zod.array(zod.object({
-  "id": zod.string(),
-  "text": zod.string(),
-  "imageUrl": zod.string().nullish()
-})).optional()
-})),
-  "savedAnswers": zod.record(zod.string(), zod.string()).optional()
-})
-
-
-export const GetQuizLeaderboardResponseItem = zod.object({
-  "rank": zod.number(),
-  "displayName": zod.string(),
-  "avatarUrl": zod.string().nullish(),
-  "score": zod.number(),
-  "timeTakenSeconds": zod.number(),
-  "governorate": zod.string().nullish(),
-  "badgeIcon": zod.string().nullish(),
-  "isCurrentUser": zod.boolean().optional()
-})
-export const GetQuizLeaderboardResponse = zod.array(GetQuizLeaderboardResponseItem)
 
 
 export const GetStudyPlanResponse = zod.object({
@@ -590,81 +538,7 @@ export const RebuildStudyPlanResponse = zod.object({
 })
 
 
-export const ListStudySessionsQueryParams = zod.object({
-  "date": zod.coerce.string().optional(),
-  "subjectId": zod.coerce.number().optional()
-})
 
-export const ListStudySessionsResponseItem = zod.object({
-  "id": zod.number(),
-  "subjectId": zod.number(),
-  "subjectName": zod.string(),
-  "type": zod.enum(['pomodoro', 'balanced', 'deep_focus', 'quick_review', 'custom', 'exam']),
-  "status": zod.enum(['active', 'paused', 'completed', 'abandoned']),
-  "startedAt": zod.string(),
-  "endedAt": zod.string().nullish(),
-  "plannedMinutes": zod.number(),
-  "actualMinutes": zod.number().nullish(),
-  "focusScore": zod.number().nullish(),
-  "pauseCount": zod.number().optional(),
-  "taskId": zod.number().nullish(),
-  "noteCount": zod.number().optional()
-})
-export const ListStudySessionsResponse = zod.array(ListStudySessionsResponseItem)
-
-
-export const CreateStudySessionBody = zod.object({
-  "subjectId": zod.number(),
-  "type": zod.string(),
-  "plannedMinutes": zod.number(),
-  "taskId": zod.number().optional(),
-  "timerMode": zod.string().optional(),
-  "goal": zod.string().optional()
-})
-
-export const CreateStudySessionResponse = zod.object({
-  "id": zod.number(),
-  "subjectId": zod.number(),
-  "subjectName": zod.string(),
-  "type": zod.enum(['pomodoro', 'balanced', 'deep_focus', 'quick_review', 'custom', 'exam']),
-  "status": zod.enum(['active', 'paused', 'completed', 'abandoned']),
-  "startedAt": zod.string(),
-  "endedAt": zod.string().nullish(),
-  "plannedMinutes": zod.number(),
-  "actualMinutes": zod.number().nullish(),
-  "focusScore": zod.number().nullish(),
-  "pauseCount": zod.number().optional(),
-  "taskId": zod.number().nullish(),
-  "noteCount": zod.number().optional()
-})
-
-
-export const UpdateStudySessionParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const UpdateStudySessionBody = zod.object({
-  "status": zod.enum(['paused', 'completed', 'abandoned']).optional(),
-  "comprehensionLevel": zod.string().optional(),
-  "focusLevel": zod.string().optional(),
-  "actualMinutes": zod.number().optional()
-})
-
-export const UpdateStudySessionResponse = zod.object({
-  "id": zod.number(),
-  "subjectId": zod.number(),
-  "subjectName": zod.string(),
-  "type": zod.enum(['pomodoro', 'balanced', 'deep_focus', 'quick_review', 'custom', 'exam']),
-  "status": zod.enum(['active', 'paused', 'completed', 'abandoned']),
-  "startedAt": zod.string(),
-  "endedAt": zod.string().nullish(),
-  "plannedMinutes": zod.number(),
-  "actualMinutes": zod.number().nullish(),
-  "focusScore": zod.number().nullish(),
-  "pauseCount": zod.number().optional(),
-  "taskId": zod.number().nullish(),
-  "noteCount": zod.number().optional()
-})
 
 
 export const ListNotesQueryParams = zod.object({
@@ -997,21 +871,7 @@ export const GetDashboardResponse = zod.object({
   "readingProgress": zod.number().optional(),
   "lastReadPage": zod.number().optional(),
   "createdAt": zod.string().optional()
-})).optional(),
-  "currentQuiz": zod.object({
-  "id": zod.number(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "subjectName": zod.string(),
-  "startsAt": zod.string(),
-  "endsAt": zod.string(),
-  "questionCount": zod.number(),
-  "durationMinutes": zod.number(),
-  "participants": zod.number(),
-  "prizes": zod.string().nullish(),
-  "hasParticipated": zod.boolean().optional(),
-  "userRank": zod.number().nullish()
-}).optional()
+})).optional()
 })
 
 

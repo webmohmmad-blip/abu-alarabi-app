@@ -48,11 +48,8 @@ function useExamAttempt(attemptId: number) {
 }
 
 export default function ExamTake() {
-  const [location, setLocation] = useLocation();
-  // Support both exam and weekly-quiz route chains
-  // /exams/:examId/attempt/:attemptId  and  /weekly-quiz/:quizId/attempt/:attemptId
-  const routeParams = useParams<{ examId?: string; quizId?: string; attemptId?: string }>();
-  const isWeeklyQuiz = location.startsWith("/weekly-quiz/");
+  const [, setLocation] = useLocation();
+  const routeParams = useParams<{ examId?: string; attemptId?: string }>();
   const attemptId = parseInt(routeParams.attemptId || "0", 10);
 
   const { data: attempt, isLoading, isError } = useExamAttempt(attemptId);
@@ -124,15 +121,9 @@ export default function ExamTake() {
         method: "POST",
         body: JSON.stringify({}),
       });
-      const resultPath = isWeeklyQuiz
-        ? `/weekly-quiz/${attempt.examId}/result/${attempt.id}`
-        : `/exams/${attempt.examId}/result/${attempt.id}`;
-      setLocation(resultPath);
+      setLocation(`/exams/${attempt.examId}/result/${attempt.id}`);
     } catch {
-      const resultPath = isWeeklyQuiz
-        ? `/weekly-quiz/${attempt.examId}/result/${attempt.id}`
-        : `/exams/${attempt.examId}/result/${attempt.id}`;
-      setLocation(resultPath);
+      setLocation(`/exams/${attempt.examId}/result/${attempt.id}`);
     }
   }, [attempt, isSubmitting, setLocation]);
 

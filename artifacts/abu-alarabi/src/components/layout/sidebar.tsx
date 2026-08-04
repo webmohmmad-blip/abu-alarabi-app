@@ -32,9 +32,7 @@ export function Sidebar() {
     { name: "أوراق العمل", href: "/worksheets", icon: FileText },
     { name: "الامتحانات", href: "/exams", icon: PenTool },
     { name: "الملخصات", href: "/summaries", icon: BookText },
-    { name: "الكويز الأسبوعي", href: "/quiz", icon: Target },
     { name: "خطتي الدراسية", href: "/study-plan", icon: CalendarDays },
-    { name: "غرفة الدراسة", href: "/study-room", icon: Focus },
     { name: "ملاحظاتي", href: "/notes", icon: StickyNote },
     { name: "إحصائياتي", href: "/statistics", icon: LineChart },
   ];

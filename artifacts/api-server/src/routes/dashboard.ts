@@ -5,7 +5,6 @@ import {
   usersTable,
   studentProfilesTable,
   studyTasksTable,
-  weeklyQuizzesTable,
   dossiersTable,
   worksheetsTable,
   examsTable,
@@ -59,18 +58,6 @@ router.get("/dashboard", requireAuth, async (req, res): Promise<void> => {
     .leftJoin(subjectsTable, eq(dossiersTable.subjectId, subjectsTable.id))
     .orderBy(desc(dossiersTable.createdAt))
     .limit(4);
-
-  const quizzes = await db
-    .select({
-      quiz: weeklyQuizzesTable,
-      subjectName: subjectsTable.name,
-    })
-    .from(weeklyQuizzesTable)
-    .leftJoin(subjectsTable, eq(weeklyQuizzesTable.subjectId, subjectsTable.id))
-    .where(eq(weeklyQuizzesTable.isActive, true))
-    .limit(1);
-
-  const currentQuiz = quizzes[0];
 
   const hourOfDay = now.getHours();
   let greeting = "مرحباً";
@@ -129,22 +116,7 @@ router.get("/dashboard", requireAuth, async (req, res): Promise<void> => {
       lastReadPage: 1,
       createdAt: dossier.createdAt,
     })),
-    currentQuiz: currentQuiz
-      ? {
-          id: currentQuiz.quiz.id,
-          title: currentQuiz.quiz.title,
-          description: currentQuiz.quiz.description,
-          subjectName: currentQuiz.subjectName ?? "",
-          startsAt: currentQuiz.quiz.startsAt,
-          endsAt: currentQuiz.quiz.endsAt,
-          questionCount: 10,
-          durationMinutes: 15,
-          participants: 847,
-          prizes: currentQuiz.quiz.prizes,
-          hasParticipated: false,
-          userRank: null,
-        }
-      : null,
+    currentQuiz: null,
   });
 });
 

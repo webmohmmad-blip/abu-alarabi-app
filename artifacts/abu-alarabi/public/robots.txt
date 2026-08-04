@@ -10,10 +10,8 @@ Disallow: /dashboard
 Disallow: /dashboard/
 Disallow: /profile
 Disallow: /settings
-Disallow: /study-room
 Disallow: /notes
 Disallow: /study-plan
-Disallow: /sessions-history
 Disallow: /onboarding
 
 # Auth pages

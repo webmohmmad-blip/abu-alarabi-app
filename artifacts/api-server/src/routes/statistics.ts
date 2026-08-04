@@ -3,7 +3,6 @@ import { eq } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   studentProfilesTable,
-  studySessionsTable,
   examAttemptsTable,
   studentSubjectsTable,
   subjectsTable,
@@ -20,16 +19,7 @@ router.get("/statistics", requireAuth, async (req, res): Promise<void> => {
     .from(studentProfilesTable)
     .where(eq(studentProfilesTable.userId, aReq.userId));
 
-  const sessions = await db
-    .select()
-    .from(studySessionsTable)
-    .where(eq(studySessionsTable.userId, aReq.userId));
-
-  const totalStudyMinutes =
-    profile?.totalStudyMinutes ??
-    sessions.reduce((acc, s) => acc + (s.actualMinutes ?? 0), 0);
-
-  const completedSessions = sessions.filter((s) => s.status === "completed");
+  const totalStudyMinutes = profile?.totalStudyMinutes ?? 0;
 
   const attempts = await db
     .select()
@@ -47,7 +37,7 @@ router.get("/statistics", requireAuth, async (req, res): Promise<void> => {
 
   res.json({
     totalStudyMinutes,
-    totalSessions: completedSessions.length,
+    totalSessions: 0,
     totalExams: completedAttempts.length,
     averageScore,
     streakDays: profile?.streakDays ?? 0,

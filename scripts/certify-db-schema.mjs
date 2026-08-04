@@ -98,14 +98,8 @@ const REQUIRED_TABLES = {
     "actual_minutes", "comprehension_level", "linked_content_id",
     "linked_content_type", "notes", "created_at", "updated_at"
   ],
-  study_sessions: [
-    "id", "user_id", "subject_id", "type", "status", "started_at",
-    "ended_at", "planned_minutes", "actual_minutes", "focus_score",
-    "pause_count", "task_id", "goal", "comprehension_level",
-    "focus_level", "created_at", "updated_at"
-  ],
   notes: [
-    "id", "user_id", "subject_id", "dossier_id", "session_id",
+    "id", "user_id", "subject_id", "dossier_id",
     "title", "content", "tags", "is_pinned", "created_at", "updated_at"
   ],
   personal_schedule_subjects: [

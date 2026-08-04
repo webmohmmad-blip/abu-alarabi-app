@@ -7,7 +7,6 @@ import {
   examsTable,
   questionsTable,
   questionChoicesTable,
-  weeklyQuizzesTable,
   achievementsTable,
 } from "@workspace/db";
 
@@ -311,22 +310,6 @@ async function seed() {
       ]);
     }
   }
-
-  // ─── WEEKLY QUIZ ────────────────────────────────────────────
-  const quizExamId = exams[1]!.id;
-  const now = new Date();
-  const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-  await db.insert(weeklyQuizzesTable).values({
-    title: "الكويز الأسبوعي - الفيزياء",
-    description: "تحدَّ نفسك وقيس معرفتك بالفيزياء لهذا الأسبوع",
-    subjectId: physicsId,
-    examId: quizExamId,
-    startsAt: now,
-    endsAt: nextWeek,
-    prizes: "الأول: شهادة تميز + وصول مجاني لمدة شهر | الثاني والثالث: شهادات تميز",
-    isActive: true,
-  });
 
   // ─── ACHIEVEMENTS ───────────────────────────────────────────
   await db.insert(achievementsTable).values([

@@ -42,13 +42,10 @@ function useAttemptResult(attemptId: number) {
 }
 
 export default function ExamResult() {
-  const [location] = useLocation();
   const params = useParams<{
     examId?: string;
-    quizId?: string;
     attemptId?: string;
   }>();
-  const isWeeklyQuiz = location.startsWith("/weekly-quiz/");
   const attemptId = parseInt(params.attemptId || "0", 10);
 
   const { data: result, isLoading, isError } = useAttemptResult(attemptId);
@@ -97,15 +94,15 @@ export default function ExamResult() {
             <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-2">تعذّر تحميل النتيجة</h2>
             <p className="text-muted-foreground mb-4">يرجى المحاولة مرة أخرى.</p>
-            <Button asChild><Link href={isWeeklyQuiz ? "/weekly-quiz" : "/exams"}>العودة</Link></Button>
+            <Button asChild><Link href="/exams">العودة</Link></Button>
           </Card>
         </div>
       </DashboardLayout>
     );
   }
 
-  const backPath = isWeeklyQuiz ? "/weekly-quiz" : "/exams";
-  const backLabel = isWeeklyQuiz ? "العودة للكويز الأسبوعي" : "العودة لقائمة الامتحانات";
+  const backPath = "/exams";
+  const backLabel = "العودة لقائمة الامتحانات";
 
   return (
     <DashboardLayout>

@@ -111,14 +111,11 @@ router.get(
         // Still produce a valid xlsx with headers only
       }
 
-      // ── Aggregate exam / quiz attempt counts in ONE query ──────────────────
-      // exam = attempts where linked exam type != 'weekly'
-      // quiz = attempts where linked exam type = 'weekly'
+      // ── Aggregate exam attempt counts in ONE query ──────────────────
       const countRows = await db
         .select({
           userId: examAttemptsTable.userId,
-          examCount: sql<string>`count(distinct case when ${examsTable.type} != 'weekly' then ${examAttemptsTable.id} end)`,
-          quizCount: sql<string>`count(distinct case when ${examsTable.type} = 'weekly'  then ${examAttemptsTable.id} end)`,
+          examCount: sql<string>`count(distinct ${examAttemptsTable.id})`,
         })
         .from(examAttemptsTable)
         .leftJoin(examsTable, eq(examAttemptsTable.examId, examsTable.id))
@@ -127,7 +124,7 @@ router.get(
       const countMap = new Map(
         countRows.map((r) => [
           r.userId,
-          { exams: Number(r.examCount), quizzes: Number(r.quizCount) },
+          { exams: Number(r.examCount), quizzes: 0 },
         ])
       );
 

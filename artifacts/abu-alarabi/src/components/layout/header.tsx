@@ -70,8 +70,6 @@ const STUDENT_NAV = [
   { href: "/dossiers",    label: "الدوسيات"                  },
   { href: "/worksheets",  label: "أوراق العمل"               },
   { href: "/exams",       label: "الامتحانات الإلكترونية"    },
-  { href: "/weekly-quiz", label: "الكويز الأسبوعي"           },
-  { href: "/study-room",  label: "غرفتي الدراسية"            },
 ] as const;
 
 export function Header() {
@@ -189,7 +187,6 @@ export function Header() {
     { href: "/worksheets", label: "أوراق العمل", icon: FileText },
     { href: "/exams", label: "الامتحانات المحوسبة", icon: Target },
     { href: "/schedule", label: "الجدول الدراسي", icon: CalendarDays },
-    { href: "/study-room", label: "الغرفة الدراسية", icon: GraduationCap },
   ];
 
   return (

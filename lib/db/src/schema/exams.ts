@@ -158,24 +158,4 @@ export const attemptAnswersTable = pgTable("attempt_answers", {
 
 export type AttemptAnswer = typeof attemptAnswersTable.$inferSelect;
 
-// ─── WEEKLY QUIZ ────────────────────────────────────────
-export const weeklyQuizzesTable = pgTable("weekly_quizzes", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  description: text("description"),
-  subjectId: integer("subject_id")
-    .notNull()
-    .references(() => subjectsTable.id, { onDelete: "cascade" }),
-  examId: integer("exam_id").references(() => examsTable.id, {
-    onDelete: "cascade",
-  }),
-  startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
-  endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
-  prizes: text("prizes"),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
 
-export type WeeklyQuiz = typeof weeklyQuizzesTable.$inferSelect;

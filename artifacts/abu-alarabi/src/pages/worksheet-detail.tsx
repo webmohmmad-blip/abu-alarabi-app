@@ -231,22 +231,11 @@ export default function WorksheetDetail() {
           {/* Divider */}
           <div className="border-t border-border" />
 
-          {/* Primary action: Study Room */}
+          {/* Primary action: Download */}
           <div className="space-y-3">
-            <Button
-              className="w-full h-14 text-base bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20 gap-3"
-              onClick={() => setLocation(`/study-room?worksheetId=${worksheetId}`)}
-              disabled={!worksheet.fileUrl}
-            >
-              <BookOpen className="w-5 h-5" />
-              حلّ في غرفتي الدراسية
-            </Button>
-
-            {/* Secondary: Download */}
             {worksheet.fileUrl ? (
               <Button
-                variant="outline"
-                className="w-full h-12 gap-2 bg-white"
+                className="w-full h-14 text-base bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 gap-3"
                 onClick={handleDownload}
                 disabled={downloading}
               >

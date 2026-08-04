@@ -473,73 +473,6 @@ export interface TaskCompletionInput {
   notes?: string;
 }
 
-export type StudySessionType = typeof StudySessionType[keyof typeof StudySessionType];
-
-
-export const StudySessionType = {
-  pomodoro: 'pomodoro',
-  balanced: 'balanced',
-  deep_focus: 'deep_focus',
-  quick_review: 'quick_review',
-  custom: 'custom',
-  exam: 'exam',
-} as const;
-
-export type StudySessionStatus = typeof StudySessionStatus[keyof typeof StudySessionStatus];
-
-
-export const StudySessionStatus = {
-  active: 'active',
-  paused: 'paused',
-  completed: 'completed',
-  abandoned: 'abandoned',
-} as const;
-
-export interface StudySession {
-  id: number;
-  subjectId: number;
-  subjectName: string;
-  type: StudySessionType;
-  status: StudySessionStatus;
-  startedAt: string;
-  /** @nullable */
-  endedAt?: string | null;
-  plannedMinutes: number;
-  /** @nullable */
-  actualMinutes?: number | null;
-  /** @nullable */
-  focusScore?: number | null;
-  pauseCount?: number;
-  /** @nullable */
-  taskId?: number | null;
-  noteCount?: number;
-}
-
-export interface StudySessionInput {
-  subjectId: number;
-  type: string;
-  plannedMinutes: number;
-  taskId?: number;
-  timerMode?: string;
-  goal?: string;
-}
-
-export type StudySessionUpdateStatus = typeof StudySessionUpdateStatus[keyof typeof StudySessionUpdateStatus];
-
-
-export const StudySessionUpdateStatus = {
-  paused: 'paused',
-  completed: 'completed',
-  abandoned: 'abandoned',
-} as const;
-
-export interface StudySessionUpdate {
-  status?: StudySessionUpdateStatus;
-  comprehensionLevel?: string;
-  focusLevel?: string;
-  actualMinutes?: number;
-}
-
 export interface Note {
   id: number;
   title: string;
@@ -549,8 +482,6 @@ export interface Note {
   subjectName: string;
   /** @nullable */
   dossierId?: number | null;
-  /** @nullable */
-  sessionId?: number | null;
   tags?: string[];
   /** @nullable */
   color?: string | null;
@@ -571,7 +502,6 @@ export interface NoteInput {
   noteType?: string;
   subjectId: number;
   dossierId?: number;
-  sessionId?: number;
   tags?: string[];
   color?: string;
   isPrivate?: boolean;

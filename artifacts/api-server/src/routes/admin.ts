@@ -15,10 +15,8 @@ import {
   dossiersTable,
   worksheetsTable,
   examsTable,
-  weeklyQuizzesTable,
   commentsTable,
   commentReportsTable,
-  studySessionsTable,
 } from "@workspace/db";
 import { requireAuth, requireRole, hashPassword } from "../lib/auth";
 import { validatePhone } from "../lib/phone";
@@ -32,7 +30,7 @@ router.use(requireRole(["admin", "super_admin"]));
 
 // ─── ADMIN DASHBOARD ─────────────────────────────────────────────────────────
 router.get("/dashboard", async (req, res) => {
-  const [students, teachers, subjects, dossiers, worksheets, exams, comments, sessions] =
+  const [students, teachers, subjects, dossiers, worksheets, exams, comments] =
     await Promise.all([
       db.select({ count: count() }).from(usersTable).where(eq(usersTable.role, "student")),
       db
@@ -46,14 +44,6 @@ router.get("/dashboard", async (req, res) => {
       db.select({ count: count() }).from(worksheetsTable).where(isNull(worksheetsTable.deletedAt)),
       db.select({ count: count() }).from(examsTable).where(isNull(examsTable.deletedAt)),
       db.select({ count: count() }).from(commentsTable).where(isNull(commentsTable.deletedAt)),
-      db
-        .select({ count: count() })
-        .from(studySessionsTable)
-        .where(
-          and(
-            sql`DATE(${studySessionsTable.startedAt}) = CURRENT_DATE`
-          )
-        ),
     ]);
 
   const pendingReports = await db
@@ -67,12 +57,6 @@ router.get("/dashboard", async (req, res) => {
     .from(usersTable)
     .where(sql`${usersTable.createdAt} >= NOW() - INTERVAL '7 days'`);
 
-  // Total study hours
-  const totalStudyMinutes = await db
-    .select({ total: sql<number>`COALESCE(SUM(${studySessionsTable.actualMinutes}), 0)` })
-    .from(studySessionsTable)
-    .where(eq(studySessionsTable.status, "completed"));
-
   res.json({
     totalStudents: Number(students[0]?.count ?? 0),
     totalTeachers: Number(teachers[0]?.count ?? 0),
@@ -82,10 +66,10 @@ router.get("/dashboard", async (req, res) => {
     totalExams: Number(exams[0]?.count ?? 0),
     totalComments: Number(comments[0]?.count ?? 0),
     pendingReports: Number(pendingReports[0]?.count ?? 0),
-    todaySessions: Number(sessions[0]?.count ?? 0),
+    todaySessions: 0,
     activeUsersNow: 0, // Would need websocket tracking
     newUsersThisWeek: Number(newUsersThisWeek[0]?.count ?? 0),
-    totalStudyHoursAllTime: Math.round((Number(totalStudyMinutes[0]?.total ?? 0)) / 60),
+    totalStudyHoursAllTime: 0,
   });
 });
 
@@ -181,10 +165,7 @@ router.get("/users/:id", async (req, res) => {
     .where(eq(studentProfilesTable.userId, userId))
     .limit(1);
 
-  const sessionCount = await db
-    .select({ count: count() })
-    .from(studySessionsTable)
-    .where(eq(studySessionsTable.userId, userId));
+  const sessionCount = 0;
 
   const noteCount = 0;
   const commentCount = await db
@@ -1034,9 +1015,8 @@ router.get("/audit-logs", async (req, res) => {
 router.get("/platform-reports", async (req, res) => {
   const { type = "weekly" } = req.query as any;
 
-  const [studentCount, sessionCount, examCount] = await Promise.all([
+  const [studentCount, examCount] = await Promise.all([
     db.select({ count: count() }).from(usersTable).where(eq(usersTable.role, "student")),
-    db.select({ count: count() }).from(studySessionsTable).where(eq(studySessionsTable.status, "completed")),
     db.select({ count: count() }).from(examsTable),
   ]);
 
@@ -1046,7 +1026,7 @@ router.get("/platform-reports", async (req, res) => {
     to: new Date().toISOString(),
     data: {
       totalStudents: Number(studentCount[0]?.count ?? 0),
-      completedSessions: Number(sessionCount[0]?.count ?? 0),
+      completedSessions: 0,
       totalExams: Number(examCount[0]?.count ?? 0),
     },
   });

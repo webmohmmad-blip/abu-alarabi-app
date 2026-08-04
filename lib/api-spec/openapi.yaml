@@ -435,50 +435,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/ExamResult"
 
-  # ─── WEEKLY QUIZ ────────────────────────────────────────
-  /quiz/current:
-    get:
-      operationId: getCurrentQuiz
-      tags: [quiz]
-      responses:
-        "200":
-          description: Current quiz
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WeeklyQuiz"
 
-  /quiz/{id}/start:
-    post:
-      operationId: startQuiz
-      tags: [quiz]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "201":
-          description: Quiz attempt started
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ExamAttempt"
-
-  /quiz/leaderboard:
-    get:
-      operationId: getQuizLeaderboard
-      tags: [quiz]
-      responses:
-        "200":
-          description: Leaderboard
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/LeaderboardEntry"
 
   # ─── STUDY PLAN ─────────────────────────────────────────
   /studyplan:
@@ -556,69 +513,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/StudyPlan"
 
-  # ─── STUDY SESSIONS ─────────────────────────────────────
-  /sessions:
-    get:
-      operationId: listStudySessions
-      tags: [sessions]
-      parameters:
-        - name: date
-          in: query
-          schema:
-            type: string
-        - name: subjectId
-          in: query
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Sessions list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/StudySession"
-    post:
-      operationId: createStudySession
-      tags: [sessions]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/StudySessionInput"
-      responses:
-        "201":
-          description: Session created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StudySession"
 
-  /sessions/{id}:
-    patch:
-      operationId: updateStudySession
-      tags: [sessions]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/StudySessionUpdate"
-      responses:
-        "200":
-          description: Session updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StudySession"
 
   # ─── NOTES ──────────────────────────────────────────────
   /notes:
@@ -2441,35 +2336,7 @@ components:
         completedAt:
           type: string
 
-    # ─── WEEKLY QUIZ ─────────────────────────────────────
-    WeeklyQuiz:
-      type: object
-      required: [id, title, subjectName, startsAt, endsAt, questionCount, durationMinutes, participants]
-      properties:
-        id:
-          type: integer
-        title:
-          type: string
-        description:
-          type: ["string", "null"]
-        subjectName:
-          type: string
-        startsAt:
-          type: string
-        endsAt:
-          type: string
-        questionCount:
-          type: integer
-        durationMinutes:
-          type: integer
-        participants:
-          type: integer
-        prizes:
-          type: ["string", "null"]
-        hasParticipated:
-          type: boolean
-        userRank:
-          type: ["integer", "null"]
+
 
     LeaderboardEntry:
       type: object
@@ -2573,69 +2440,7 @@ components:
         daysLeft:
           type: integer
 
-    # ─── STUDY SESSIONS ──────────────────────────────────
-    StudySession:
-      type: object
-      required: [id, subjectId, subjectName, type, status, startedAt, plannedMinutes]
-      properties:
-        id:
-          type: integer
-        subjectId:
-          type: integer
-        subjectName:
-          type: string
-        type:
-          type: string
-          enum: [pomodoro, balanced, deep_focus, quick_review, custom, exam]
-        status:
-          type: string
-          enum: [active, paused, completed, abandoned]
-        startedAt:
-          type: string
-        endedAt:
-          type: ["string", "null"]
-        plannedMinutes:
-          type: integer
-        actualMinutes:
-          type: ["integer", "null"]
-        focusScore:
-          type: ["number", "null"]
-        pauseCount:
-          type: integer
-        taskId:
-          type: ["integer", "null"]
-        noteCount:
-          type: integer
 
-    StudySessionInput:
-      type: object
-      required: [subjectId, type, plannedMinutes]
-      properties:
-        subjectId:
-          type: integer
-        type:
-          type: string
-        plannedMinutes:
-          type: integer
-        taskId:
-          type: integer
-        timerMode:
-          type: string
-        goal:
-          type: string
-
-    StudySessionUpdate:
-      type: object
-      properties:
-        status:
-          type: string
-          enum: [paused, completed, abandoned]
-        comprehensionLevel:
-          type: string
-        focusLevel:
-          type: string
-        actualMinutes:
-          type: integer
 
     # ─── NOTES ───────────────────────────────────────────
     Note:
@@ -2919,8 +2724,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Dossier"
-        currentQuiz:
-          $ref: "#/components/schemas/WeeklyQuiz"
+
 
     PlatformStats:
       type: object

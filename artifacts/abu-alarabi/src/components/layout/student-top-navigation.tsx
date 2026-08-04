@@ -5,8 +5,6 @@ const NAV_ITEMS = [
   { name: "الدوسيات",               href: "/dossiers"    },
   { name: "أوراق العمل",            href: "/worksheets"  },
   { name: "الامتحانات الإلكترونية", href: "/exams"       },
-  { name: "الكويز الأسبوعي",        href: "/weekly-quiz" },
-  { name: "غرفتي الدراسية",         href: "/study-room"  },
 ];
 
 export function StudentTopNavigation() {

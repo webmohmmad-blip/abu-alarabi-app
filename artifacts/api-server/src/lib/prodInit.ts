@@ -97,7 +97,6 @@ export async function ensureProductionReady(): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_exam_attempts_user_exam ON exam_attempts(user_id, exam_id)`,
     `CREATE INDEX IF NOT EXISTS idx_attempt_answers_attempt_id ON attempt_answers(attempt_id)`,
     `CREATE INDEX IF NOT EXISTS idx_study_tasks_user_scheduled ON study_tasks(user_id, scheduled_at)`,
-    `CREATE INDEX IF NOT EXISTS idx_study_sessions_user ON study_sessions(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_notes_user ON notes(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_dossier_progress_user_dossier ON dossier_reading_progress(user_id, dossier_id)`,
   ];

@@ -139,18 +139,11 @@ export default function StudyPlan() {
                           
                           <div className="shrink-0 flex items-center gap-2">
                             {task.status !== 'completed' ? (
-                              <>
-                                <Button variant="outline" size="sm" asChild className="bg-white">
-                                  <Link href={`/study-room?taskId=${task.id}`}>
-                                    <Clock className="w-4 h-4 mr-1" /> مؤقت
-                                  </Link>
-                                </Button>
-                                <Button size="sm" asChild className="shadow-sm">
-                                  <Link href={task.linkedContentId ? `/${task.linkedContentType}s/${task.linkedContentId}` : '#'}>
-                                    {getTaskIcon(task.type)} ابدأ
-                                  </Link>
-                                </Button>
-                              </>
+                              <Button size="sm" asChild className="shadow-sm">
+                                <Link href={task.linkedContentId ? `/${task.linkedContentType}s/${task.linkedContentId}` : '#'}>
+                                  {getTaskIcon(task.type)} ابدأ
+                                </Link>
+                              </Button>
                             ) : (
                               <div className="px-4 py-2 bg-success/10 text-success font-bold rounded-xl text-sm flex items-center gap-2 border border-success/20">
                                 <CheckCircle2 className="w-5 h-5" /> مكتمل

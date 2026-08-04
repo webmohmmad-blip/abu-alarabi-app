@@ -110,7 +110,7 @@ export default function Dashboard() {
                           <div className="shrink-0">
                             {task.status !== 'completed' ? (
                               <Button asChild className="w-full md:w-auto shadow-sm">
-                                <Link href={task.linkedContentId ? `/${task.linkedContentType}s/${task.linkedContentId}` : '/study-room'}>
+                                <Link href={task.linkedContentId ? `/${task.linkedContentType}s/${task.linkedContentId}` : '/study-plan'}>
                                   {task.type === 'take_exam' ? 'ابدأ الامتحان' : 'ابدأ الدراسة'}
                                 </Link>
                               </Button>
@@ -132,9 +132,9 @@ export default function Dashboard() {
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">لا توجد مهام اليوم!</h3>
-                <p className="text-muted-foreground mb-6">لقد أنهيت جميع مهامك، يمكنك أخذ قسط من الراحة أو الدراسة الحرة.</p>
+                <p className="text-muted-foreground mb-6">لقد أنهيت جميع مهامك، يمكنك استعراض خطتك الدراسية.</p>
                 <Button asChild variant="outline">
-                  <Link href="/study-room">جلسة دراسة حرة</Link>
+                  <Link href="/study-plan">استعراض الخطة الدراسية</Link>
                 </Button>
               </Card>
             )}
@@ -142,26 +142,6 @@ export default function Dashboard() {
 
           {/* Right Sidebar */}
           <div className="space-y-6">
-            {/* Weekly Quiz Promo */}
-            {dashboard.currentQuiz && (
-              <Card className="bg-gradient-to-br from-secondary to-[#097b91] text-white border-none shadow-lg shadow-secondary/20 overflow-hidden relative">
-                <div className="absolute -right-10 -top-10 opacity-20 rotate-12">
-                  <Trophy className="w-32 h-32" />
-                </div>
-                <CardContent className="p-6 relative z-10">
-                  <h3 className="font-black text-xl mb-2 flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-accent" /> كويز الأسبوع
-                  </h3>
-                  <p className="text-white/80 text-sm mb-4 leading-relaxed">
-                    {dashboard.currentQuiz.title} متاح الآن. شارك واربح جوائز قيمة!
-                  </p>
-                  <Button asChild size="sm" variant="secondary" className="w-full bg-white text-secondary-foreground hover:bg-white/90">
-                    <Link href="/quiz">شارك الآن</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Quick Actions */}
             <div className="bg-white/50 backdrop-blur border border-white/60 rounded-2xl p-4">
               <h3 className="font-bold mb-4 px-2">الوصول السريع</h3>
@@ -178,11 +158,11 @@ export default function Dashboard() {
                   </div>
                   <span className="text-xs font-bold text-center">الامتحانات</span>
                 </Link>
-                <Link href="/study-room" className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white transition-colors border border-transparent hover:border-black/5 hover:shadow-sm">
+                <Link href="/worksheets" className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white transition-colors border border-transparent hover:border-black/5 hover:shadow-sm">
                   <div className="w-10 h-10 rounded-full bg-secondary/10 text-secondary flex items-center justify-center">
-                    <Clock className="w-5 h-5" />
+                    <FileText className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-bold text-center">مؤقت بومودورو</span>
+                  <span className="text-xs font-bold text-center">أوراق العمل</span>
                 </Link>
                 <Link href="/notes" className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white transition-colors border border-transparent hover:border-black/5 hover:shadow-sm">
                   <div className="w-10 h-10 rounded-full bg-success/10 text-success flex items-center justify-center">

@@ -610,7 +610,7 @@ export default function AdminAdvertisements() {
                   className="text-left"
                 />
                 <p className="text-xs text-[#9CA3AF] mt-1">
-                  روابط داخلية مقبولة: <span className="font-mono">/dossiers /worksheets /exams /weekly-quiz /study-room</span>
+                  روابط داخلية مقبولة: <span className="font-mono">/dossiers /worksheets /exams</span>
                   {" — "}روابط خارجية: <span className="font-mono">https://...</span>
                 </p>
                 {form.linkUrl && !/^(https?:\/\/|\/)/.test(form.linkUrl) && (

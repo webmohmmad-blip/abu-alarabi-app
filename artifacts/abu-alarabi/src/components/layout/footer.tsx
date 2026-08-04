@@ -92,7 +92,6 @@ export function Footer() {
               <li><Link href="/" className="hover:text-primary transition-colors">الرئيسية</Link></li>
               <li><Link href="/dossiers" className="hover:text-primary transition-colors">مكتبة الدوسيات</Link></li>
               <li><Link href="/exams" className="hover:text-primary transition-colors">الامتحانات</Link></li>
-              <li><Link href="/weekly-quiz" className="hover:text-primary transition-colors">الكويز الأسبوعي</Link></li>
               <li><Link href="/worksheets" className="hover:text-primary transition-colors">أوراق العمل</Link></li>
             </ul>
           </div>
@@ -101,7 +100,6 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-bold mb-4 text-white">الخدمات التعليمية</h3>
             <ul className="space-y-3 text-sm text-sidebar-foreground/70">
-              <li><Link href="/study-room" className="hover:text-primary transition-colors">غرفة الدراسة</Link></li>
               <li><Link href="/schedule" className="hover:text-primary transition-colors">جدولي الدراسي</Link></li>
               <li>
                 <a

@@ -24,15 +24,12 @@ const Exams           = lazy(() => import('@/pages/exams'));
 const ExamInstructions= lazy(() => import('@/pages/exam-instructions'));
 const ExamTake        = lazy(() => import('@/pages/exam-take'));
 const ExamResult      = lazy(() => import('@/pages/exam-result'));
-const Quiz            = lazy(() => import('@/pages/quiz'));
 const StudyPlan       = lazy(() => import('@/pages/study-plan'));
-const StudyRoom       = lazy(() => import('@/pages/study-room'));
 const Notes           = lazy(() => import('@/pages/notes'));
 const Statistics      = lazy(() => import('@/pages/statistics'));
 const Profile         = lazy(() => import('@/pages/profile'));
 const Settings        = lazy(() => import('@/pages/settings'));
 const Summaries       = lazy(() => import('@/pages/summaries'));
-const SessionsHistory = lazy(() => import('@/pages/sessions-history'));
 const Schedule        = lazy(() => import('@/pages/schedule'));
 
 // ── Admin pages (lazy — never needed by students) ─────────────────────────────
@@ -48,7 +45,6 @@ const AdminAudit        = lazy(() => import('@/pages/admin/audit'));
 const AdminReports      = lazy(() => import('@/pages/admin/reports'));
 const AdminAnnouncements= lazy(() => import('@/pages/admin/announcements'));
 const AdminWorksheets   = lazy(() => import('@/pages/admin/worksheets'));
-const AdminQuiz           = lazy(() => import('@/pages/admin/quiz'));
 const AdminAdvertisements = lazy(() => import('@/pages/admin/advertisements'));
 const AdminHomepageSettings = lazy(() => import('@/pages/admin/homepage-settings'));
 
@@ -95,20 +91,11 @@ function Router() {
         <Route path="/exams/:examId/result/:attemptId" component={ExamResult} />
         <Route path="/exams/:id" component={ExamInstructions} />
 
-        {/* Weekly quiz routes */}
-        <Route path="/quiz" component={Quiz} />
-        <Route path="/weekly-quiz" component={Quiz} />
-        <Route path="/weekly-quiz/:quizId/instructions" component={ExamInstructions} />
-        <Route path="/weekly-quiz/:quizId/attempt/:attemptId" component={ExamTake} />
-        <Route path="/weekly-quiz/:quizId/result/:attemptId" component={ExamResult} />
-
         {/* Other student pages */}
         <Route path="/study-plan" component={StudyPlan} />
-        <Route path="/study-room" component={StudyRoom} />
         <Route path="/notes" component={Notes} />
         <Route path="/summaries" component={Summaries} />
         <Route path="/statistics" component={Statistics} />
-        <Route path="/history" component={SessionsHistory} />
         <Route path="/schedule" component={Schedule} />
         <Route path="/profile" component={Profile} />
         <Route path="/settings" component={Settings} />
@@ -126,7 +113,6 @@ function Router() {
         <Route path="/admin/reports" component={AdminReports} />
         <Route path="/admin/announcements" component={AdminAnnouncements} />
         <Route path="/admin/worksheets" component={AdminWorksheets} />
-        <Route path="/admin/quiz" component={AdminQuiz} />
         <Route path="/admin/advertisements" component={AdminAdvertisements} />
         <Route path="/admin/homepage-settings" component={AdminHomepageSettings} />
 

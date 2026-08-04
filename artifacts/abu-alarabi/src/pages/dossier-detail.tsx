@@ -261,22 +261,13 @@ export default function DossierDetail() {
               </div>
               
               <div className="space-y-2">
-                {/* Study Room button — primary CTA */}
-                <Button
-                  size="lg"
-                  className="w-full gap-2 text-base font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
-                  onClick={() => setLocation(`/study-room?dossierId=${dossierId}`)}
-                >
-                  <Pencil className="w-5 h-5" /> ادرس الآن في غرفة الدراسة
-                </Button>
                 <div className="flex gap-2">
                   <Button 
                     size="lg"
-                    variant="outline"
-                    className="flex-1 gap-2"
+                    className="flex-1 gap-2 text-base font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
                     onClick={handleStartReading}
                   >
-                    <BookOpen className="w-5 h-5" /> قراءة سريعة
+                    <BookOpen className="w-5 h-5" /> قراءة الدوسية
                   </Button>
                   <Button 
                     size="lg" 

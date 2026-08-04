@@ -40,21 +40,7 @@ export const taskPriorityEnum = pgEnum("task_priority", [
   "critical",
 ]);
 
-export const sessionTypeEnum = pgEnum("session_type", [
-  "pomodoro",
-  "balanced",
-  "deep_focus",
-  "quick_review",
-  "custom",
-  "exam",
-]);
 
-export const sessionStatusEnum = pgEnum("session_status", [
-  "active",
-  "paused",
-  "completed",
-  "abandoned",
-]);
 
 // ─── STUDY PLANS ────────────────────────────────────────
 export const studyPlansTable = pgTable("study_plans", {
@@ -121,44 +107,6 @@ export const insertStudyTaskSchema = createInsertSchema(studyTasksTable).omit({
 export type InsertStudyTask = z.infer<typeof insertStudyTaskSchema>;
 export type StudyTask = typeof studyTasksTable.$inferSelect;
 
-// ─── STUDY SESSIONS ─────────────────────────────────────
-export const studySessionsTable = pgTable("study_sessions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
-    .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
-  subjectId: integer("subject_id")
-    .notNull()
-    .references(() => subjectsTable.id, { onDelete: "cascade" }),
-  type: sessionTypeEnum("type").notNull().default("pomodoro"),
-  status: sessionStatusEnum("status").notNull().default("active"),
-  startedAt: timestamp("started_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  endedAt: timestamp("ended_at", { withTimezone: true }),
-  plannedMinutes: integer("planned_minutes").notNull(),
-  actualMinutes: integer("actual_minutes"),
-  focusScore: numeric("focus_score", { precision: 4, scale: 1 }),
-  pauseCount: integer("pause_count").notNull().default(0),
-  taskId: integer("task_id"),
-  goal: text("goal"),
-  comprehensionLevel: text("comprehension_level"),
-  focusLevel: text("focus_level"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
-
-export const insertStudySessionSchema = createInsertSchema(
-  studySessionsTable
-).omit({ id: true, createdAt: true, updatedAt: true });
-export type InsertStudySession = z.infer<typeof insertStudySessionSchema>;
-export type StudySession = typeof studySessionsTable.$inferSelect;
-
 // ─── NOTES ──────────────────────────────────────────────
 export const notesTable = pgTable("notes", {
   id: serial("id").primaryKey(),
@@ -169,9 +117,6 @@ export const notesTable = pgTable("notes", {
     .notNull()
     .references(() => subjectsTable.id, { onDelete: "cascade" }),
   dossierId: integer("dossier_id").references(() => dossiersTable.id, {
-    onDelete: "set null",
-  }),
-  sessionId: integer("session_id").references(() => studySessionsTable.id, {
     onDelete: "set null",
   }),
   title: text("title").notNull(),
