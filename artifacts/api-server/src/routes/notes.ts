@@ -36,7 +36,6 @@ router.get("/notes", requireAuth, async (req, res): Promise<void> => {
       subjectId: note.subjectId,
       subjectName: subjectName ?? "",
       dossierId: note.dossierId,
-      sessionId: note.sessionId,
       tags: note.tags ?? [],
       isPinned: note.isPinned,
       createdAt: note.createdAt,
@@ -47,12 +46,11 @@ router.get("/notes", requireAuth, async (req, res): Promise<void> => {
 
 router.post("/notes", requireAuth, async (req, res): Promise<void> => {
   const aReq = req as AuthRequest;
-  const { title, content, subjectId, dossierId, sessionId, tags } = req.body as {
+  const { title, content, subjectId, dossierId, tags } = req.body as {
     title: string;
     content: string;
     subjectId: number;
     dossierId?: number;
-    sessionId?: number;
     tags?: string[];
   };
 
@@ -71,7 +69,6 @@ router.post("/notes", requireAuth, async (req, res): Promise<void> => {
       userId: aReq.userId,
       subjectId,
       dossierId: dossierId ?? null,
-      sessionId: sessionId ?? null,
       title,
       content,
       tags: tags ?? [],
@@ -91,7 +88,6 @@ router.post("/notes", requireAuth, async (req, res): Promise<void> => {
     subjectId: note.subjectId,
     subjectName: subject?.name ?? "",
     dossierId: note.dossierId,
-    sessionId: note.sessionId,
     tags: note.tags ?? [],
     isPinned: note.isPinned,
     createdAt: note.createdAt,
@@ -140,7 +136,6 @@ router.patch("/notes/:id", requireAuth, async (req, res): Promise<void> => {
     subjectId: note.subjectId,
     subjectName: subject?.name ?? "",
     dossierId: note.dossierId,
-    sessionId: note.sessionId,
     tags: note.tags ?? [],
     isPinned: note.isPinned,
     createdAt: note.createdAt,

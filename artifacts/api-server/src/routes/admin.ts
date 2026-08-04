@@ -185,7 +185,7 @@ router.get("/users/:id", async (req, res) => {
     field: profile[0]?.field ?? null,
     goal: profile[0]?.goal ?? null,
     groupName: null,
-    totalSessions: Number(sessionCount[0]?.count ?? 0),
+    totalSessions: 0,
     totalExams: 0,
     totalStudyMinutes: profile[0]?.totalStudyMinutes ?? 0,
     totalNotes: noteCount,
