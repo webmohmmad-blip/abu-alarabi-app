@@ -74,6 +74,12 @@ export function SEO({
     schemas.push(buildBreadcrumbSchema(breadcrumbs));
   }
 
+  const activePath = typeof window !== "undefined" ? window.location.pathname : "/";
+  const targetCanonical = canonical ?? activePath;
+  const canonicalUrl = targetCanonical.startsWith("http")
+    ? targetCanonical
+    : `${SITE_URL}${targetCanonical.startsWith("/") ? targetCanonical : `/${targetCanonical}`}`;
+
   return (
     <Helmet>
       <title>{fullTitle}</title>
@@ -83,7 +89,7 @@ export function SEO({
       ) : (
         <meta name="robots" content="index, follow" />
       )}
-      {canonical && <link rel="canonical" href={canonical.startsWith("http") ? canonical : `${SITE_URL}${canonical}`} />}
+      <link rel="canonical" href={canonicalUrl} />
 
       {/* Open Graph */}
       <meta property="og:type"        content="website" />
@@ -91,9 +97,7 @@ export function SEO({
       <meta property="og:locale"      content="ar_JO" />
       <meta property="og:title"       content={fullTitle} />
       <meta property="og:description" content={desc} />
-      {canonical && (
-        <meta property="og:url" content={canonical.startsWith("http") ? canonical : `${SITE_URL}${canonical}`} />
-      )}
+      <meta property="og:url"         content={canonicalUrl} />
       <meta property="og:image"        content={ogImage} />
       <meta property="og:image:width"  content="1200" />
       <meta property="og:image:height" content="630" />
