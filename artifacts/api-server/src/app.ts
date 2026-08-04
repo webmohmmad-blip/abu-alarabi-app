@@ -111,6 +111,16 @@ if (fs.existsSync(staticPath)) {
   app.use((req, res, next) => {
     if (req.method !== "GET" && req.method !== "HEAD") return next();
     if (req.path.startsWith("/api")) return next();
+    
+    // Do not serve index.html SPA fallback for missing static assets or files
+    if (
+      req.path.startsWith("/assets/") ||
+      /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|map|json)$/i.test(req.path)
+    ) {
+      res.status(404).type("text/plain").send("404 Not Found");
+      return;
+    }
+
     res.sendFile(path.join(staticPath, "index.html"));
   });
 }
